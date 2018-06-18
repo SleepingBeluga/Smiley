@@ -427,8 +427,7 @@ Lets you join a draft.
 @commands('start')
 def start(bot, trigger):
     if bot.memory['phase'] == 'setup':
-        #TODO: Change to 4
-        if len(bot.memory['players']) >= 1 and len(bot.memory['players']) <= 6:
+        if len(bot.memory['players']) >= 4 and len(bot.memory['players']) <= 6:
             bot.say('Starting the draft!')
             bot.memory['phase'] = 'the draft'
             bot.memory['round'] = 1
