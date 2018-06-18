@@ -231,6 +231,23 @@ def do_clash(bot, continued):
                 if bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 1 > bot.memory['rows to show']:
                     bot.memory['rows to show'] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 1
                 bot.memory['to resolve'].append(player1)
+                
+        if bot.memory['clash choices'][player0] == 'concede':
+            if bot.memory['clash choices'][player1] == 'stay':
+                coin = random.choice('heads','tails')
+                to_say = player1 + ' stayed. ' + player0 + ' conceded. Flipping a coin: ' + coin + '! '
+                if coin == 'heads':
+                    to_say += player0 + ' gets a white mark and chooses a category at a lower rung. ' + \
+                              player1 + ' gets the spot.'
+                    bot.memory['white marks'][player0] += 1
+                else:
+                    to_say += player0 + ' loses the spot and will have to choose a category at a lower rung. ' + \
+                              player1 + ' gets the spot and a black mark.'
+                    bot.memory['black marks'][player1] += 1
+                bot.memory['limits'][player0] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 1
+                if bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 1 > bot.memory['rows to show']:
+                    bot.memory['rows to show'] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 1
+                bot.memory['to resolve'].append(player0)
                     
     bot.memory['clashes'][0] = bot.memory['clashes'][1]
     bot.memory['clashes'][1] = bot.memory['clashes'][2]
