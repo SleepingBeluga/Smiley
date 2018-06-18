@@ -1,0 +1,13 @@
+Subround:
+
+get bids from all involved players
+while there are clashes
+	resolve a clash
+	add rebidding players to a subround
+if next round has any players
+	go to next subround
+
+else
+	add all players to a subround
+	increase phase
+	go to next subround
