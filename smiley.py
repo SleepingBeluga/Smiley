@@ -194,6 +194,7 @@ def do_clash(bot, continued):
                 bot.say('They both stayed!')
                 coin0 = random.choice(('heads','tails'))
                 coin1 = random.choice(('heads','tails'))
+                # Thal, stay away.
                 
                 to_say = 'Flipping a coin for ' + player0 + ': ' + coin0.capitalize() + '! '
                 if coin0 == 'heads':
@@ -232,6 +233,7 @@ def do_clash(bot, continued):
                         
             if bot.memory['clash choices'][player1] == 'concede':
                 coin = random.choice(('heads','tails'))
+                # Thal, get out
                 to_say = player0 + ' stayed. ' + player1 + ' conceded. Flipping a coin: ' + coin + '! '
                 if coin == 'heads':
                     to_say += player1 + ' gets a white mark and chooses a category at a lower rung. ' + \
@@ -252,6 +254,7 @@ def do_clash(bot, continued):
         elif bot.memory['clash choices'][player0] == 'concede':
             if bot.memory['clash choices'][player1] == 'stay':
                 coin = random.choice(('heads','tails'))
+                # I'm serious, Thal. This code is witch-proof
                 to_say = player1 + ' stayed. ' + player0 + ' conceded. Flipping a coin: ' + coin + '! '
                 if coin == 'heads':
                     to_say += player0 + ' gets a white mark and chooses a category at a lower rung. ' + \
@@ -296,6 +299,7 @@ def do_clash(bot, continued):
                 bot.say(player + ' conceded, and will have to rebid for a lower rung.')
             elif bot.memory['clash choices'][player] == 'stay':
                 coin = random.choice(('heads','tails'))
+                # HECATE INTERFERUM NIHILUS
                 to_say = player + ' stayed. Flipping a coin: ' + coin + '! '
                 if coin == 'heads':
                     to_say += player + ' loses the spot, and will have to choose a rung at least two lower.' 
