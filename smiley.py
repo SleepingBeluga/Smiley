@@ -1,4 +1,4 @@
-from sopel.module import commands, require_privmsg, require_chanmsg
+from sopel.module import commands, thread, require_privmsg, require_chanmsg
 import time, random
 
 '''
@@ -52,9 +52,13 @@ def subround(bot, clash):
         bot.say(to_say)
         bot.say('Remember your bids are restricted by the results of the clashes.')
     get_bids(bot)
+    if bot.memory['phase'] == 'none':
+        return
     calc_clashes(bot)
     while bot.memory['clash']:
         do_clash(bot, False)
+        if bot.memory['phase'] == 'none':
+            return
     show_cats(bot)
     if len(bot.memory['to resolve']) > 0:
         subround(bot, True)
@@ -99,6 +103,7 @@ def show_cats(bot):
 Displays the categories so you can see who has what.
 '''
 
+@thread(True)
 def get_bids(bot):
     for player in bot.memory['players']:
         if player not in bot.memory['to resolve']:
@@ -117,6 +122,8 @@ def get_bids(bot):
                 to_say = to_say[:-2]
             bot.say(to_say)
             start = time.time()
+        if bot.memory['phase'] == 'none':
+            return
     bot.memory['bidding'] = False
     for player in bot.memory['players']:
         bot.memory['limits'][player] = 0
@@ -277,6 +284,7 @@ def do_clash(bot, continued):
 Performs clashes and adds players who need to rebid to 'to resolve'.
 '''
 
+@thread(True)
 def get_clash_choices(bot):
     for player in bot.memory['players']:
         if player not in bot.memory['clashes'][0]:
@@ -295,6 +303,8 @@ def get_clash_choices(bot):
                 to_say = to_say[:-2]
             bot.say(to_say)
             start = time.time()
+        if bot.memory['phase'] == 'none':
+            return
     bot.memory['clashing'] = False
 '''
 Tells players to submit clash choices, and waits until all clash choices are done.
@@ -318,7 +328,9 @@ def all_resolved(bot):
     if any(x  == ''  for x in bot.memory['family'][:len(bot.memory['players'])]):
         return False
     return True
-
+'''
+Not used because it doesn't work yet. Ideally should calculate when future rounds can be autofilled, but with insigs/abysmal that's not an easy check. 
+'''
 
 @require_chanmsg
 @commands('hi')
@@ -384,12 +396,15 @@ def start(bot, trigger):
 Starts the draft after players join.
 '''
 
+@thread(True)
 @require_chanmsg
 @commands('reset')
 def reset(bot, trigger):
     if not bot.memory['quitconfirm']:
-        bot.say('Are you sure? This will reset any drafts in progress. (Use ~quit again to confirm)')
+        bot.say('Are you sure? This will reset any drafts in progress. (Use ~reset again to confirm)')
         bot.memory['quitconfirm'] = True
+        time.sleep(60)
+        bot.memory['quitconfirm'] = False
     else:
         bot.say('OK, I\'ve reset.')
         setup(bot)
