@@ -36,7 +36,7 @@ def setup(bot):
     bot.memory['family']     = ['', '', '', '', '',    '', '', '']
     
     bot.memory['clashes'] = [[],[],[]]
-    
+
 '''
 My initializing function.
 '''
@@ -150,8 +150,9 @@ def calc_clashes(bot):
                         if not player in bot.memory['clashes'][clashes_so_far]:
                             bot.memory['clashes'][clashes_so_far].append(player)
                             found_clash = True
-            if found_clash:
-                clashes_so_far += 1
+        if found_clash:
+            clashes_so_far += 1
+            found_clash = False
     if clashes_so_far == 0:
         bot.say('There are no clashes.')
     elif clashes_so_far == 1:
@@ -319,7 +320,7 @@ def do_clash(bot, continued):
         if number_of_clashers > 1:
             bot.say('There\'s more than one clasher remaining! PM me with ~stay or ~concede again!')
             do_clash(bot, True)
-        if number_of_clashers == 1:
+        elif number_of_clashers == 1:
             player = remaining[0]
             bot.say('There\'s only ' + player + ' left! They get the spot!')
             bot.memory[bot.memory['bids'][bot.memory['clashes'][0][0]][0]][bot.memory['bids'][bot.memory['clashes'][0][0]][1] - 1] \
@@ -333,8 +334,6 @@ def do_clash(bot, continued):
     
     if bot.memory['clashes'][0] == []:
         bot.memory['clash'] = False
-    
-    #TODO: multiclashes
 '''
 Performs clashes and adds players who need to rebid to 'to resolve'.
 '''
@@ -527,3 +526,16 @@ def concede(bot, trigger):
             bot.say('I don\'t need a choice from you right now.')
     else:
         bot.say('Now\'s not the time to submit a clash choice.')
+
+@require_privmsg
+@commands('table')
+def table(bot, trigger):
+    if bot.memory['phase'] == 'the draft':
+        show_cats(bot)
+    else:
+        bot.say('There\'s no draft going on.')
+        
+@commands('help')
+def help(bot, trigger):
+    bot.say('Use ~open to open up a draft for players to join, ~join to join an opened draft, ~start to start, and ~table in PM to see how the draft is going so far. I\'ll give you more instructions during the draft!')
+
