@@ -272,7 +272,7 @@ def do_clash(bot, continued):
     if bot.memory['clashes'][0] == []:
         bot.memory['clash'] = False
     
-    #TODO: uh, everything
+    #TODO: multiclashes
 '''
 Performs clashes and adds players who need to rebid to 'to resolve'.
 '''
