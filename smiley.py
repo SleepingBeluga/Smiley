@@ -26,6 +26,8 @@ def setup(bot):
     
     bot.memory['quitconfirm'] = False
     
+    bot.memory['cats'] = ('puissance', 'longevity', 'access', 'executions', 'research', \
+                          'schools',   'priority',  'family')
     bot.memory['puissance']  = ['', '', '', '', '',    '', '', '']
     bot.memory['longevity']  = ['', '', '', '', '',    '', '', '']
     bot.memory['access']     = ['', '', '', '', '',    '', '', '']
@@ -74,8 +76,7 @@ My main loop. Executes subrounds and resolves clashes.
 '''
 
 def show_cats(bot):
-    for cat in ('puissance', 'longevity', 'access', 'executions', 'research', \
-                'schools',   'priority',  'family'):
+    for cat in bot.memory['cats']:
         to_say = cat.capitalize()
         for i in range(11 - len(cat)):
             to_say += ' '
@@ -473,38 +474,44 @@ Resets me, stopping any drafts in progress.
 @commands('bid')
 def bid(bot, trigger):
     if bot.memory['bidding']:
-        if trigger.nick in bot.memory['to resolve']:
-            cat = trigger.group(2).lower().split()[0]
-            rung = int(trigger.group(2).lower().split()[1])
-            if bot.memory.contains(cat):
-                if not trigger.nick in bot.memory[cat]:
-                    if (rung <= len(bot.memory['players']) and rung >= bot.memory['limits'][trigger.nick]) or rung == bot.memory['limits'][trigger.nick]:
-                        if bot.memory[cat][rung - 1] == '':
-                            bot.say('Got it!')
-                            bot.memory['bids'][trigger.nick] = (cat, rung)
+        if trigger.nick in bot.memory['to resolve']
+            if len(trigger.group(2).lower().split()) == 2:
+                cat = trigger.group(2).lower().split()[0]
+                rung = int(trigger.group(2).lower().split()[1])
+                if cat in bot.memory['cats']:
+                    if not trigger.nick in bot.memory[cat]:
+                        if (rung <= len(bot.memory['players']) and rung >= bot.memory['limits'][trigger.nick]) or rung == bot.memory['limits'][trigger.nick]:
+                            if bot.memory[cat][rung - 1] == '':
+                                bot.say('Got it!')
+                                bot.memory['bids'][trigger.nick] = (cat, rung)
+                            else:
+                                bot.say('That one\'s taken, please choose another.')
                         else:
-                            bot.say('That one\'s taken, please choose another.')
+                            to_say = 'Please choose a rung between '
+                            if bot.memory['limits'][trigger.nick] == 0:
+                                to_say += '1'
+                            else:
+                                to_say += str(bot.memory['limits'][trigger.nick])
+                            to_say += ' and '
+                            if bot.memory['limits'][trigger.nick] <= len(bot.memory['players']):
+                                to_say += str(len(bot.memory['players']))
+                            else:
+                                to_say += str(bot.memory['limits'][trigger.nick])
+                            to_say += '. Format your message like this: ~bid puissance 4'
+                            bot.say(to_say)
                     else:
-                        to_say = 'Please choose a rung between '
-                        if bot.memory['limits'][trigger.nick] == 0:
-                            to_say += '1'
-                        else:
-                            to_say += str(bot.memory['limits'][trigger.nick])
-                        to_say += ' and '
-                        if bot.memory['limits'][trigger.nick] <= len(bot.memory['players']):
-                            to_say += str(len(bot.memory['players']))
-                        else:
-                            to_say += str(bot.memory['limits'][trigger.nick])
-                        to_say += '. Format your message like this: ~bid puissance 4'
-                        bot.say(to_say)
+                        bot.say('You already have a rung in that category! Pick another, please.')
                 else:
-                    bot.say('You already have a rung in that category! Pick another, please.')
+                    bot.say ('I don\'t know that category. Format your message like this: ~bid puissance 4')
             else:
-                bot.say ('I don\'t know that category. Format your message like this: ~bid puissance 4')
+                bot.say('Format your message like this: ~bid puissance 4')
         else:
             bot.say('I don\'t need a bid from you right now.')
     else:
         bot.say('Now\'s not the time for bidding.')
+'''
+Allows players to bid on draft slots.
+'''
 
 @require_privmsg
 @commands('stay')
@@ -517,6 +524,9 @@ def stay(bot, trigger):
             bot.say('I don\'t need a choice from you right now.')
     else:
         bot.say('Now\'s not the time to submit a clash choice.')
+'''
+The command to refuse to budge during a clash.
+'''
 
 @require_privmsg
 @commands('concede')
@@ -529,6 +539,9 @@ def concede(bot, trigger):
             bot.say('I don\'t need a choice from you right now.')
     else:
         bot.say('Now\'s not the time to submit a clash choice.')
+'''
+The command to cede during a clash.
+'''
 
 @require_privmsg
 @commands('table')
@@ -537,8 +550,122 @@ def table(bot, trigger):
         show_cats(bot)
     else:
         bot.say('There\'s no draft going on.')
-        
+'''
+Shows the current draft progress
+'''
+
 @commands('help')
 def help(bot, trigger):
     bot.say('Use ~open to open up a draft for players to join, ~join to join an opened draft, ~start to start, and ~table in PM to see how the draft is going so far. I\'ll give you more instructions during the draft!')
+'''
+Gives basic help.
+TODO: expand to give help on commands.
+'''
+
+
+@require_privmsg
+@commands('offer')
+def offer(bot, trigger):
+    if bot.memory['phase'] == 'the draft':
+        if trigger.nick in bot.memory['players']
+            args = trigger.group(2).lower().split()
+            if len(args) >= 5:
+                recipient = args[0]
+                offered = []
+                wanted = []
+                past_offered = False
+                i = 0
+                while i < len(args):
+                    if args[i] == 'for':
+                        past_offered = True
+                    if past_offered:
+                        offered.append((args[i], args i + 1))
+                        i += 1
+                    else:
+                        wanted.append((args[i], args i + 1))
+                        i += 1
+                    i += 1
+                valid = True
+                for item in offered:
+                    if not (item[0] in bot.memory['cats'] or item [0] == 'bmark' or item [0] == 'wmark'):
+                        valid = False
+                for item in wanted:
+                    if not (item[0] in bot.memory['cats'] or item [0] == 'bmark' or item [0] == 'wmark'):
+                        valid = False
+                if valid:
+                    offered_owned = True
+                    for item in offered:
+                        if not ((item[0] in bot.memory['cats'] and bot.memory[item[0]][item[1]] == trigger.nick) \
+                                or (item[0] == 'bmark' and bot.memory['black marks'][trigger.nick] >= item[1])   \
+                                or (item[0] == 'wmark' and bot.memory['white marks'][trigger.nick] >= item[1]):
+                            offered_owned = False
+                    if offered_owned:
+                        wanted_owned = True
+                        for item in wanted:
+                            if not ((item[0] in bot.memory['cats'] and bot.memory[item[0]][item[1]] == recipient) \
+                                    or (item[0] == 'bmark' and bot.memory['black marks'][recipient] >= item[1])   \
+                                    or (item[0] == 'wmark' and bot.memory['white marks'][recipient] >= item[1]):
+                                wanted_owned = False
+                        if wanted_owned:
+                            # Make sure people can't offer a category unless they
+                            # request the same one or there's a free slot
+                            # in that category.
+                            all_cats_ok = True
+                            cat_ok = {}
+                            for item in offered:
+                                cat_ok[item[0]] = False
+                                for req_item in wanted:
+                                    if item[0] == req_item[0]
+                                        cat_ok[item[0]] = True
+                                if not cat_ok[item[0]]:
+                                    for rung in range(len(bot.memory[item[0]])):
+                                        if bot.memory[item[0]][rung] = '' and rung <= len(bot.memory['players']):
+                                            cat_ok[item[0]] = True
+                            for i in cat_ok:
+                                if not i:
+                                    all_cats_ok = False
+                            if all_cats_ok:
+                                # Make sure people can't request a category unless they
+                                # offer the same one or there's a free slot
+                                # in that category.
+                                cat_ok = {}
+                                for item in wanted:
+                                    cat_ok[item[0]] = False
+                                    for req_item in offered:
+                                        if item[0] == req_item[0]
+                                            cat_ok[item[0]] = True
+                                    if not cat_ok[item[0]]:
+                                        for rung in range(len(bot.memory[item[0]])):
+                                            if bot.memory[item[0]][rung] = '' and rung <= len(bot.memory['players']):
+                                                cat_ok[item[0]] = True
+                                for i in cat_ok:
+                                    if not i:
+                                        all_cats_ok = False
+                                if all_cats_ok:
+                                    # TODO: Make sure people can't offer a category the recipient
+                                    # has if they aren't requesting one in return.
+                                    
+                                    # TODO: Make sure people can't request a category they
+                                    # have if they aren't offering one in return.
+                                    
+                                    # TODO: Save the pending trade and send a confirmation
+                                    # message to the recipient.
+                                    
+                                    # TODO: If the player or recipient already has a trade
+                                    # pending, give an error.
+                            else:
+                                bot.say('You can\'t offer a category unless you request the same one or there\'s a free slot in that category!')
+                        else:
+                            bot.say('You can only request things that the recipient of the offer has!')
+                    else:
+                        bot.say('You can only offer things that you have!')
+                else:
+                    bot.say('You can offer a category, like puissance, with the category\'s name or black or white marks with \'bmark\' or \'wmark\'')
+                    bot.say('Format your message like this: ~offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1')
+            else:
+                bot.say('Format your message like this: ~offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1')
+        else:
+            bot.say('You\'re not in the draft!')
+    else:
+        bot.say('There\'s no draft going on.')
 
