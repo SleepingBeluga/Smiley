@@ -4,7 +4,7 @@ import time, random
 '''
 My (Smiley's) Main Module
 
-I'm friendly, but that's about it!
+I'm friendly, and I can run Pact Dice drafts!
 '''
 
 def setup(bot):
