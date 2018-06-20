@@ -197,6 +197,10 @@ def do_clash(bot, continued):
         if bot.memory['clash choices'][player0] == 'stay':
             if bot.memory['clash choices'][player1] == 'stay':
                 bot.say('They both stayed!')
+                
+                # Anti luck manipulation barriers around the random parts
+                
+                # MUSA DERELINQUAS ME SERMONIBUS
                 coin0 = random.choice(('heads','tails'))
                 coin1 = random.choice(('heads','tails'))
                 # Thal, stay away.
@@ -238,6 +242,7 @@ def do_clash(bot, continued):
                         = player1
                         
             if bot.memory['clash choices'][player1] == 'concede':
+                # FORTUNA RERUM NATURALIUM
                 coin = random.choice(('heads','tails'))
                 # Thal, get out
                 to_say = player0 + ' stayed. ' + player1 + ' conceded. Flipping a coin: ' + coin + '! '
@@ -259,6 +264,7 @@ def do_clash(bot, continued):
                 
         elif bot.memory['clash choices'][player0] == 'concede':
             if bot.memory['clash choices'][player1] == 'stay':
+                # EX TALIS MAGA
                 coin = random.choice(('heads','tails'))
                 # I'm serious, Thal. This code is witch-proof
                 to_say = player1 + ' stayed. ' + player0 + ' conceded. Flipping a coin: ' + coin + '! '
@@ -304,8 +310,9 @@ def do_clash(bot, continued):
                 bot.memory['clashes'][0].remove(player)
                 bot.say(player + ' conceded, and will have to rebid for a lower rung.')
             elif bot.memory['clash choices'][player] == 'stay':
+                # MAGICAE NON INTERMIXTI
                 coin = random.choice(('heads','tails'))
-                # HECATE INTERFERUM NIHILUS
+                # Let's see you get around that foolproof magic barrier
                 to_say = player + ' stayed. Flipping a coin: ' + coin + '! '
                 if coin == 'heads':
                     to_say += player + ' loses the spot, and will have to choose a rung at least two lower.' 
