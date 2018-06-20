@@ -731,6 +731,7 @@ def offer(bot, trigger):
                                                             
                                                             bot.memory['trade contents'][both_players] = (offered, wanted)
                                                             bot.say(to_say, recipient)
+                                                            bot.say('Trade offer sent!', trigger.nick)
                                                         else:
                                                             bot.say('You can\'t request a category you already have unless you offer the same one in return!')
                                                     else:
@@ -762,4 +763,35 @@ def offer(bot, trigger):
         bot.say('There\'s no draft going on.')
 '''
 Allows players to offer trades to other players.
+'''
+
+@require_privmsg
+@commands('tradedeny')
+def tradedeny(bot, trigger):
+    if bot.memory['phase'] == 'the draft':
+        if trigger.nick.lower() in bot.memory['players']:
+            if trigger.nick.lower() in bot.memory['pending trades']:
+                offerer = trigger.group(2)
+                if offerer.lower() in bot.memory['players']:
+                    both_players = [offerer.lower(), trigger.nick.lower()]
+                    both_players.sort()
+                    both_players = '&'.join(both_players)
+                    if both_players in bot.memory['trade contents']:
+                        bot.say('Trade denied!')
+                        bot.say(trigger.nick + ' denied your trade.', offerer)
+                        del bot.memory['trade contents'][both_players]
+                        bot.memory['pending trades'].remove(trigger.nick.lower())
+                        bot.memory['pending trades'].remove(offerer.lower())
+                    else:
+                        bot.say('You don\'t have a pending trade with ' + offerer + '!')
+                else:
+                    bot.say(offerer + ' isn\'t a player in this draft!')
+            else:
+                bot.say('You don\'t have any pending trades!')
+        else:
+            bot.say('You\'re not in the draft!')
+    else:
+        bot.say('There\'s no draft going on.')
+'''
+Lets players deny trades offered them.
 '''
