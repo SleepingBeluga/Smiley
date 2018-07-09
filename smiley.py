@@ -1,8 +1,8 @@
-from sopel.module import commands, thread, require_privmsg, require_chanmsg
-import time, random
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
+
+from sopel.module import commands, thread, require_privmsg, require_chanmsg
+import time, random
 
 '''
 My (Smiley's) Main Module
