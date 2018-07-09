@@ -1,10 +1,13 @@
 from sopel.module import commands, thread, require_privmsg, require_chanmsg
 import time, random
 
+#!/usr/bin/env python
+# -*- coding: utf-8 -*- 
+
 '''
 My (Smiley's) Main Module
 
-I'm friendly, but that's about it!
+I'm friendly, and I can do Pact Dice Drafts!
 '''
 
 def setup(bot):
