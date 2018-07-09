@@ -11,9 +11,9 @@ I'm friendly, and I can do Pact Dice Drafts!
 '''
 
 def setup(bot):
-    #import sys
-    #reload(sys)
-    #sys.setdefaultencoding("utf-8")
+    import sys
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
     
     bot.memory['phase'] = 'none'
     bot.memory['round'] = None
