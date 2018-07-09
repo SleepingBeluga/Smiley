@@ -11,9 +11,9 @@ I'm friendly, and I can do Pact Dice Drafts!
 '''
 
 def setup(bot):
-    import sys
-    reload(sys)
-    sys.setdefaultencoding("utf-8")
+    #import sys
+    #reload(sys)
+    #sys.setdefaultencoding("utf-8")
     
     bot.memory['phase'] = 'none'
     bot.memory['round'] = None
@@ -26,6 +26,7 @@ def setup(bot):
     bot.memory['pending trades'] = []
     bot.memory['trade contents'] = {}
 
+    bot.memory['proper names'] = {}
     bot.memory['bids'] = {}
     bot.memory['clash choices'] = {}
     bot.memory['black marks'] = {}
@@ -60,10 +61,13 @@ def subround(bot, clash):
     else:
         to_say = 'We need to finish resolving the clashes! '
         for player in bot.memory['to resolve']:
-            to_say = to_say + player + ', '
-        to_say = to_say + 'please submit your bids by PMing me with e.x. ~bid Executions 2'
+            to_say = to_say + bot.memory['proper names'][player] + ', '
+        if len(bot.memory['to resolve']) > 1:
+            to_say = to_say + 'please submit your bids by PMing me with e.x. ~bid Executions 2'
+        else:
+            to_say = to_say + 'please submit your bid by PMing me with e.x. ~bid Executions 2'
         bot.say(to_say)
-        bot.say('Remember your bids are restricted by the results of the clashes.')
+        bot.say('Remember, bids are restricted by the results of the clashes.')
     get_bids(bot)
     if bot.memory['phase'] == 'none':
         return
@@ -97,14 +101,14 @@ def show_cats(bot):
                 for j in range(14):
                     to_say += ' '
             else:
-                to_say += ' ' + bot.memory[cat][i][:-1] + '​' + bot.memory[cat][i][-1]
+                to_say += ' ' + bot.memory['proper names'][bot.memory[cat][i]][:-1] + '​' + bot.memory['proper names'][bot.memory[cat][i]][-1]
                 for j in range(13 - len(bot.memory[cat][i])):
                     to_say += ' '
             to_say += '|'
         bot.say(to_say)
         
     for player in bot.memory['players']:
-        to_say = player[:-1] + '​' + player[-1] + ': '
+        to_say = bot.memory['proper names'][player][:-1] + '​' + bot.memory['proper names'][player][-1] + ': '
         for i in range(bot.memory['white marks'][player]):
             to_say += '☆'
         to_say += ' | '
@@ -129,7 +133,7 @@ def get_bids(bot):
             to_say = 'Still waiting for '
             for player in bot.memory['to resolve']:
                 if bot.memory['bids'][player] == None:
-                    to_say = to_say + player + ', '
+                    to_say = to_say + bot.memory['proper names'][player] + ', '
             if to_say[-2:] == ', ':
                 to_say = to_say[:-2]
             bot.say(to_say)
@@ -189,7 +193,7 @@ def do_clash(bot, continued):
     if not continued:
         to_say = 'Clash: '
         for player in bot.memory['clashes'][0]:
-            to_say = to_say + player + ', '
+            to_say = to_say + bot.memory['proper names'][player] + ', '
         to_say = to_say[:-2] + ' for ' + bot.memory['bids'][bot.memory['clashes'][0][0]][0].capitalize() \
                              + ' ' + str(bot.memory['bids'][bot.memory['clashes'][0][0]][1]) + '! ' \
                              + 'Please PM me with either ~stay or ~concede'
@@ -212,28 +216,28 @@ def do_clash(bot, continued):
                 coin1 = random.choice(('heads','tails')) #🐀
                 # Thal, stay away.                        🐀
                 
-                to_say = 'Flipping a coin for ' + player0 + ': ' + coin0.capitalize() + '! '
+                to_say = 'Flipping a coin for ' + bot.memory['proper names'][player0] + ': ' + coin0.capitalize() + '! '
                 if coin0 == 'heads':
-                    to_say = to_say + player0 + ' loses the spot and will have to rebid at least two rungs lower.'
+                    to_say = to_say + bot.memory['proper names'][player0] + ' loses the spot and will have to rebid at least two rungs lower.'
                     bot.memory['to resolve'].append(player0)
                     bot.memory['limits'][player0] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 2
                     if bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 2 > bot.memory['rows to show']:
                         bot.memory['rows to show'] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 2
 
                 else:
-                    to_say = to_say + player0 + ' gets a black mark.'
+                    to_say = to_say + bot.memory['proper names'][player0] + ' gets a black mark.'
                     bot.memory['black marks'][player0] += 1
                 bot.say(to_say)    
-                to_say = 'Flipping a coin for ' + player1 + ': ' + coin1.capitalize() + '! '
+                to_say = 'Flipping a coin for ' + bot.memory['proper names'][player1] + ': ' + coin1.capitalize() + '! '
                 if coin1 == 'heads':
-                    to_say = to_say + player1 + ' loses the spot and will have to rebid at least two rungs lower.'
+                    to_say = to_say + bot.memory['proper names'][player1] + ' loses the spot and will have to rebid at least two rungs lower.'
                     bot.memory['to resolve'].append(player1)
                     bot.memory['limits'][player1] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 2
                     if bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 2 > bot.memory['rows to show']:
                         bot.memory['rows to show'] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 2
 
                 else:
-                    to_say = to_say + player1 + ' gets a black mark.'
+                    to_say = to_say + bot.memory['proper names'][player1] + ' gets a black mark.'
                     bot.memory['black marks'][player1] += 1
                 bot.say(to_say)
                 
@@ -252,14 +256,14 @@ def do_clash(bot, continued):
                 # FORTUNA RERUM NATURALIUM               🐀
                 coin = random.choice(('heads','tails')) #🐀
                 # Thal, get out                          🐀
-                to_say = player0 + ' stayed. ' + player1 + ' conceded. Flipping a coin: ' + coin + '! '
+                to_say = bot.memory['proper names'][player0] + ' stayed. ' + bot.memory['proper names'][player1] + ' conceded. Flipping a coin: ' + coin + '! '
                 if coin == 'heads':
-                    to_say += player1 + ' gets a white mark and chooses a category at a lower rung. ' + \
-                              player0 + ' gets the spot.'
+                    to_say += bot.memory['proper names'][player1] + ' gets a white mark and chooses a category at a lower rung. ' + \
+                              bot.memory['proper names'][player0] + ' gets the spot.'
                     bot.memory['white marks'][player1] += 1
                 else:
-                    to_say += player1 + ' loses the spot and will have to choose a category at a lower rung. ' + \
-                              player0 + ' gets the spot and a black mark.'
+                    to_say += bot.memory['proper names'][player1] + ' loses the spot and will have to choose a category at a lower rung. ' + \
+                              bot.memory['proper names'][player0] + ' gets the spot and a black mark.'
                     bot.memory['black marks'][player0] += 1
                 bot.say(to_say)
                 bot.memory['limits'][player1] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 1
@@ -274,14 +278,14 @@ def do_clash(bot, continued):
                 # EX TALIS MAGA                                🐀
                 coin = random.choice(('heads','tails'))       #🐀
                 # I'm serious, Thal. This code is witch-proof  🐀
-                to_say = player1 + ' stayed. ' + player0 + ' conceded. Flipping a coin: ' + coin + '! '
+                to_say = player1 + ' stayed. ' + bot.memory['proper names'][player0] + ' conceded. Flipping a coin: ' + coin + '! '
                 if coin == 'heads':
-                    to_say += player0 + ' gets a white mark and chooses a category at a lower rung. ' + \
-                              player1 + ' gets the spot.'
+                    to_say += bot.memory['proper names'][player0] + ' gets a white mark and chooses a category at a lower rung. ' + \
+                              bot.memory['proper names'][player1] + ' gets the spot.'
                     bot.memory['white marks'][player0] += 1
                 else:
-                    to_say += player0 + ' loses the spot and will have to choose a category at a lower rung. ' + \
-                              player1 + ' gets the spot and a black mark.'
+                    to_say += bot.memory['proper names'][player0] + ' loses the spot and will have to choose a category at a lower rung. ' + \
+                              bot.memory['proper names'][player1] + ' gets the spot and a black mark.'
                     bot.memory['black marks'][player1] += 1
                 bot.say(to_say)
                 bot.memory['limits'][player0] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 1
@@ -315,14 +319,14 @@ def do_clash(bot, continued):
                     bot.memory['rows to show'] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 1
                 number_of_clashers -= 1
                 bot.memory['clashes'][0].remove(player)
-                bot.say(player + ' conceded, and will have to rebid for a lower rung.')
+                bot.say(bot.memory['proper names'][player] + ' conceded, and will have to rebid for a lower rung.')
             elif bot.memory['clash choices'][player] == 'stay':
                 # MAGICAE NON INTERMIXTI                                 🐀
                 coin = random.choice(('heads','tails'))                 #🐀
                 # Let's see you get around that foolproof magic barrier  🐀
-                to_say = player + ' stayed. Flipping a coin: ' + coin + '! '
+                to_say = bot.memory['proper names'][player] + ' stayed. Flipping a coin: ' + coin + '! '
                 if coin == 'heads':
-                    to_say += player + ' loses the spot, and will have to choose a rung at least two lower.' 
+                    to_say += bot.memory['proper names'][player] + ' loses the spot, and will have to choose a rung at least two lower.' 
                     bot.memory['limits'][player] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 2
                     if bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 2 > bot.memory['rows to show']:
                         bot.memory['rows to show'] = bot.memory['bids'][bot.memory['clashes'][0][0]][1] + 2
@@ -330,14 +334,14 @@ def do_clash(bot, continued):
                     number_of_clashers -= 1
                     bot.memory['clashes'][0].remove(player)
                 elif coin == 'tails':
-                    to_say += player + ' remains.'
+                    to_say += bot.memory['proper names'][player] + ' remains.'
                     to_mark.append(player)
                     remaining.append(player)
                 bot.say(to_say)
         if number_of_clashers <= 2 and number_of_clashers > 0:
             to_say = 'Since there are 2 or less clashers remaining, black marks will be doled out to '
             for player in to_mark:
-                to_say += player + ', '
+                to_say += bot.memory['proper names'][player] + ', '
                 bot.memory['black marks'][player] += 1
             to_say = to_say[:-2] + '!'
             bot.say(to_say)
@@ -347,7 +351,7 @@ def do_clash(bot, continued):
             return
         elif number_of_clashers == 1:
             player = remaining[0]
-            bot.say('There\'s only ' + player + ' left! They get the spot!')
+            bot.say('There\'s only ' + bot.memory['proper names'][player] + ' left! They get the spot!')
             bot.memory[bot.memory['bids'][bot.memory['clashes'][0][0]][0]][bot.memory['bids'][bot.memory['clashes'][0][0]][1] - 1] \
                 = player
         else:
@@ -377,7 +381,7 @@ def get_clash_choices(bot):
             to_say = 'Still waiting for '
             for player in bot.memory['clashes'][0]:
                 if bot.memory['clash choices'][player] == None:
-                    to_say = to_say + player + ', '
+                    to_say = to_say + bot.memory['proper names'][player] + ', '
             if to_say[-2:] == ', ':
                 to_say = to_say[:-2]
             bot.say(to_say)
@@ -411,7 +415,6 @@ def all_resolved(bot):
 Not used because it doesn't work yet. Ideally should calculate when future rounds can be autofilled, but with insigs/abysmal that's not an easy check. 
 '''
 
-@require_chanmsg
 @commands('hi')
 def hi(bot, trigger):
     bot.reply('Hi!')
@@ -437,6 +440,7 @@ def join(bot, trigger):
     if bot.memory['phase'] == 'setup':
         if not trigger.nick.lower() in bot.memory['players']:
             bot.memory['players'].append(trigger.nick.lower())
+            bot.memory['proper names'][trigger.nick.lower()] = trigger.nick
             bot.say(trigger.nick + ' has joined!')
         else:
             bot.say('You\'ve already joined!')
@@ -453,7 +457,7 @@ Lets you join a draft.
 def start(bot, trigger):
     if bot.memory['phase'] == 'setup':
         if len(bot.memory['players']) >= 4 and len(bot.memory['players']) <= 6:
-            bot.say('Starting the draft!')
+            bot.say('Starting the draft! Consider using a monospaced font for the duration of the draft to make my tables look better.')
             bot.memory['phase'] = 'the draft'
             bot.memory['round'] = 1
             bot.memory['to resolve'] = bot.memory['players']
