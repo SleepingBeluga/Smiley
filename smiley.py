@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 from sopel.module import commands, thread, require_privmsg, require_chanmsg
-import time, random
+import time, random, sheets
 
 '''
 My (Smiley's) Main Module
@@ -11,10 +11,6 @@ I'm friendly, and I can do Pact Dice Drafts!
 '''
 
 def setup(bot):
-    import sys
-    reload(sys)
-    sys.setdefaultencoding("utf-8")
-    
     bot.memory['phase'] = 'none'
     bot.memory['round'] = None
     bot.memory['bidding'] = False
@@ -51,6 +47,9 @@ def setup(bot):
     bot.memory['family']     = ['', '', '', '', '',    '', '', '']
     
     bot.memory['clashes'] = [[],[],[]]
+    
+    bot.memory['colors'] = {"red":    (0.8,0,0),
+                            "purple": (0.2,0.1,0.5)}
 '''
 My initializing function.
 '''
@@ -585,6 +584,26 @@ def help(bot, trigger):
 Gives basic help.
 TODO: expand to give help on commands.
 '''
+
+@commands('testnewsheet')
+def testnewsheet(bot, trigger):
+    num_players = len(bot.memory["players"])
+    num_players = 5 # for testing
+    bot.memory["sheetID"] = sheets.new_blank_sheet(bot,num_players)
+    bot.say('Click here: https://docs.google.com/spreadsheets/d/' + bot.memory["sheetID"])
+
+@commands('testwriteplayer')
+def testwriteplayer(bot, trigger):
+    args = trigger.group(2).lower().split()
+    cell = [0,0]
+    cell[0] = int(args[0])
+    cell[1] = int(args[1])
+    player = args[2]
+    if args[3] in bot.memory["colors"]:
+        color = bot.memory["colors"][args[3]]
+    else:
+        bot.say("error, invalid color name: " + arg[3])
+    sheets.write_player(bot, cell, player, color)
 
 @require_privmsg
 @commands('offer')
