@@ -5,7 +5,7 @@ from google.oauth2 import service_account as s_a
 SECRET = os.path.join(os.getcwd(), "smiley-sopel-secret.json")
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
-async def new_blank_sheet(NUM_PLAYERS):
+async def new_blank_sheet(memory, NUM_PLAYERS):
     c = s_a.Credentials.from_service_account_file(SECRET, scopes=SCOPES)
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -39,6 +39,8 @@ async def new_blank_sheet(NUM_PLAYERS):
         column_headers = ["","Supreme","Good","Moderate","Modest","Least"]
     elif NUM_PLAYERS == 6:
         column_headers = ["","Supreme","Great","Good","Modest","Poor","Least"]
+    else:
+        column_headers = [""] + [str(n) for n in list(range(1,4))]
     values = [column_headers]
     body = {"values": values}
     write_res = memory["sheet"].values().update(spreadsheetId=ID,range="A1",valueInputOption="RAW",body=body).execute()
@@ -121,7 +123,7 @@ async def new_blank_sheet(NUM_PLAYERS):
 Generates a generic draft sheet and returns the spreadsheet ID.
 '''
 
-async def write_cell(cell, content, bgcolor, fgcolor):
+async def write_cell(memory, cell, content, bgcolor, fgcolor):
     ID = memory["sheetID"]
     bgcolor = {"red": bgcolor[0],
                "green": bgcolor[1],

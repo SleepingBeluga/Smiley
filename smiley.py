@@ -76,8 +76,6 @@ async def subround(clash):
         await memory['channel'].send(to_say)
         await memory['channel'].send('Remember, bids are restricted by the results of the clashes.')
     await get_bids()
-    memory['bidsin'].wait()
-    memory['bidsin'].clear()
     if memory['phase'] == 'none':
         return
     await calc_clashes()
@@ -131,8 +129,8 @@ Displays the categories so you can see who has what.
 
 async def blank_sheet():
     num_players = len(memory["players"])
-    memory["sheetID"] = await sheets.new_blank_sheet(num_players)
-    bot.say('Click here to follow: https://docs.google.com/spreadsheets/d/' + memory["sheetID"])
+    memory["sheetID"] = await sheets.new_blank_sheet(memory, num_players)
+    memory['channel'].send('Click here to follow: https://docs.google.com/spreadsheets/d/' + memory["sheetID"])
 
 async def show_cats():
     for cat in memory['cats']:
@@ -164,7 +162,7 @@ Displays the categories so you can see who has what.
 '''
 
 async def update_sheet():
-    if memory['rows to show'] > len(memory['players']:
+    if memory['rows to show'] > len(memory['players']):
         # Extend sheet
         do_nothing_here_yet = 0
     for cat in memory['cats']:
@@ -174,23 +172,23 @@ async def update_sheet():
                 index = memory['players'].index(player)
                 row = memory['cats'].index(cat)
                 col = rank + 1
-                await sheets.write_cell((row,col), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
+                await sheets.write_cell(memory, (row,col), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
 
     for player in memory['players']:
         index = memory['players'].index(player)
         to_write = ''
         for i in range(memory['white marks'][player]):
             to_write += '☆'
-        await sheets.write_cell((11+index,1), to_write, (.15,.15,.15), (1,1,1))
+        await sheets.write_cell(memory, (11+index,1), to_write, (.15,.15,.15), (1,1,1))
         to_write = ''
         for i in range(memory['black marks'][player]):
             to_write += '★'
-        await sheets.write_cell((11+index,2), to_write, (.15,.15,.15), (1,1,1))
+        await sheets.write_cell(memory, (11+index,2), to_write, (.15,.15,.15), (1,1,1))
 
 async def do_player_karma_labels():
     for index in range(len(memory['players'])):
         player = memory['players'][index]
-        await sheets.write_cell((11+index,0), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
+        await sheets.write_cell(memory, (11+index,0), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
 
 async def get_bids():
     for player in memory['players']:
@@ -199,8 +197,19 @@ async def get_bids():
         else:
             memory['bids'][player] = None
     memory['bidding'] = True
+    #asyncio.run(bid_reminder())
+    memory['bidsin'].wait()
+    memory['bidsin'].clear()
+    memory['bidding'] = False
+    for player in memory['players']:
+        memory['limits'][player] = 0
+'''
+Tells players to submit bids, and waits until all bids are done.
+'''
+
+async def bid_reminder():
+    asyncio.sleep(240)
     while not memory['bidsin'].is_set():
-        asyncio.sleep(240)
         to_say = 'Still waiting for '
         for player in memory['to resolve']:
             if memory['bids'][player] == None:
@@ -208,14 +217,9 @@ async def get_bids():
         if to_say[-2:] == ', ':
             to_say = to_say[:-2]
         memory['channel'].send(to_say)
-        if memory['phase'] == 'none':
+        if not memory['bidding']:
             return
-    memory['bidding'] = False
-    for player in memory['players']:
-        memory['limits'][player] = 0
-'''
-Tells players to submit bids, and waits until all bids are done.
-'''
+        asyncio.sleep(240)
 
 async def calc_clashes():
     bid = None
@@ -448,20 +452,12 @@ async def get_clash_choices():
         else:
             memory['clash choices'][player] = None
     memory['clashing'] = True
-    start = time.time()
-    while None in memory['clash choices'].values():
-        if (time.time() - start) > 240:
-            to_say = 'Still waiting for '
-            for player in memory['clashes'][0]:
-                if memory['clash choices'][player] == None:
-                    to_say = to_say + memory['proper names'][player] + ', '
-            if to_say[-2:] == ', ':
-                to_say = to_say[:-2]
-            memory['channel'].send(to_say)
-            start = time.time()
-        if memory['phase'] == 'none':
-            return
+    #asyncio.run(clash_reminder())
+    memory['clashesin'].wait()
+    memory['clashesin'].clear()
     memory['clashing'] = False
+    for player in memory['players']:
+        memory['clash choices'][player] = ""
 '''
 Tells players to submit clash choices, and waits until all clash choices are done.
 '''
@@ -526,7 +522,7 @@ Lets you join a draft.
 @b.command()
 async def start(ctx, *args):
     if memory['phase'] == 'setup':
-        if len(memory['players']) >= 2 and len(memory['players']) <= 6:
+        if len(memory['players']) >= 1 and len(memory['players']) <= 6:
             await ctx.send('Starting the draft! Consider using a monospaced font for the duration of the draft to make my tables look better.')
             memory['channel'] = ctx
             memory['phase'] = 'the draft'
@@ -538,6 +534,7 @@ async def start(ctx, *args):
             for player in memory['players']:
                 memory['limits'][player] = 0
             memory['rows to show'] = len(memory['players'])
+            await blank_sheet()
             await subround(False)
         else:
             await ctx.send('You must have between 4 and 6 players to start.')
@@ -580,6 +577,7 @@ async def bid(ctx, *args):
                             if memory[cat][rung - 1] == '':
                                 await ctx.send('Got it!')
                                 memory['bids'][ctx.author.display_name.lower()] = (cat, rung)
+                                await check_bids()
                             else:
                                 await ctx.send('That one\'s taken, please choose another.')
                         else:
@@ -609,6 +607,14 @@ async def bid(ctx, *args):
 Allows players to bid on draft slots.
 '''
 
+async def check_bids():
+    if not None in memory['bids'].values():
+        memory['bidsin'].set()
+
+async def check_clash_choices():
+    if not None in memory['clash choices'].values():
+        memory['bidsin'].set()
+
 @b.command()
 async def stay(ctx, *args):
     if not type(ctx.channel) == DMChannel:
@@ -618,6 +624,7 @@ async def stay(ctx, *args):
         if ctx.author.display_name.lower() in memory['clashes'][0]:
             await ctx.send('OK!')
             memory['clash choices'][ctx.author.display_name.lower()] = 'stay'
+            await check_clash_choices()
         else:
             await ctx.send('I don\'t need a choice from you right now.')
     else:
@@ -635,6 +642,7 @@ async def concede(ctx, *args):
         if ctx.author.display_name.lower() in memory['clashes'][0]:
             await ctx.send('OK!')
             memory['clash choices'][ctx.author.display_name.lower()] = 'concede'
+            await check_clash_choices()
         else:
             await ctx.send('I don\'t need a choice from you right now.')
     else:
