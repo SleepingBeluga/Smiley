@@ -13,6 +13,7 @@ I'm friendly, and I can do Pact Dice Drafts!
 
 b = commands.Bot(command_prefix=('~'))
 memory = {}
+fopen = open
 
 async def setup():
     memory['channel'] = None
@@ -130,7 +131,7 @@ Displays the categories so you can see who has what.
 async def blank_sheet():
     num_players = len(memory["players"])
     memory["sheetID"] = await sheets.new_blank_sheet(memory, num_players)
-    memory['channel'].send('Click here to follow: https://docs.google.com/spreadsheets/d/' + memory["sheetID"])
+    await memory['channel'].send('Click here to follow: https://docs.google.com/spreadsheets/d/' + memory["sheetID"])
 
 async def show_cats():
     for cat in memory['cats']:
@@ -198,7 +199,7 @@ async def get_bids():
             memory['bids'][player] = None
     memory['bidding'] = True
     #asyncio.run(bid_reminder())
-    memory['bidsin'].wait()
+    await memory['bidsin'].wait()
     memory['bidsin'].clear()
     memory['bidding'] = False
     for player in memory['players']:
@@ -453,7 +454,7 @@ async def get_clash_choices():
             memory['clash choices'][player] = None
     memory['clashing'] = True
     #asyncio.run(clash_reminder())
-    memory['clashesin'].wait()
+    await memory['clashesin'].wait()
     memory['clashesin'].clear()
     memory['clashing'] = False
     for player in memory['players']:
@@ -506,7 +507,7 @@ Begins a draft so people can join.
 async def join(ctx, *args):
     if memory['phase'] == 'setup':
         if not ctx.author.display_name.lower() in memory['players']:
-            memory['players'].append(ctx.author.display_name.lower())
+            memory['players'].append(str(ctx.author.display_name))
             memory['proper names'][ctx.author.display_name.lower()] = ctx.author.display_name
             await ctx.send(ctx.author.display_name + ' has joined!')
         else:
@@ -523,7 +524,7 @@ Lets you join a draft.
 async def start(ctx, *args):
     if memory['phase'] == 'setup':
         if len(memory['players']) >= 1 and len(memory['players']) <= 6:
-            await ctx.send('Starting the draft! Consider using a monospaced font for the duration of the draft to make my tables look better.')
+            await ctx.send('Starting the draft!')
             memory['channel'] = ctx
             memory['phase'] = 'the draft'
             memory['round'] = 1
@@ -535,6 +536,7 @@ async def start(ctx, *args):
                 memory['limits'][player] = 0
             memory['rows to show'] = len(memory['players'])
             await blank_sheet()
+            await do_player_karma_labels()
             await subround(False)
         else:
             await ctx.send('You must have between 4 and 6 players to start.')
@@ -551,7 +553,7 @@ async def reset(ctx, *args):
     if not memory['quitconfirm']:
         await ctx.send('Are you sure? This will reset any drafts in progress. (Use ~reset again to confirm)')
         memory['quitconfirm'] = True
-        time.sleep(60)
+        await asyncio.sleep(60)
         memory['quitconfirm'] = False
     else:
         await ctx.send('OK, I\'ve reset.')
@@ -562,7 +564,7 @@ Resets me, stopping any drafts in progress.
 
 @b.command()
 async def bid(ctx, *args):
-    if not type(ctx.channel) == DMChannel:
+    if not type(ctx.channel) == discord.DMChannel:
         await ctx.send('This command only works in DMs.')
         return
     lower_args = [arg.lower() for arg in args]
@@ -617,7 +619,7 @@ async def check_clash_choices():
 
 @b.command()
 async def stay(ctx, *args):
-    if not type(ctx.channel) == DMChannel:
+    if not type(ctx.channel) == discord.DMChannel:
         await ctx.send('This command only works in DMs.')
         return
     if memory['clashing']:
@@ -635,7 +637,7 @@ The command to refuse to budge during a clash.
 
 @b.command()
 async def concede(ctx, *args):
-    if not type(ctx.channel) == DMChannel:
+    if not type(ctx.channel) == discord.DMChannel:
         await ctx.send('This command only works in DMs.')
         return
     if memory['clashing']:
@@ -889,7 +891,7 @@ async def deny(ctx, *args):
 Lets players deny trades offered them.
 '''
 
-asyncio.run(setup())
-with open('secret') as s:
+b.loop.create_task(setup())
+with fopen('secret') as s:
     token = s.read()[:-1]
 b.run(token)
