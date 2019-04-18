@@ -890,4 +890,6 @@ Lets players deny trades offered them.
 '''
 
 asyncio.run(setup())
-b.run('NTY3MTcwNDMxNDEzMzg3MjY1.XLZTAw.iGI6O9cbZFQKztSJNKQt0rbJZ3w')
+with open('secret') as s:
+    token = s.read()[:-1]
+b.run(token)
