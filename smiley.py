@@ -24,6 +24,7 @@ async def setup():
 
     memory['players'] = []
     memory['to resolve'] = []
+    memory['player colors'] = []
 
     memory['pending trades'] = []
     memory['trade contents'] = {}
@@ -54,8 +55,13 @@ async def setup():
 
     memory['clashes'] = [[],[],[]]
 
-    memory['colors'] = {"red":    (0.8,0,0),
-                            "purple": (0.2,0.1,0.5)}
+    memory['colors'] = {"purple": (0.2,0.1,0.5),
+                        "blue":   (0.1,0.3,0.8),
+                        "green":  (0.2,0.5,0.1),
+                        "yellow": (0.7,0.6,0.0), # Leave out first
+                        "orange": (0.7,0.4,0.0), # Leave out second
+                        "red":    (0.6,0.0,0.0)
+                        }
 
     memory['clashesin'] = asyncio.Event()
     memory['bidsin'] = asyncio.Event()
@@ -168,23 +174,24 @@ async def update_sheet():
         do_nothing_here_yet = 0
     for cat in memory['cats']:
         for rank in range(memory['rows to show']):
-            if not memory['cat'][rank] == '':
-                player = memory['cat'][rank]
+            if not memory[cat][rank] == '':
+                player = memory[cat][rank]
                 index = memory['players'].index(player)
-                row = memory['cats'].index(cat)
+                row = memory['cats'].index(cat) + 1
                 col = rank + 1
                 await sheets.write_cell(memory, (row,col), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
 
-    for player in memory['players']:
-        index = memory['players'].index(player)
+    for index in range(len(memory['players'])):
+        player = memory['players'][index]
+        row = index + 11
         to_write = ''
         for i in range(memory['white marks'][player]):
-            to_write += '☆'
-        await sheets.write_cell(memory, (11+index,1), to_write, (.15,.15,.15), (1,1,1))
+            to_write += '★'
+        await sheets.write_cell(memory, (row,1), to_write, (0.15,0.15,0.15), (1,1,1))
         to_write = ''
         for i in range(memory['black marks'][player]):
-            to_write += '★'
-        await sheets.write_cell(memory, (11+index,2), to_write, (.15,.15,.15), (1,1,1))
+            to_write += '☆'
+        await sheets.write_cell(memory, (row,2), to_write, (0.15,0.15,0.15), (1,1,1))
 
 async def do_player_karma_labels():
     for index in range(len(memory['players'])):
@@ -279,12 +286,12 @@ async def do_clash(continued):
     if number_of_clashers == 2:
         player0 = memory['clashes'][0][0]
         player1 = memory['clashes'][0][1]
+        for player in memory['players']:
+            memory['clash choices'][player] = ""
         await get_clash_choices()
-        memory['clashesin'].wait(clash)
-        memory['clashesin'].clear(clash)
         if memory['clash choices'][player0] == 'stay':
             if memory['clash choices'][player1] == 'stay':
-                await memory['channel'].send('They h stayed!')
+                await memory['channel'].send('They both stayed!')
 
                 # Anti luck manipulation barriers around the random parts
 
@@ -320,7 +327,7 @@ async def do_clash(continued):
 
                 if coin0 == 'tails' and coin1 == 'tails':
                     await memory['channel'].send('The clash continues! Please choose either ~stay or ~concede again.')
-                    do_clash(True)
+                    await do_clash(True)
                     return
                 elif coin0 == 'tails':
                     memory[memory['bids'][memory['clashes'][0][0]][0]][memory['bids'][memory['clashes'][0][0]][1] - 1] \
@@ -373,7 +380,7 @@ async def do_clash(continued):
                         = player1
 
             elif memory['clash choices'][player1] == 'concede':
-                await memory['channel'].send('They h conceded, and will need to rebid for a lower rung.')
+                await memory['channel'].send('They both conceded, and will need to rebid for a lower rung.')
                 memory['limits'][player0] = memory['bids'][memory['clashes'][0][0]][1] + 1
                 memory['limits'][player1] = memory['bids'][memory['clashes'][0][0]][1] + 1
                 if memory['bids'][memory['clashes'][0][0]][1] + 1 > memory['rows to show']:
@@ -385,9 +392,9 @@ async def do_clash(continued):
         to_mark = []
         clashers = []
         remaining = []
+        for player in memory['players']:
+            memory['clash choices'][player] = ""
         await get_clash_choices()
-        memory['clashesin'].wait(clash)
-        memory['clashesin'].clear(clash)
         for i in range(number_of_clashers):
             clashers.append(memory['clashes'][0][i])
         for player in clashers:
@@ -457,8 +464,6 @@ async def get_clash_choices():
     await memory['clashesin'].wait()
     memory['clashesin'].clear()
     memory['clashing'] = False
-    for player in memory['players']:
-        memory['clash choices'][player] = ""
 '''
 Tells players to submit clash choices, and waits until all clash choices are done.
 '''
@@ -506,9 +511,9 @@ Begins a draft so people can join.
 @b.command()
 async def join(ctx, *args):
     if memory['phase'] == 'setup':
-        if not ctx.author.display_name.lower() in memory['players']:
-            memory['players'].append(str(ctx.author.display_name))
-            memory['proper names'][ctx.author.display_name.lower()] = ctx.author.display_name
+        if not str(ctx.author) in memory['players']:
+            memory['players'].append(str(ctx.author))
+            memory['proper names'][str(ctx.author)] = ctx.author.display_name
             await ctx.send(ctx.author.display_name + ' has joined!')
         else:
             await ctx.send('You\'ve already joined!')
@@ -534,6 +539,12 @@ async def start(ctx, *args):
                 memory['white marks'][player] = 0
             for player in memory['players']:
                 memory['limits'][player] = 0
+            if len(memory['players']) == 4:
+                memory['player colors'] = ['red','green','blue','purple']
+            elif len(memory['players']) == 5:
+                memory['player colors'] = ['red','orange','green','blue','purple']
+            elif len(memory['players']) == 6:
+                memory['player colors'] = ['red','orange','yellow','green','blue','purple']
             memory['rows to show'] = len(memory['players'])
             await blank_sheet()
             await do_player_karma_labels()
@@ -569,30 +580,30 @@ async def bid(ctx, *args):
         return
     lower_args = [arg.lower() for arg in args]
     if memory['bidding']:
-        if ctx.author.display_name.lower() in memory['to resolve']:
+        if str(ctx.author) in memory['to resolve']:
             if len(lower_args) == 2:
                 cat = lower_args[0]
                 rung = int(lower_args[1])
                 if cat in memory['cats']:
-                    if not ctx.author.display_name.lower() in memory[cat]:
-                        if (rung <= len(memory['players']) and rung >= memory['limits'][ctx.author.display_name.lower()]) or rung == memory['limits'][ctx.author.display_name.lower()]:
+                    if not str(ctx.author) in memory[cat]:
+                        if (rung <= len(memory['players']) and rung >= memory['limits'][str(ctx.author)]) or rung == memory['limits'][str(ctx.author)]:
                             if memory[cat][rung - 1] == '':
                                 await ctx.send('Got it!')
-                                memory['bids'][ctx.author.display_name.lower()] = (cat, rung)
+                                memory['bids'][str(ctx.author)] = (cat, rung)
                                 await check_bids()
                             else:
                                 await ctx.send('That one\'s taken, please choose another.')
                         else:
                             to_say = 'Please choose a rung between '
-                            if memory['limits'][ctx.author.display_name.lower()] == 0:
+                            if memory['limits'][str(ctx.author)] == 0:
                                 to_say += '1'
                             else:
-                                to_say += str(memory['limits'][ctx.author.display_name.lower()])
+                                to_say += str(memory['limits'][str(ctx.author)])
                             to_say += ' and '
-                            if memory['limits'][ctx.author.display_name.lower()] <= len(memory['players']):
+                            if memory['limits'][str(ctx.author)] <= len(memory['players']):
                                 to_say += str(len(memory['players']))
                             else:
-                                to_say += str(memory['limits'][ctx.author.display_name.lower()])
+                                to_say += str(memory['limits'][str(ctx.author)])
                             to_say += '. Format your message like this: ~bid puissance 4'
                             await ctx.send(to_say)
                     else:
@@ -615,7 +626,7 @@ async def check_bids():
 
 async def check_clash_choices():
     if not None in memory['clash choices'].values():
-        memory['bidsin'].set()
+        memory['clashesin'].set()
 
 @b.command()
 async def stay(ctx, *args):
@@ -623,9 +634,9 @@ async def stay(ctx, *args):
         await ctx.send('This command only works in DMs.')
         return
     if memory['clashing']:
-        if ctx.author.display_name.lower() in memory['clashes'][0]:
+        if str(ctx.author) in memory['clashes'][0]:
             await ctx.send('OK!')
-            memory['clash choices'][ctx.author.display_name.lower()] = 'stay'
+            memory['clash choices'][str(ctx.author)] = 'stay'
             await check_clash_choices()
         else:
             await ctx.send('I don\'t need a choice from you right now.')
@@ -641,9 +652,9 @@ async def concede(ctx, *args):
         await ctx.send('This command only works in DMs.')
         return
     if memory['clashing']:
-        if ctx.author.display_name.lower() in memory['clashes'][0]:
+        if str(ctx.author) in memory['clashes'][0]:
             await ctx.send('OK!')
-            memory['clash choices'][ctx.author.display_name.lower()] = 'concede'
+            memory['clash choices'][str(ctx.author)] = 'concede'
             await check_clash_choices()
         else:
             await ctx.send('I don\'t need a choice from you right now.')
@@ -667,8 +678,8 @@ Shows the current draft progress
 async def offer(ctx, *args):
     lower_args = [arg.lower() for arg in args]
     if memory['phase'] == 'the draft':
-        if ctx.author.display_name.lower() in memory['players']:
-            if not ctx.author.display_name.lower() in memory['pending trades']:
+        if str(ctx.author) in memory['players']:
+            if not str(ctx.author) in memory['pending trades']:
                 args = lower_args
                 if len(args) >= 6:
                     recipient = args[0].lower()
@@ -700,10 +711,10 @@ async def offer(ctx, *args):
                                 if valid:
                                     offered_owned = True
                                     for item in offered:
-                                        if not ((item[0] in memory['cats'] and memory[item[0]][int(item[1]) - 1] == ctx.author.display_name.lower()) \
-                                                or (item[0] == 'bmark' and memory['black marks'][ctx.author.display_name.lower()] >= int(item[1]))   \
-                                                or (item[0] == 'wmark' and memory['white marks'][ctx.author.display_name.lower()] >= int(item[1]))):
-                                            await ctx.send(ctx.author.display_name.lower())
+                                        if not ((item[0] in memory['cats'] and memory[item[0]][int(item[1]) - 1] == str(ctx.author)) \
+                                                or (item[0] == 'bmark' and memory['black marks'][str(ctx.author)] >= int(item[1]))   \
+                                                or (item[0] == 'wmark' and memory['white marks'][str(ctx.author)] >= int(item[1]))):
+                                            await ctx.send(str(ctx.author))
                                             await ctx.send(item[0])
                                             await ctx.send(item[1])
                                             offered_owned = False
@@ -778,7 +789,7 @@ async def offer(ctx, *args):
                                                         for item in wanted:
                                                             if item[0] in memory['cats']:
                                                                 cat_ok[item[0]] = False
-                                                                if ctx.author.display_name.lower() in memory[item[0]]:
+                                                                if str(ctx.author) in memory[item[0]]:
                                                                     for off_item in wanted:
                                                                         if off_item[0] == item[0]:
                                                                             cat_ok[item[0]] = True
@@ -791,7 +802,7 @@ async def offer(ctx, *args):
                                                             # Save the pending trade and send a confirmation
                                                             # message to the recipient.
 
-                                                            memory['pending trades'].append(ctx.author.display_name.lower())
+                                                            memory['pending trades'].append(str(ctx.author))
                                                             memory['pending trades'].append(recipient)
 
                                                             to_say = 'You have a trade offer from ' + ctx.author.display_name + '! They want to trade their '
@@ -820,7 +831,7 @@ async def offer(ctx, *args):
                                                                     to_say += item[1] + ' black marks, '
                                                             to_say = to_say[:-2] + '! Reply with ~confirmtrade ' + ctx.author.display_name + ' to confirm, or ~denytrade ' + ctx.author.display_name + ' to deny.'
 
-                                                            h_players = [ctx.author.display_name.lower(),recipient]
+                                                            h_players = [str(ctx.author),recipient]
                                                             h_players.sort()
                                                             h_players = '&'.join(h_players)
 
@@ -864,18 +875,18 @@ Allows players to offer trades to other players.
 async def deny(ctx, *args):
     lower_args = [arg.lower() for arg in args]
     if memory['phase'] == 'the draft':
-        if ctx.author.display_name.lower() in memory['players']:
-            if ctx.author.display_name.lower() in memory['pending trades']:
+        if str(ctx.author) in memory['players']:
+            if str(ctx.author) in memory['pending trades']:
                 offerer = lower_args[0]
                 if offerer.lower() in memory['players']:
-                    h_players = [offerer.lower(), ctx.author.display_name.lower()]
+                    h_players = [offerer.lower(), str(ctx.author)]
                     h_players.sort()
                     h_players = '&'.join(h_players)
                     if h_players in memory['trade contents']:
                         await ctx.send('Trade denied!')
                         await ctx.send(ctx.author.display_name + ' denied your trade.', offerer)
                         del memory['trade contents'][h_players]
-                        memory['pending trades'].remove(ctx.author.display_name.lower())
+                        memory['pending trades'].remove(str(ctx.author))
                         memory['pending trades'].remove(offerer.lower())
                     else:
                         await ctx.send('You don\'t have a pending trade with ' + offerer + '!')
