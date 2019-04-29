@@ -902,7 +902,7 @@ async def deny(ctx, *args):
 Lets players deny trades offered them.
 '''
 
-@b.command
+@b.command()
 async def roll(ctx, *, arg):
     roll = arg
     if roll == '':
