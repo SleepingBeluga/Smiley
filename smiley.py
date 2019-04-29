@@ -965,12 +965,21 @@ async def roll(ctx, *, arg='1d6 1d6'):
     # Determine bonus
 
     try:
-        number = int(roll[:dsplit])
         sides = int(roll[dsplit + 1:])
     except:
-        await ctx.send('Error rolling dice. Make sure the number of sides and the number of dice are valid')
+        await ctx.send('Error rolling dice. Make sure the number of sides is valid')
         return -1
-    # Split the number and sides
+    # Split the sides
+
+    if dsplit > 0:
+        try:
+            number = int(roll[:dsplit])
+        except:
+            await ctx.send('Error rolling dice. Make sure the number of dice is valid')
+            return -1
+    else:
+        number = 1
+    # Split the number
 
     if not (number > 0 and number <= 50):
         await ctx.send('Error rolling dice. The number of dice must be between 1 and 50')
