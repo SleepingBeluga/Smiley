@@ -903,10 +903,8 @@ Lets players deny trades offered them.
 '''
 
 @b.command()
-async def roll(ctx, *, arg):
+async def roll(ctx, *, arg='1d6 1d6'):
     roll = arg
-    if roll == '':
-        roll = '1d6 1d6'
     has_tag = ' ' in roll
     if has_tag:
         roll, tag = roll.split(' ')
