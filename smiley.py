@@ -8,7 +8,7 @@ import time, random, sheets, asyncio
 '''
 My (Smiley's) Main Script
 
-I'm friendly, and I can do Pact Dice Drafts!
+I'm friendly, and I can do Pact Dice drafts and dice rolls!
 '''
 
 b = commands.Bot(command_prefix=('~'))
@@ -907,8 +907,8 @@ async def roll(ctx, *, arg='1d6 1d6'):
     roll = arg
     has_tag = ' ' in roll
     if has_tag:
+        tag = roll[roll.find(' ')+1:]
         roll = roll[:roll.find(' ')]
-        roll = roll[roll.find(' ')+1:]
     roll = roll.lower()
     # Separate the roll command from the tag
 
