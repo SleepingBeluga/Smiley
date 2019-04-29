@@ -903,7 +903,7 @@ Lets players deny trades offered them.
 '''
 
 @b.command
-async def dice(ctx, *, arg):
+async def roll(ctx, *, arg):
     roll = arg
     if roll == '':
         roll = '1d6 1d6'
@@ -912,7 +912,7 @@ async def dice(ctx, *, arg):
         roll, tag = roll.split(' ')
     roll = roll.lower()
     # Separate the roll command from the tag
-    
+
     if roll.find('l') > -1:
         dsplit = roll.find('l')
         type = 'low'
