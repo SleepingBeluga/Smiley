@@ -1032,7 +1032,7 @@ async def roll(ctx, *, arg):
         if ind < reps - 1:
             response += ' :: '
     # Build the response string
-    ctx.send(response)
+    await ctx.send(response)
 
 b.loop.create_task(setup())
 with fopen('secret') as s:
