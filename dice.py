@@ -1,6 +1,6 @@
 from discord.ext import commands
 
-class Rolls:
+class Rolls(commands.Cog):
     '''For rolling dice
     '''
     @commands.command()

@@ -1,4 +1,5 @@
 from discord.ext import commands
+import discord
 
 async def subround(clash):
     '''My main loop. Executes subrounds and resolves clashes.
@@ -427,7 +428,7 @@ async def check_clash_choices():
     if not None in memory['clash choices'].values():
         memory['clashesin'].set()
 
-class Draft:
+class Draft(commands.Cog):
     '''Commands for Pact Dice drafts
     '''
     @commands.command()

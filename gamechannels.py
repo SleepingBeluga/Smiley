@@ -1,11 +1,12 @@
 from discord.ext import commands
+import discord
 
 async def debug(ctx, message):
     '''Prints a message in the context passed
     '''
     await ctx.send(message)
 
-class Game_Channels:
+class Game_Channels(commands.Cog):
     # - - - - Absolute mess of code below. Mostly channel stuff. Tread at your own risk. - - - -
     @commands.command()
     async def campaigns(self, ctx, *args):
@@ -43,9 +44,9 @@ class Game_Channels:
 
         #    await ctx.guild.create_role(name=roleName)
 
-            for discord.Role in ctx.message.guild.roles:
-                if discord.Role.name == 'Game Master':
-                    gameMaster = discord.Role
+            for role in ctx.message.guild.roles:
+                if role.name == 'Game Master':
+                    gameMaster = role
                 #elif discord.Role.name == roleName:
                  #   gameRole = discord.Role
 
@@ -58,11 +59,11 @@ class Game_Channels:
                 ctx.me: discord.PermissionOverwrite(read_messages=True)
             }
 
-            for discord.CategoryChannel in ctx.guild.categories:
-                if (discord.CategoryChannel.name == 'PactDice Games' and gameType == 'pd'):
-                    gamecat = discord.CategoryChannel
-                elif (discord.CategoryChannel.name == 'WeaverDice Games' and gameType == 'wd'):
-                    gamecat = discord.CategoryChannel
+            for category in ctx.guild.categories:
+                if (category.name == 'PactDice Games' and gameType == 'pd'):
+                    gamecat = category
+                elif (category.name == 'WeaverDice Games' and gameType == 'wd'):
+                    gamecat = category
 
             await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
             await sheets.newgame(str('#' + gameName),str(ctx.author.display_name), str(gameType).upper())
@@ -97,26 +98,26 @@ class Game_Channels:
         joining = "We are trying to join "
         channelsJoined = 0
 
-        for discord.Guild.TextChannel in ctx.guild.channels:
+        for channel in ctx.guild.channels:
             # First lets just check whether they want all games!
-            if not discord.Guild.TextChannel.category:
+            if not channel.category:
                 continue
             # If the channel has no category, move to the next channel
-            catName = discord.Guild.TextChannel.category.name
+            catName = channel.category.name
             if joinAllWD and catName == 'WeaverDice Games':
-                joining += discord.Guild.TextChannel.name + ", "
+                joining += channel.name + ", "
                 channelsJoined += 1
-                await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
+                await channel.set_permissions(ctx.author, read_messages=True)
             elif joinAllPD and catName == 'PactDice Games':
-                joining += discord.Guild.TextChannel.name + ", "
+                joining += channel.name + ", "
                 channelsJoined += 1
-                await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
+                await channel.set_permissions(ctx.author, read_messages=True)
             elif joinAllArchive and catName == 'Archives':
-                joining += discord.Guild.TextChannel.name + ", "
+                joining += channel.name + ", "
                 channelsJoined += 1
-                await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
-            if discord.Guild.TextChannel.name == gameName:
-                game = discord.Guild.TextChannel
+                await channel.set_permissions(ctx.author, read_messages=True)
+            if channel.name == gameName:
+                game = channel
                 joining += game.name
                 check = (catName in ['PactDice Games', 'WeaverDice Games', 'Archives'])
 
@@ -148,9 +149,9 @@ class Game_Channels:
         for arg in args:
             gameName = gameName + str(arg)
 
-        for discord.Guild.TextChannel in ctx.guild.channels:
-            if discord.Guild.TextChannel.name == gameName:
-                game = discord.Guild.TextChannel
+        for channel in ctx.guild.channels:
+            if channel.name == gameName:
+                game = channel
                 check = True
 
         if gameName == '':
@@ -176,17 +177,17 @@ class Game_Channels:
         namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
         moderator = ('Mod Team' in ctx.author.roles)
 
-        for discord.Guild.CategoryChannel in ctx.message.guild.categories:
-            if discord.Guild.CategoryChannel.name == 'PactDice Games':
-                PDID = discord.Guild.CategoryChannel
-            if discord.Guild.CategoryChannel.name == 'WeaverDice Games':
-                WDID = discord.Guild.CategoryChannel
-            elif discord.Guild.CategoryChannel.name == 'Archives':
-                archiveID = discord.Guild.CategoryChannel
+        for category in ctx.message.guild.categories:
+            if category.name == 'PactDice Games':
+                PDID = category
+            if category.name == 'WeaverDice Games':
+                WDID = category
+            elif category.name == 'Archives':
+                archiveID = category
 
-        for discord.Guild.TextChannel in ctx.message.guild.channels:
-            if discord.Guild.TextChannel.name == gameName:
-                gameID = discord.Guild.TextChannel.category
+        for channel in ctx.message.guild.channels:
+            if channel.name == gameName:
+                gameID = channel.category
 
         if gameName == '':
             await ctx.send("Please write out the game you wish to archive after the command (i.e. ~archive New York)")
@@ -219,13 +220,13 @@ class Game_Channels:
         PDID = None
         WDID = None
 
-        for discord.Guild.CategoryChannel in ctx.message.guild.categories:
-            if discord.Guild.CategoryChannel.name == 'PactDice Games':
-                PDID = discord.Guild.CategoryChannel
-            elif discord.Guild.CategoryChannel.name == 'WeaverDice Games':
-                WDID = discord.Guild.CategoryChannel
-            elif discord.Guild.CategoryChannel.name == 'Archives':
-                archiveID = discord.Guild.CategoryChannel
+        for category in ctx.message.guild.categories:
+            if category.name == 'PactDice Games':
+                PDID = category
+            elif category.name == 'WeaverDice Games':
+                WDID = category
+            elif category.name == 'Archives':
+                archiveID = category
 
         for arg in args[1:]:
             gameName = gameName + str(arg)
@@ -233,9 +234,9 @@ class Game_Channels:
         namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
         moderator = ('Mod Team' in ctx.author.roles)
 
-        for discord.Guild.TextChannel in ctx.message.guild.channels:
-            if discord.Guild.TextChannel.name == gameName:
-                gameID = discord.Guild.TextChannel.category
+        for channel in ctx.message.guild.channels:
+            if channel.name == gameName:
+                gameID = channel.category
 
         if gameName == '':
             await ctx.send("Please write out the game you wish to unarchive after the command (i.e. ~unarchive New York)")
