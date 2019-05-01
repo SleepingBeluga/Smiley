@@ -1042,6 +1042,185 @@ async def roll(ctx, *, arg='1d6 1d6'):
     # Build the response string
     await ctx.send(response)
 
+
+# - - - - Absolute mess of code below. Mostly channel stuff. Tread at your own risk. - - - -
+
+
+@b.command()
+async def addgame(ctx, *args):
+    gameName = ''
+    gameMaster = None
+    #gameRole = None
+    gamecat = None
+
+    for arg in args:
+        gameName = gameName + str(arg)
+
+    if gameName == '':
+        await ctx.send("Please write out your game's name after the command (i.e. ~addgame New York)")
+    else:
+
+    #    roleName = gameName + 'er'
+
+    #    await ctx.guild.create_role(name=roleName)
+
+        for discord.Role in ctx.message.guild.roles:
+            if discord.Role.name == 'Game Master':
+                gameMaster = discord.Role
+            #elif discord.Role.name == roleName:
+             #   gameRole = discord.Role
+
+        await ctx.author.add_roles(gameMaster)
+
+        overwrites = {
+            ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            #gameRole: discord.PermissionOverwrite(read_messages=True),
+            ctx.author: discord.PermissionOverwrite(read_messages=True),
+            ctx.me: discord.PermissionOverwrite(read_messages=True)
+        }
+
+        for discord.CategoryChannel in ctx.guild.categories:
+            if discord.CategoryChannel.name == 'PactDice Games':
+                gamecat = discord.CategoryChannel
+
+        await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
+        await moresheets.newgame(str('#' + gameName),str(ctx.author.display_name))
+
+@b.command()
+async def enter(ctx, *args):
+    gameName = ''
+    game = None
+    check = False
+
+    for arg in args:
+        gameName = gameName + str(arg)
+
+    for discord.Guild.TextChannel in ctx.guild.channels:
+        if discord.Guild.TextChannel.name == gameName:
+            game = discord.Guild.TextChannel
+            check = True
+
+    if gameName == '':
+        await ctx.send("Please write out the game you wish to access after the command (i.e. ~enter New York)")
+    elif check == False:
+        await ctx.send("That game could not be found.")
+     #   roleName = gameName + 'er'
+
+      #  if roleName == 'Game Master':
+       #     await ctx.send("You must think you're so clever.")
+    else:
+        await game.set_permissions(ctx.author, read_messages=True)
+
+@b.command()
+async def exit(ctx, *args):
+    gameName = ''
+    game = None
+    check = False
+
+    for arg in args:
+        gameName = gameName + str(arg)
+
+    for discord.Guild.TextChannel in ctx.guild.channels:
+        if discord.Guild.TextChannel.name == gameName:
+            game = discord.Guild.TextChannel
+            check = True
+
+    if gameName == '':
+        await ctx.send("Please write out where you wish to exit after the command (i.e. ~exit New York)")
+    elif check == False:
+        await ctx.send("That game could not be found.")
+    else:
+        await game.set_permissions(ctx.author, read_messages=False)
+
+@b.command()
+async def archive(ctx, *args):
+    gameName = ''
+    gameID = None
+    archiveID = None
+    PDID = None
+
+    for arg in args:
+        gameName = gameName + str(arg)
+
+    namecheck = (await moresheets.gamecheck(ctx.author.display_name,gameName))
+
+    for discord.Guild.CategoryChannel in ctx.message.guild.categories:
+        if discord.Guild.CategoryChannel.name == 'PactDice Games':
+            PDID = discord.Guild.CategoryChannel
+        elif discord.Guild.CategoryChannel.name == 'Archives':
+            archiveID = discord.Guild.CategoryChannel
+
+    for discord.Guild.TextChannel in ctx.message.guild.channels:
+        if discord.Guild.TextChannel.name == gameName:
+            gameID = discord.Guild.TextChannel.category
+
+    if gameName == '':
+        await ctx.send("Please write out the game you wish to archive after the command (i.e. ~archive New York)")
+    elif gameID == archiveID:
+        await ctx.send("That game is already archived.")
+    elif namecheck == False:
+        await ctx.send("No.")
+    else:
+        if gameID != PDID:
+            await ctx.send("That game could not be found.")
+        else:
+            for ctx.TextChannel in ctx.message.guild.text_channels:
+                if ctx.TextChannel.name == gameName:
+                    await ctx.TextChannel.edit(category=archiveID)
+                    await moresheets.changeState(gameName,'N')
+
+@b.command()
+async def unarchive(ctx, *args):
+    gameName = ''
+    gameRole = None
+    gameChan = None
+    gameID = None
+    archiveID = None
+    PDID = None
+
+    for discord.Guild.CategoryChannel in ctx.message.guild.categories:
+        if discord.Guild.CategoryChannel.name == 'PactDice Games':
+            PDID = discord.Guild.CategoryChannel
+        elif discord.Guild.CategoryChannel.name == 'Archives':
+            archiveID = discord.Guild.CategoryChannel
+
+    for arg in args:
+        gameName = gameName + str(arg)
+
+    namecheck = (await moresheets.gamecheck(ctx.author.display_name,gameName))
+
+    for discord.Guild.TextChannel in ctx.message.guild.channels:
+        if discord.Guild.TextChannel.name == gameName:
+            gameID = discord.Guild.TextChannel.category
+
+    if gameName == '':
+        await ctx.send("Please write out the game you wish to unarchive after the command (i.e. ~unarchive New York)")
+    elif gameID == PDID:
+        await ctx.send("That game is already active.")
+    elif namecheck == False:
+        await ctx.send("No.")
+    else:
+        if gameID != archiveID:
+            await ctx.send("That game could not be found.")
+        else:
+            for ctx.TextChannel in ctx.message.guild.text_channels:
+                if ctx.TextChannel.name == gameName:
+                    await ctx.TextChannel.edit(category=PDID)
+                    await moresheets.changeState(gameName,'Y')
+
+@b.command()
+async def link(ctx, *args):
+    link = ''
+
+    for arg in args:
+        link = link + str(arg)
+
+    await moresheets.addlink(ctx.author.display_name,link)
+
+
+# - - - - End of Disaster Area - - - -
+
+
 b.loop.create_task(setup())
 with fopen('secret') as s:
     token = s.read()[:-1]
