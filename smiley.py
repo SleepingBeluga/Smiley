@@ -1090,7 +1090,7 @@ async def addgame(ctx, *args):
                 gamecat = discord.CategoryChannel
 
         await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
-        await moresheets.newgame(str('#' + gameName),str(ctx.author.display_name))
+        await sheets.newgame(str('#' + gameName),str(ctx.author.display_name))
 
 @b.command()
 async def enter(ctx, *args):
@@ -1151,7 +1151,7 @@ async def archive(ctx, *args):
     for arg in args:
         gameName = gameName + str(arg)
 
-    namecheck = (await moresheets.gamecheck(ctx.author.display_name,gameName))
+    namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
 
     for discord.Guild.CategoryChannel in ctx.message.guild.categories:
         if discord.Guild.CategoryChannel.name == 'PactDice Games':
@@ -1178,7 +1178,7 @@ async def archive(ctx, *args):
             for ctx.TextChannel in ctx.message.guild.text_channels:
                 if ctx.TextChannel.name == gameName:
                     await ctx.TextChannel.edit(category=archiveID)
-                    await moresheets.changeState(gameName,'N')
+                    await sheets.changeState(gameName,'N')
 
 @b.command()
 async def unarchive(ctx, *args):
@@ -1205,7 +1205,7 @@ async def unarchive(ctx, *args):
     for arg in args[1:]:
         gameName = gameName + str(arg)
 
-    namecheck = (await moresheets.gamecheck(ctx.author.display_name,gameName))
+    namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
 
     for discord.Guild.TextChannel in ctx.message.guild.channels:
         if discord.Guild.TextChannel.name == gameName:
@@ -1227,7 +1227,7 @@ async def unarchive(ctx, *args):
                         await ctx.TextChannel.edit(category=PDID)
                     elif gameType == 'wd':
                         await ctx.TextChannel.edit(category=WDID)
-                    await moresheets.changeState(gameName,'Y')
+                    await sheets.changeState(gameName,'Y')
 
 @b.command()
 async def link(ctx, *args):
@@ -1236,7 +1236,7 @@ async def link(ctx, *args):
     for arg in args:
         link = link + str(arg)
 
-    await moresheets.addlink(ctx.author.display_name,link)
+    await sheets.addlink(ctx.author.display_name,link)
 
 
 # - - - - End of Disaster Area - - - -
