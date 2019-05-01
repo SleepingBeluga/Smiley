@@ -918,6 +918,9 @@ async def deny(ctx, *args):
 
 @b.command()
 async def roll(ctx, *, arg='1d6 1d6'):
+    '''
+    Roll some dice
+    '''
     roll = arg
     has_tag = ' ' in roll
     if has_tag:
@@ -1060,10 +1063,16 @@ async def roll(ctx, *, arg='1d6 1d6'):
 # - - - - Absolute mess of code below. Mostly channel stuff. Tread at your own risk. - - - -
 @b.command()
 async def campaigns(ctx, *args):
+    '''
+    Get the link to the campaigns spreadsheet
+    '''
     await ctx.send("Campaign list: https://docs.google.com/spreadsheets/d/1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY")
 
 @b.command()
 async def addgame(ctx, *args):
+    '''
+    Create a WD or PD game with you as the GM
+    '''
     gameType = args[0].lower()
     if (gameType != 'wd' and gameType != 'pd'):
         await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd New York)")
@@ -1115,10 +1124,16 @@ async def addgame(ctx, *args):
         await sheets.newgame(str('#' + gameName),str(ctx.author.display_name), str(gameType).upper())
 
 async def debug(ctx, message):
+    '''
+    Prints a message in the context passed
+    '''
     await ctx.send(message)
 
 @b.command()
 async def enter(ctx, *args):
+    '''
+    Join a game channel
+    '''
     gameName = ''
     game = None
     check = False
@@ -1187,6 +1202,9 @@ async def enter(ctx, *args):
 
 @b.command()
 async def exit(ctx, *args):
+    '''
+    Leave a game channel
+    '''
     gameName = ''
     game = None
     check = False
@@ -1208,6 +1226,9 @@ async def exit(ctx, *args):
 
 @b.command()
 async def archive(ctx, *args):
+    '''
+    Move an inactive game to archives
+    '''
     gameName = ''
     gameID = None
     archiveID = None
@@ -1249,6 +1270,9 @@ async def archive(ctx, *args):
 
 @b.command()
 async def unarchive(ctx, *args):
+    '''
+    Move an archived game back out of archives
+    '''
     gameType = args[0].lower()
     if (gameType != 'wd' and gameType != 'pd'):
         await ctx.send("Please write out your game's name after the command (i.e. ~unarchive pd New York)")
@@ -1299,10 +1323,14 @@ async def unarchive(ctx, *args):
 
 @b.command()
 async def link(ctx, *args):
+    '''
+    Sets the doc link on the spreadsheet for your game
+    '''
     link = ''
 
     for arg in args:
-        link = link + str(arg)
+        link += str(arg) + ' '
+    link = link[:-1]
 
     await sheets.addlink(ctx.author.display_name,link)
 
@@ -1311,6 +1339,11 @@ async def link(ctx, *args):
 
 
 b.loop.create_task(setup())
+# Run the setup function before doing anything!
+
 with fopen('secret') as s:
     token = s.read()[:-1]
+# Read the Discord bot token from a soup or secret file
+
 b.run(token)
+# Start the bot
