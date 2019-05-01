@@ -1062,6 +1062,12 @@ async def addgame(ctx, *args):
     for arg in args[1:]:
         gameName = gameName + str(arg)
 
+    # List of restricted titles
+    restricted_names = ['all', 'allactive', 'wdall', 'pdall', 'allarchive']
+    if gameName in restricted_names:
+        await ctx.send(gameName + " is a restricted term and you can't name your game that. Sorry!")
+        return
+
     if gameName == '':
         await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd New York)")
     else:
@@ -1103,12 +1109,29 @@ async def enter(ctx, *args):
     for arg in args:
         gameName = gameName + str(arg)
 
+    joinAllWD = False
+    joinAllPD = False
+    joinAllArchive = False
+
+    if gameName in ['wdall', 'all', 'allactive']:
+        joinAllWD = True
+    if gameName in ['pdall', 'all', 'allactive']:
+        joinAllPD = True
+    if gameName in ['all', 'allarchive']:
+        joinAllArchive
+
     for discord.Guild.TextChannel in ctx.guild.channels:
-        if discord.Guild.TextChannel.name == gameName:
+        # First lets just check whether they want all games!
+        catName = discord.Guild.TestChannel.category.name
+        if joinAllWD and catName == 'WeaverDice Games':
+            await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
+        elif joinAllPD and catName == 'PactDice Games':
+            await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
+        elif joinAllArchive and catName == 'Archives':
+            await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
+        elif discord.Guild.TextChannel.name == gameName:
             game = discord.Guild.TextChannel
-            check = (discord.Guild.TextChannel.category.name == "PactDice Games"
-                or discord.Guild.TextChannel.category.name == "WeaverDice Games"
-                or discord.Guild.TextChannel.category.name == "Archives")
+            check = (catName in ['PactDice Games', 'WeaverDice Games', 'Archives'])
 
     if gameName == '':
         await ctx.send("Please write out the game you wish to access after the command (i.e. ~enter New York)")
