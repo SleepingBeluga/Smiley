@@ -1048,16 +1048,20 @@ async def roll(ctx, *, arg='1d6 1d6'):
 
 @b.command()
 async def addgame(ctx, *args):
+    gameType = args[0].lower()
+    if (gameType != 'wd' and gameType != 'pd'):
+        await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd new_york)")
+        return
     gameName = ''
     gameMaster = None
     #gameRole = None
     gamecat = None
 
-    for arg in args:
+    for arg in args[1:]:
         gameName = gameName + str(arg)
 
     if gameName == '':
-        await ctx.send("Please write out your game's name after the command (i.e. ~addgame New York)")
+        await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd new_york)")
     else:
 
     #    roleName = gameName + 'er'
@@ -1080,7 +1084,9 @@ async def addgame(ctx, *args):
         }
 
         for discord.CategoryChannel in ctx.guild.categories:
-            if discord.CategoryChannel.name == 'PactDice Games':
+            if (discord.CategoryChannel.name == 'PactDice Games' and gameType == 'pd'):
+                gamecat = discord.CategoryChannel
+            elif (discord.CategoryChannel.name == 'WeaverDice Games' and gameType == 'wd'):
                 gamecat = discord.CategoryChannel
 
         await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
