@@ -1090,7 +1090,7 @@ async def addgame(ctx, *args):
                 gamecat = discord.CategoryChannel
 
         await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
-        await sheets.newgame(str('#' + gameName),str(ctx.author.display_name))
+        await sheets.newgame(str('#' + gameName),str(ctx.author.display_name), str(gameType))
 
 @b.command()
 async def enter(ctx, *args):
