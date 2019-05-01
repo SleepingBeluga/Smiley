@@ -1062,6 +1062,12 @@ async def addgame(ctx, *args):
     for arg in args[1:]:
         gameName = gameName + str(arg)
 
+    # List of restricted titles
+    restricted_names = ['all', 'allactive', 'wdall', 'pdall', 'allarchive']
+    if gameName in restricted_names:
+        await ctx.send(gameName + " is a restricted term and you can't name your game that. Sorry!")
+        return
+
     if gameName == '':
         await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd New York)")
     else:
@@ -1094,22 +1100,63 @@ async def addgame(ctx, *args):
         await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
         await sheets.newgame(str('#' + gameName),str(ctx.author.display_name), str(gameType).upper())
 
+async def debug(ctx, message):
+    await ctx.send(message)
+
 @b.command()
 async def enter(ctx, *args):
     gameName = ''
     game = None
     check = False
+    debugging = False
 
     for arg in args:
+        if arg.lower() == "-d":
+            debugging = True
+            continue
         gameName = gameName + str(arg)
 
-    for discord.Guild.TextChannel in ctx.guild.channels:
-        if discord.Guild.TextChannel.name == gameName:
-            game = discord.Guild.TextChannel
-            check = (discord.Guild.TextChannel.category.name == "PactDice Games"
-                or discord.Guild.TextChannel.category.name == "WeaverDice Games"
-                or discord.Guild.TextChannel.category.name == "Archives")
+    joinAllWD = False
+    joinAllPD = False
+    joinAllArchive = False
 
+    if gameName in ['wdall', 'all', 'allactive']:
+        joinAllWD = True
+    if gameName in ['pdall', 'all', 'allactive']:
+        joinAllPD = True
+    if gameName in ['all', 'allarchive']:
+        joinAllArchive = True
+
+    # Let's track some info for debugging
+    joining = "We are trying to join "
+    channelsJoined = 0
+
+    for discord.Guild.TextChannel in ctx.guild.channels:
+        # First lets just check whether they want all games!
+        catName = discord.Guild.TestChannel.category.name
+        if joinAllWD and catName == 'WeaverDice Games':
+            joining += discord.Guild.TextChannel.name + ", "
+            channelsJoined += 1
+            await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
+        elif joinAllPD and catName == 'PactDice Games':
+            joining += discord.Guild.TextChannel.name + ", "
+            channelsJoined += 1
+            await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
+        elif joinAllArchive and catName == 'Archives':
+            joining += discord.Guild.TextChannel.name + ", "
+            channelsJoined += 1
+            await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
+        elif discord.Guild.TextChannel.name == gameName:
+            game = discord.Guild.TextChannel
+            joining += game.name
+            check = (catName in ['PactDice Games', 'WeaverDice Games', 'Archives'])
+
+    # Let's do some debugging
+    if debugging:
+        debug(joining)
+        if channelsJoined > 0:
+            debug("That is trying to join " + channelsJoined)
+    
     if gameName == '':
         await ctx.send("Please write out the game you wish to access after the command (i.e. ~enter New York)")
     elif check == False:
