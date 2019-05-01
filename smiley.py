@@ -5,8 +5,7 @@ import discord
 from discord.ext import commands
 import time, random, sheets, asyncio
 
-'''
-My (Smiley's) Main Script
+'''My (Smiley's) Main Script
 
 I'm friendly, and I can do Pact Dice drafts and dice rolls!
 '''
@@ -16,8 +15,7 @@ memory = {}
 fopen = open
 
 async def setup():
-    '''
-    My initializing function.
+    '''My initializing function.
     '''
 
     memory['channel'] = None
@@ -76,8 +74,7 @@ async def setup():
     # Events for the end of clash and bids
 
 async def subround(clash):
-    '''
-    My main loop. Executes subrounds and resolves clashes.
+    '''My main loop. Executes subrounds and resolves clashes.
     Parameter: bool clash - True if function should handle post-clash bids
                             False if function should do a full round
     Return: None
@@ -132,8 +129,7 @@ async def subround(clash):
     # Go on to the next full round!
 
 async def show_cats():
-    '''
-    Displays the categories so you can see who has what.
+    '''Displays the categories so you can see who has what.
     This function is not called by anything, and has been replaced by google
      sheets integration.
     '''
@@ -164,8 +160,7 @@ async def show_cats():
         await memory['channel'].send(to_say)
 
 async def blank_sheet():
-    '''
-    Makes a new sheet for a PD Draft.
+    '''Makes a new sheet for a PD Draft.
     Parameters: none
     Return: None
     '''
@@ -174,8 +169,7 @@ async def blank_sheet():
     await memory['channel'].send('Click here to follow: https://docs.google.com/spreadsheets/d/' + memory["sheetID"])
 
 async def update_sheet():
-    '''
-    Goes through my memory and copies current draft results
+    '''Goes through my memory and copies current draft results
     to the google sheet.
     Parameters: none
     Return: None
@@ -212,8 +206,7 @@ async def do_player_karma_labels():
         await sheets.write_cell(memory, (11+index,0), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
 
 async def get_bids():
-    '''
-    Tells players to submit bids, and waits until all bids are done.
+    '''Tells players to submit bids, and waits until all bids are done.
     '''
     for player in memory['players']:
         if player not in memory['to resolve']:
@@ -243,8 +236,7 @@ async def bid_reminder():
         asyncio.sleep(240)
 
 async def calc_clashes():
-    '''
-    Figures out if there are clashes and who's in each.
+    '''Figures out if there are clashes and who's in each.
     '''
     bid = None
     bid_player = None
@@ -285,8 +277,7 @@ async def calc_clashes():
     memory['to resolve'] = []
 
 async def do_clash(continued):
-    '''
-    Performs clashes and adds players who need to rebid to 'to resolve'.
+    '''Performs clashes and adds players who need to rebid to 'to resolve'.
     '''
     if not continued:
         to_say = 'Clash: '
@@ -467,8 +458,7 @@ async def do_clash(continued):
         memory['clash'] = False
 
 async def get_clash_choices():
-    '''
-    Tells players to submit clash choices, and waits until all clash choices are done.
+    '''Tells players to submit clash choices, and waits until all clash choices are done.
     '''
     for player in memory['players']:
         if player not in memory['clashes'][0]:
@@ -482,8 +472,7 @@ async def get_clash_choices():
     memory['clashing'] = False
 
 async def all_resolved():
-    '''
-    Not used because it doesn't work yet. Ideally should calculate when future rounds can be autofilled, but with insigs/abysmal that's not an easy check.
+    '''Not used because it doesn't work yet. Ideally should calculate when future rounds can be autofilled, but with insigs/abysmal that's not an easy check.
     '''
     if any(x == '' for x in memory['puissance'][:len(memory['players'])]):
         return False
@@ -505,15 +494,13 @@ async def all_resolved():
 
 @b.command()
 async def hi(ctx, *args):
-    '''
-    The hi command. I'll greet the user.
+    '''The hi command. I'll greet the user.
     '''
     await ctx.send('Hi, ' + ctx.author.display_name + '!')
 
 @b.command()
 async def open(ctx, *args):
-    '''
-    Begins a draft so people can join.
+    '''Begins a draft so people can join.
     '''
     if memory['phase'] == 'none':
         memory['phase'] = 'setup'
@@ -523,8 +510,7 @@ async def open(ctx, *args):
 
 @b.command()
 async def join(ctx, *args):
-    '''
-    Lets you join a draft.
+    '''Lets you join a draft.
     '''
     if memory['phase'] == 'setup':
         if not str(ctx.author) in memory['players']:
@@ -540,8 +526,7 @@ async def join(ctx, *args):
 
 @b.command()
 async def start(ctx, *args):
-    '''
-    Starts the draft after players join.
+    '''Starts the draft after players join.
     '''
     if memory['phase'] == 'setup':
         if len(memory['players']) >= 1 and len(memory['players']) <= 6:
@@ -574,8 +559,7 @@ async def start(ctx, *args):
 
 @b.command()
 async def reset(ctx, *args):
-    '''
-    Resets me, stopping any drafts in progress.
+    '''Resets me, stopping any drafts in progress.
     '''
     if not memory['quitconfirm']:
         await ctx.send('Are you sure? This will reset any drafts in progress. (Use ~reset again to confirm)')
@@ -588,8 +572,7 @@ async def reset(ctx, *args):
 
 @b.command()
 async def bid(ctx, *args):
-    '''
-    Allows players to bid on draft slots.
+    '''Allows players to bid on draft slots.
     '''
     if not type(ctx.channel) == discord.DMChannel:
         await ctx.send('This command only works in DMs.')
@@ -643,8 +626,7 @@ async def check_clash_choices():
 
 @b.command()
 async def stay(ctx, *args):
-    '''
-    The command to refuse to budge during a clash.
+    '''The command to refuse to budge during a clash.
     '''
     if not type(ctx.channel) == discord.DMChannel:
         await ctx.send('This command only works in DMs.')
@@ -661,8 +643,7 @@ async def stay(ctx, *args):
 
 @b.command()
 async def concede(ctx, *args):
-    '''
-    The command to cede during a clash.
+    '''The command to cede during a clash.
     '''
     if not type(ctx.channel) == discord.DMChannel:
         await ctx.send('This command only works in DMs.')
@@ -680,8 +661,7 @@ async def concede(ctx, *args):
 
 @b.command()
 async def table(ctx, *args):
-    '''
-    Shows the current draft progress
+    '''Shows the current draft progress
     '''
     if memory['phase'] == 'the draft':
         show_cats()
@@ -690,8 +670,7 @@ async def table(ctx, *args):
 
 @b.command()
 async def offer(ctx, *args):
-    '''
-    Allows players to offer trades to other players.
+    '''Allows players to offer trades to other players.
     '''
     lower_args = [arg.lower() for arg in args]
     if memory['phase'] == 'the draft':
@@ -887,8 +866,7 @@ async def offer(ctx, *args):
 
 @b.command()
 async def deny(ctx, *args):
-    '''
-    Lets players deny trades offered them.
+    '''Lets players deny trades offered them.
     '''
     lower_args = [arg.lower() for arg in args]
     if memory['phase'] == 'the draft':
@@ -918,8 +896,7 @@ async def deny(ctx, *args):
 
 @b.command()
 async def roll(ctx, *, arg='1d6 1d6'):
-    '''
-    Roll some dice
+    '''Roll some dice
     '''
     roll = arg
     has_tag = ' ' in roll
@@ -1063,15 +1040,13 @@ async def roll(ctx, *, arg='1d6 1d6'):
 # - - - - Absolute mess of code below. Mostly channel stuff. Tread at your own risk. - - - -
 @b.command()
 async def campaigns(ctx, *args):
-    '''
-    Get the link to the campaigns spreadsheet
+    '''Get the link to the campaigns spreadsheet
     '''
     await ctx.send("Campaign list: https://docs.google.com/spreadsheets/d/1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY")
 
 @b.command()
 async def addgame(ctx, *args):
-    '''
-    Create a WD or PD game with you as the GM
+    '''Create a WD or PD game with you as the GM
     '''
     gameType = args[0].lower()
     if (gameType != 'wd' and gameType != 'pd'):
@@ -1124,15 +1099,13 @@ async def addgame(ctx, *args):
         await sheets.newgame(str('#' + gameName),str(ctx.author.display_name), str(gameType).upper())
 
 async def debug(ctx, message):
-    '''
-    Prints a message in the context passed
+    '''Prints a message in the context passed
     '''
     await ctx.send(message)
 
 @b.command()
 async def enter(ctx, *args):
-    '''
-    Join a game channel
+    '''Join a game channel
     '''
     gameName = ''
     game = None
@@ -1202,8 +1175,7 @@ async def enter(ctx, *args):
 
 @b.command()
 async def exit(ctx, *args):
-    '''
-    Leave a game channel
+    '''Leave a game channel
     '''
     gameName = ''
     game = None
@@ -1226,8 +1198,7 @@ async def exit(ctx, *args):
 
 @b.command()
 async def archive(ctx, *args):
-    '''
-    Move an inactive game to archives
+    '''Move an inactive game to archives
     '''
     gameName = ''
     gameID = None
@@ -1270,8 +1241,7 @@ async def archive(ctx, *args):
 
 @b.command()
 async def unarchive(ctx, *args):
-    '''
-    Move an archived game back out of archives
+    '''Move an archived game back out of archives
     '''
     gameType = args[0].lower()
     if (gameType != 'wd' and gameType != 'pd'):
@@ -1323,8 +1293,7 @@ async def unarchive(ctx, *args):
 
 @b.command()
 async def link(ctx, *args):
-    '''
-    Sets the doc link on the spreadsheet for your game
+    '''Sets the doc link on the spreadsheet for your game
     '''
     link = ''
 
