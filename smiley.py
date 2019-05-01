@@ -16,11 +16,16 @@ memory = {}
 fopen = open
 
 async def setup():
+    '''
+    My initializing function.
+    '''
+
     memory['channel'] = None
     memory['phase'] = 'none'
     memory['round'] = None
     memory['bidding'] = False
     memory['clashing'] = False
+    # Set all the 'state' indicators to defaults
 
     memory['players'] = []
     memory['to resolve'] = []
@@ -35,6 +40,7 @@ async def setup():
     memory['black marks'] = {}
     memory['white marks'] = {}
     memory['limits'] = {}
+    # Make empty arrays for all the player things
 
     memory['rows to show'] = 0
 
@@ -54,6 +60,7 @@ async def setup():
     memory['family']     = ['', '', '', '', '',    '', '', '']
 
     memory['clashes'] = [[],[],[]]
+    # More empty things
 
     memory['colors'] = {"purple": (0.2,0.1,0.5),
                         "blue":   (0.1,0.3,0.8),
@@ -62,17 +69,24 @@ async def setup():
                         "orange": (0.7,0.4,0.0), # Leave out second
                         "red":    (0.6,0.0,0.0)
                         }
+    # Define colors
 
     memory['clashesin'] = asyncio.Event()
     memory['bidsin'] = asyncio.Event()
-'''
-My initializing function.
-'''
+    # Events for the end of clash and bids
 
 async def subround(clash):
+    '''
+    My main loop. Executes subrounds and resolves clashes.
+    Parameter: bool clash - True if function should handle post-clash bids
+                            False if function should do a full round
+    Return: None
+    '''
     if not clash:
         await memory['channel'].send('It\'s the beginning of round ' + str(memory['round']) + '! (Submit your bids by PMing me with e.x. ~bid Executions 2)')
+        # Start a full round & tell players to submit bids
     else:
+    # Resolve clashes
         to_say = 'We need to finish resolving the clashes! '
         for player in memory['to resolve']:
             to_say = to_say + memory['proper names'][player] + ', '
@@ -82,30 +96,48 @@ async def subround(clash):
             to_say = to_say + 'please submit your bid by PMing me with e.x. ~bid Executions 2'
         await memory['channel'].send(to_say)
         await memory['channel'].send('Remember, bids are restricted by the results of the clashes.')
+        # Tell players to submit bids
     await get_bids()
+    # Wait until bids are all submitted
+
     if memory['phase'] == 'none':
         return
+    # Make sure the draft hasn't been reset
+
     await calc_clashes()
+    # See if there are any clashes
+
     while memory['clash']:
         await do_clash(False)
         if memory['phase'] == 'none':
             return
-    #await show_cats()
+    # Handle any and all clashes
+
     await update_sheet()
+    # Post results to the google sheet
+
     if len(memory['to resolve']) > 0:
         await subround(True)
+    # If the clashes need to be resolved, do another subround for those bids
+
     elif memory['round'] == 8:
         await memory['channel'].send('That\'s the end of the draft! Thanks for playing!')
         await setup()
+    # If it's the last round, end the draft
+
     else:
         memory['to resolve'] = memory['players']
         memory['round'] += 1
         await subround(False)
-'''
-My main loop. Executes subrounds and resolves clashes.
-'''
+    # Go on to the next full round!
 
 async def show_cats():
+    '''
+    Displays the categories so you can see who has what.
+    This function is not called by anything, and has been replaced by google
+     sheets integration.
+    '''
+
     for cat in memory['cats']:
         to_say = cat.capitalize()
         for i in range(11 - len(cat)):
@@ -130,47 +162,26 @@ async def show_cats():
         for i in range(memory['black marks'][player]):
             to_say += '★'
         await memory['channel'].send(to_say)
-'''
-Displays the categories so you can see who has what.
-'''
 
 async def blank_sheet():
+    '''
+    Makes a new sheet for a PD Draft.
+    Parameters: none
+    Return: None
+    '''
     num_players = len(memory["players"])
     memory["sheetID"] = await sheets.new_blank_sheet(memory, num_players)
     await memory['channel'].send('Click here to follow: https://docs.google.com/spreadsheets/d/' + memory["sheetID"])
 
-async def show_cats():
-    for cat in memory['cats']:
-        to_say = cat.capitalize()
-        for i in range(11 - len(cat)):
-            to_say += ' '
-        to_say += '| '
-        for i in range(memory['rows to show']):
-            if memory[cat][i] == '':
-                for j in range(14):
-                    to_say += ' '
-            else:
-                to_say += ' ' + memory['proper names'][memory[cat][i]][:-1] + '​' + memory['proper names'][memory[cat][i]][-1]
-                for j in range(13 - len(memory[cat][i])):
-                    to_say += ' '
-            to_say += '|'
-        bot.say(to_say)
-
-    for player in memory['players']:
-        to_say = memory['proper names'][player][:-1] + '​' + memory['proper names'][player][-1] + ': '
-        for i in range(memory['white marks'][player]):
-            to_say += '☆'
-        to_say += ' | '
-        for i in range(memory['black marks'][player]):
-            to_say += '★'
-        bot.say(to_say)
-'''
-Displays the categories so you can see who has what.
-'''
-
 async def update_sheet():
+    '''
+    Goes through my memory and copies current draft results
+    to the google sheet.
+    Parameters: none
+    Return: None
+    '''
     if memory['rows to show'] > len(memory['players']):
-        # Extend sheet
+        # Extend sheet at some point in the future
         do_nothing_here_yet = 0
     for cat in memory['cats']:
         for rank in range(memory['rows to show']):
@@ -180,6 +191,7 @@ async def update_sheet():
                 row = memory['cats'].index(cat) + 1
                 col = rank + 1
                 await sheets.write_cell(memory, (row,col), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
+    # Write into each filled category the player who has it
 
     for index in range(len(memory['players'])):
         player = memory['players'][index]
@@ -192,6 +204,7 @@ async def update_sheet():
         for i in range(memory['black marks'][player]):
             to_write += '☆'
         await sheets.write_cell(memory, (row,2), to_write, (0.15,0.15,0.15), (1,1,1))
+    # Write each player's karma into the karma table
 
 async def do_player_karma_labels():
     for index in range(len(memory['players'])):
