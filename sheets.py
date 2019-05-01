@@ -143,20 +143,11 @@ and sets the colors for the cell.
 
 # - - - - More weird channel stuff below. Should hopefully still work when copy-pasted
 
-
-SECRET1 = os.path.join(os.getcwd(), "client_secret.json")
-SCOPES1 = ['https://www.googleapis.com/auth/drive']
-
 ID1 = '1ijaOZAqpvmvsmO8HhxJOC5oTsz0yAMA_AnafWMM79ks'
-
-c1 = s_a.Credentials.from_service_account_file(SECRET1, scopes=SCOPES1)
-
-service1 = build('sheets', 'v4', credentials=c1)
-drive_service1 = build('drive', 'v3', credentials=c1)
 
 async def newgame(name, GM, type):
 
-    sheet = service1.spreadsheets()
+    sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
                                 range='Campaigns!A1:E100').execute()
     values = result.get('values', [])
@@ -192,8 +183,8 @@ async def newgame(name, GM, type):
                     "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
     requests = [{"updateCells": update_cells}]
     batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
-    
-    
+
+
     cell = (rowNum, 3)
     celldata = {"userEnteredValue": {"stringValue": type}}
     update_cells = {"rows": [{"values": [celldata]}],
@@ -204,7 +195,7 @@ async def newgame(name, GM, type):
 
 async def gamecheck(name, game):
 
-    sheet = service1.spreadsheets()
+    sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
                                 range='Campaigns!A1:E100').execute()
     values = result.get('values', [])
@@ -222,7 +213,7 @@ async def gamecheck(name, game):
 
 async def addlink(name, link):
 
-    sheet = service1.spreadsheets()
+    sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
                                 range='Campaigns!A1:E100').execute()
     values = result.get('values', [])
@@ -245,7 +236,7 @@ async def addlink(name, link):
 
 async def changeState(name,yesno):
 
-    sheet = service1.spreadsheets()
+    sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
                                 range='Campaigns!A1:E100').execute()
     values = result.get('values', [])

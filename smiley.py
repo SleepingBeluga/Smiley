@@ -1104,7 +1104,7 @@ async def enter(ctx, *args):
     for discord.Guild.TextChannel in ctx.guild.channels:
         if discord.Guild.TextChannel.name == gameName:
             game = discord.Guild.TextChannel
-            check = (discord.Guild.TextChannel.category.name == "PactDice Games" 
+            check = (discord.Guild.TextChannel.category.name == "PactDice Games"
                 or discord.Guild.TextChannel.category.name == "WeaverDice Games"
                 or discord.Guild.TextChannel.category.name == "Archives")
 
