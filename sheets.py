@@ -143,7 +143,7 @@ and sets the colors for the cell.
 
 # - - - - More weird channel stuff below. Should hopefully still work when copy-pasted
 
-ID1 = '1ijaOZAqpvmvsmO8HhxJOC5oTsz0yAMA_AnafWMM79ks'
+ID1 = '1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY'
 
 async def newgame(name, GM, type):
 
