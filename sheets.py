@@ -154,7 +154,7 @@ c1 = s_a.Credentials.from_service_account_file(SECRET1, scopes=SCOPES1)
 service1 = build('sheets', 'v4', credentials=c1)
 drive_service1 = build('drive', 'v3', credentials=c1)
 
-async def newgame(name, GM):
+async def newgame(name, GM, type):
 
     sheet = service1.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
@@ -187,6 +187,15 @@ async def newgame(name, GM):
 
     cell = (rowNum, 2)
     celldata = {"userEnteredValue": {"stringValue": 'Y'}}
+    update_cells = {"rows": [{"values": [celldata]}],
+                    "fields": "userEnteredValue",
+                    "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
+    requests = [{"updateCells": update_cells}]
+    batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
+    
+    
+    cell = (rowNum, 3)
+    celldata = {"userEnteredValue": {"stringValue": type}}
     update_cells = {"rows": [{"values": [celldata]}],
                     "fields": "userEnteredValue",
                     "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
@@ -226,7 +235,7 @@ async def addlink(name, link):
         else:
             rowNum = rowNum + 1
 
-    cell = (rowNum, 3)
+    cell = (rowNum, 4)
     celldata = {"userEnteredValue": {"stringValue": link}}
     update_cells = {"rows": [{"values": [celldata]}],
                     "fields": "userEnteredValue",
