@@ -1217,6 +1217,7 @@ async def archive(ctx, *args):
         gameName = gameName + str(arg)
 
     namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
+    moderator = ('Mod Team' in ctx.author.roles)
 
     for discord.Guild.CategoryChannel in ctx.message.guild.categories:
         if discord.Guild.CategoryChannel.name == 'PactDice Games':
@@ -1234,8 +1235,8 @@ async def archive(ctx, *args):
         await ctx.send("Please write out the game you wish to archive after the command (i.e. ~archive New York)")
     elif gameID == archiveID:
         await ctx.send("That game is already archived.")
-    elif namecheck == False:
-        await ctx.send("No.")
+    elif namecheck == False and moderator == False:
+        await ctx.send("You don't have permission to archive this.")
     else:
         if gameID != PDID and gameID != WDID:
             await ctx.send("That game could not be found.")
@@ -1271,6 +1272,7 @@ async def unarchive(ctx, *args):
         gameName = gameName + str(arg)
 
     namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
+    moderator = ('Mod Team' in ctx.author.roles)
 
     for discord.Guild.TextChannel in ctx.message.guild.channels:
         if discord.Guild.TextChannel.name == gameName:
@@ -1280,8 +1282,8 @@ async def unarchive(ctx, *args):
         await ctx.send("Please write out the game you wish to unarchive after the command (i.e. ~unarchive New York)")
     elif gameID == PDID or gameID == WDID:
         await ctx.send("That game is already active.")
-    elif namecheck == False:
-        await ctx.send("No.")
+    elif namecheck == False and moderator = False:
+        await ctx.send("You don't have permission to unarchive this.")
     else:
         if gameID != archiveID:
             await ctx.send("That game could not be found.")
