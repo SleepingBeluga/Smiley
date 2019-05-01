@@ -1050,7 +1050,7 @@ async def roll(ctx, *, arg='1d6 1d6'):
 async def addgame(ctx, *args):
     gameType = args[0].lower()
     if (gameType != 'wd' and gameType != 'pd'):
-        await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd new_york)")
+        await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd new-york)")
         return
     gameName = ''
     gameMaster = None
@@ -1061,7 +1061,7 @@ async def addgame(ctx, *args):
         gameName = gameName + str(arg)
 
     if gameName == '':
-        await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd new_york)")
+        await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd new-york)")
     else:
 
     #    roleName = gameName + 'er'
