@@ -1104,9 +1104,9 @@ async def enter(ctx, *args):
     for discord.Guild.TextChannel in ctx.guild.channels:
         if discord.Guild.TextChannel.name == gameName:
             game = discord.Guild.TextChannel
-            check = (discord.Guild.TextChannel.category == "PactDice Games" 
-                or discord.Guild.TextChannel.category == "WeaverDice Games"
-                or discord.Guild.TextChannel.category == "Archives")
+            check = (discord.Guild.TextChannel.category.name == "PactDice Games" 
+                or discord.Guild.TextChannel.category.name == "WeaverDice Games"
+                or discord.Guild.TextChannel.category.name == "Archives")
 
     if gameName == '':
         await ctx.send("Please write out the game you wish to access after the command (i.e. ~enter New York)")
