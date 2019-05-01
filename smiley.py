@@ -1044,7 +1044,9 @@ async def roll(ctx, *, arg='1d6 1d6'):
 
 
 # - - - - Absolute mess of code below. Mostly channel stuff. Tread at your own risk. - - - -
-
+@b.command()
+async def campaigns(ctx, *args):
+    await ctx.send("Campaign list: https://docs.google.com/spreadsheets/d/1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY")
 
 @b.command()
 async def addgame(ctx, *args):
