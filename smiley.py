@@ -93,9 +93,10 @@ async def reset(ctx, *args):
         await ctx.send('OK, I\'ve reset.')
         await setup()
 
-b.add_cog(Draft())
-b.add_cog(Game_Channels())
-b.add_cog(Rolls())
+b.add_cog(draft.Draft())
+b.add_cog(gamechannels.Game_Channels())
+b.add_cog(dice.Rolls())
+# Add the cogs to the bot
 
 b.loop.create_task(setup())
 # Run the setup function before doing anything!
