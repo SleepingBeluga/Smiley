@@ -212,6 +212,9 @@ async def do_player_karma_labels():
         await sheets.write_cell(memory, (11+index,0), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
 
 async def get_bids():
+    '''
+    Tells players to submit bids, and waits until all bids are done.
+    '''
     for player in memory['players']:
         if player not in memory['to resolve']:
             memory['bids'][player] = 0
@@ -224,9 +227,6 @@ async def get_bids():
     memory['bidding'] = False
     for player in memory['players']:
         memory['limits'][player] = 0
-'''
-Tells players to submit bids, and waits until all bids are done.
-'''
 
 async def bid_reminder():
     asyncio.sleep(240)
@@ -243,6 +243,9 @@ async def bid_reminder():
         asyncio.sleep(240)
 
 async def calc_clashes():
+    '''
+    Figures out if there are clashes and who's in each.
+    '''
     bid = None
     bid_player = None
     clashes_so_far = 0
@@ -280,11 +283,11 @@ async def calc_clashes():
     if clashes_so_far > 0:
         memory['clash'] = True
     memory['to resolve'] = []
-'''
-Figures out if there are clashes and who's in each.
-'''
 
 async def do_clash(continued):
+    '''
+    Performs clashes and adds players who need to rebid to 'to resolve'.
+    '''
     if not continued:
         to_say = 'Clash: '
         for player in memory['clashes'][0]:
@@ -462,11 +465,11 @@ async def do_clash(continued):
 
     if memory['clashes'][0] == []:
         memory['clash'] = False
-'''
-Performs clashes and adds players who need to rebid to 'to resolve'.
-'''
 
 async def get_clash_choices():
+    '''
+    Tells players to submit clash choices, and waits until all clash choices are done.
+    '''
     for player in memory['players']:
         if player not in memory['clashes'][0]:
             memory['clash choices'][player] = ""
@@ -477,11 +480,11 @@ async def get_clash_choices():
     await memory['clashesin'].wait()
     memory['clashesin'].clear()
     memory['clashing'] = False
-'''
-Tells players to submit clash choices, and waits until all clash choices are done.
-'''
 
 async def all_resolved():
+    '''
+    Not used because it doesn't work yet. Ideally should calculate when future rounds can be autofilled, but with insigs/abysmal that's not an easy check.
+    '''
     if any(x == '' for x in memory['puissance'][:len(memory['players'])]):
         return False
     if any(x  == ''  for x in memory['longevity'][:len(memory['players'])]):
@@ -499,30 +502,30 @@ async def all_resolved():
     if any(x  == ''  for x in memory['family'][:len(memory['players'])]):
         return False
     return True
-'''
-Not used because it doesn't work yet. Ideally should calculate when future rounds can be autofilled, but with insigs/abysmal that's not an easy check.
-'''
 
 @b.command()
 async def hi(ctx, *args):
+    '''
+    The hi command. I'll greet the user.
+    '''
     await ctx.send('Hi, ' + ctx.author.display_name + '!')
-'''
-The hi command. I'll greet the user.
-'''
 
 @b.command()
 async def open(ctx, *args):
+    '''
+    Begins a draft so people can join.
+    '''
     if memory['phase'] == 'none':
         memory['phase'] = 'setup'
         await ctx.send('Opening a draft! (Use ~join to join, and then ~start to begin)')
     else:
         await ctx.send('A draft is already ongoing! Finish it before trying again.')
-'''
-Begins a draft so people can join.
-'''
 
 @b.command()
 async def join(ctx, *args):
+    '''
+    Lets you join a draft.
+    '''
     if memory['phase'] == 'setup':
         if not str(ctx.author) in memory['players']:
             memory['players'].append(str(ctx.author))
@@ -534,12 +537,12 @@ async def join(ctx, *args):
         await ctx.send('You can\'t join because there\'s no draft going on! (Use ~open to start one)')
     else:
         await ctx.send('You can\'t join right now, we\'re in ' + memory['phase'] + '!')
-'''
-Lets you join a draft.
-'''
 
 @b.command()
 async def start(ctx, *args):
+    '''
+    Starts the draft after players join.
+    '''
     if memory['phase'] == 'setup':
         if len(memory['players']) >= 1 and len(memory['players']) <= 6:
             await ctx.send('Starting the draft!')
@@ -568,12 +571,12 @@ async def start(ctx, *args):
         await ctx.send('You can\'t start the draft yet, you need players first! (Use ~open to let players join)')
     else:
         await ctx.send('You can\'t start a draft right now, we\'re in ' + memory['phase'] + '!')
-'''
-Starts the draft after players join.
-'''
 
 @b.command()
 async def reset(ctx, *args):
+    '''
+    Resets me, stopping any drafts in progress.
+    '''
     if not memory['quitconfirm']:
         await ctx.send('Are you sure? This will reset any drafts in progress. (Use ~reset again to confirm)')
         memory['quitconfirm'] = True
@@ -582,12 +585,12 @@ async def reset(ctx, *args):
     else:
         await ctx.send('OK, I\'ve reset.')
         await setup()
-'''
-Resets me, stopping any drafts in progress.
-'''
 
 @b.command()
 async def bid(ctx, *args):
+    '''
+    Allows players to bid on draft slots.
+    '''
     if not type(ctx.channel) == discord.DMChannel:
         await ctx.send('This command only works in DMs.')
         return
@@ -629,9 +632,6 @@ async def bid(ctx, *args):
             await ctx.send('I don\'t need a bid from you right now.')
     else:
         await ctx.send('Now\'s not the time for bidding.')
-'''
-Allows players to bid on draft slots.
-'''
 
 async def check_bids():
     if not None in memory['bids'].values():
@@ -643,6 +643,9 @@ async def check_clash_choices():
 
 @b.command()
 async def stay(ctx, *args):
+    '''
+    The command to refuse to budge during a clash.
+    '''
     if not type(ctx.channel) == discord.DMChannel:
         await ctx.send('This command only works in DMs.')
         return
@@ -655,12 +658,12 @@ async def stay(ctx, *args):
             await ctx.send('I don\'t need a choice from you right now.')
     else:
         await ctx.send('Now\'s not the time to submit a clash choice.')
-'''
-The command to refuse to budge during a clash.
-'''
 
 @b.command()
 async def concede(ctx, *args):
+    '''
+    The command to cede during a clash.
+    '''
     if not type(ctx.channel) == discord.DMChannel:
         await ctx.send('This command only works in DMs.')
         return
@@ -673,22 +676,23 @@ async def concede(ctx, *args):
             await ctx.send('I don\'t need a choice from you right now.')
     else:
         await ctx.send('Now\'s not the time to submit a clash choice.')
-'''
-The command to cede during a clash.
-'''
+
 
 @b.command()
 async def table(ctx, *args):
+    '''
+    Shows the current draft progress
+    '''
     if memory['phase'] == 'the draft':
         show_cats()
     else:
         await ctx.send('There\'s no draft going on.')
-'''
-Shows the current draft progress
-'''
 
 @b.command()
 async def offer(ctx, *args):
+    '''
+    Allows players to offer trades to other players.
+    '''
     lower_args = [arg.lower() for arg in args]
     if memory['phase'] == 'the draft':
         if str(ctx.author) in memory['players']:
@@ -880,12 +884,12 @@ async def offer(ctx, *args):
             await ctx.send('You\'re not in the draft!')
     else:
         await ctx.send('There\'s no draft going on.')
-'''
-Allows players to offer trades to other players.
-'''
 
 @b.command()
 async def deny(ctx, *args):
+    '''
+    Lets players deny trades offered them.
+    '''
     lower_args = [arg.lower() for arg in args]
     if memory['phase'] == 'the draft':
         if str(ctx.author) in memory['players']:
@@ -911,9 +915,6 @@ async def deny(ctx, *args):
             await ctx.send('You\'re not in the draft!')
     else:
         await ctx.send('There\'s no draft going on.')
-'''
-Lets players deny trades offered them.
-'''
 
 @b.command()
 async def roll(ctx, *, arg='1d6 1d6'):
@@ -1282,7 +1283,7 @@ async def unarchive(ctx, *args):
         await ctx.send("Please write out the game you wish to unarchive after the command (i.e. ~unarchive New York)")
     elif gameID == PDID or gameID == WDID:
         await ctx.send("That game is already active.")
-    elif namecheck == False and moderator = False:
+    elif namecheck == False and moderator == False:
         await ctx.send("You don't have permission to unarchive this.")
     else:
         if gameID != archiveID:
