@@ -5,12 +5,12 @@ from google.oauth2 import service_account as s_a
 SECRET = os.path.join(os.getcwd(), "gsecret.json")
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
+c = s_a.Credentials.from_service_account_file(SECRET, scopes=SCOPES)
+
+service = build('sheets', 'v4', credentials=c)
+drive_service = build('drive', 'v3', credentials=c)
+
 async def new_blank_sheet(memory, NUM_PLAYERS):
-    c = s_a.Credentials.from_service_account_file(SECRET, scopes=SCOPES)
-
-    service = build('sheets', 'v4', credentials=c)
-    drive_service = build('drive', 'v3', credentials=c)
-
     # Call the Sheets API
     memory["sheet"] = service.spreadsheets()
 
