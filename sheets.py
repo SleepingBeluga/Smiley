@@ -140,3 +140,113 @@ async def write_cell(memory, cell, content, bgcolor, fgcolor):
 Given a cell, contents, and colors, writes contents
 and sets the colors for the cell.
 '''
+
+# - - - - More weird channel stuff below. Should hopefully still work when copy-pasted
+
+
+async def newgame(name, GM):
+
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=ID,
+                                range='Campaigns!A1:E100').execute()
+    values = result.get('values', [])
+
+    rowNum = 0
+
+    name = name.lower()
+
+    for row in values:
+        if row[0] != "":
+            rowNum = rowNum + 1
+
+    cell = (rowNum,0)
+    celldata = {"userEnteredValue": {"stringValue": name}}
+    update_cells = {"rows": [{"values": [celldata]}],
+                    "fields": "userEnteredValue",
+                    "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
+    requests = [{"updateCells": update_cells}]
+    batch_res = sheet.batchUpdate(spreadsheetId=ID, body={"requests": requests}).execute()
+
+    cell = (rowNum,1)
+    celldata = {"userEnteredValue": {"stringValue": GM}}
+    update_cells = {"rows": [{"values": [celldata]}],
+                    "fields": "userEnteredValue",
+                    "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
+    requests = [{"updateCells": update_cells}]
+    batch_res = sheet.batchUpdate(spreadsheetId=ID, body={"requests": requests}).execute()
+
+    cell = (rowNum, 2)
+    celldata = {"userEnteredValue": {"stringValue": 'Y'}}
+    update_cells = {"rows": [{"values": [celldata]}],
+                    "fields": "userEnteredValue",
+                    "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
+    requests = [{"updateCells": update_cells}]
+    batch_res = sheet.batchUpdate(spreadsheetId=ID, body={"requests": requests}).execute()
+
+async def gamecheck(name, game):
+
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=ID,
+                                range='Campaigns!A1:E100').execute()
+    values = result.get('values', [])
+
+    check = False
+
+    game = game.lower()
+
+    for row in values:
+        if str(row[0]) == str('#' + game):
+            if str(row[1]) == name:
+                check = True
+
+    return check
+
+async def addlink(name, link):
+
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=ID,
+                                range='Campaigns!A1:E100').execute()
+    values = result.get('values', [])
+
+    rowNum = 0
+
+    for row in values:
+        if str(row[1]) == name:
+            break
+        else:
+            rowNum = rowNum + 1
+
+    cell = (rowNum, 3)
+    celldata = {"userEnteredValue": {"stringValue": link}}
+    update_cells = {"rows": [{"values": [celldata]}],
+                    "fields": "userEnteredValue",
+                    "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
+    requests = [{"updateCells": update_cells}]
+    batch_res = sheet.batchUpdate(spreadsheetId=ID, body={"requests": requests}).execute()
+
+async def changeState(name,yesno):
+
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=ID,
+                                range='Campaigns!A1:E100').execute()
+    values = result.get('values', [])
+
+    rowNum = 0
+
+    name = name.lower()
+
+    for row in values:
+        if str(row[0]) == str('#' + name):
+            break
+        else:
+            rowNum = rowNum + 1
+
+    cell = (rowNum, 2)
+    celldata = {"userEnteredValue": {"stringValue": yesno}}
+    update_cells = {"rows": [{"values": [celldata]}],
+                    "fields": "userEnteredValue",
+                    "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
+    requests = [{"updateCells": update_cells}]
+    batch_res = sheet.batchUpdate(spreadsheetId=ID, body={"requests": requests}).execute()
+
+# ...sorry about the mess X|
