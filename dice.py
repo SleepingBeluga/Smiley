@@ -1,8 +1,10 @@
+from discord.ext import commands
+
 class Rolls:
     '''For rolling dice
     '''
-    @b.command()
-    async def roll(ctx, *, arg='1d6 1d6'):
+    @commands.command()
+    async def roll(self, ctx, *, arg='1d6 1d6'):
         '''Roll some dice
         '''
         roll = arg

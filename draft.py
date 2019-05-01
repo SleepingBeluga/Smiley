@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 async def subround(clash):
     '''My main loop. Executes subrounds and resolves clashes.
     Parameter: bool clash - True if function should handle post-clash bids
@@ -428,8 +430,8 @@ async def check_clash_choices():
 class Draft:
     '''Commands for Pact Dice drafts
     '''
-    @b.command()
-    async def open(ctx, *args):
+    @commands.command()
+    async def open(self, ctx, *args):
         '''Begins a draft so people can join.
         '''
         if memory['phase'] == 'none':
@@ -438,8 +440,8 @@ class Draft:
         else:
             await ctx.send('A draft is already ongoing! Finish it before trying again.')
 
-    @b.command()
-    async def join(ctx, *args):
+    @commands.command()
+    async def join(self, ctx, *args):
         '''Lets you join a draft.
         '''
         if memory['phase'] == 'setup':
@@ -454,8 +456,8 @@ class Draft:
         else:
             await ctx.send('You can\'t join right now, we\'re in ' + memory['phase'] + '!')
 
-    @b.command()
-    async def start(ctx, *args):
+    @commands.command()
+    async def start(self, ctx, *args):
         '''Starts the draft after players join.
         '''
         if memory['phase'] == 'setup':
@@ -487,8 +489,8 @@ class Draft:
         else:
             await ctx.send('You can\'t start a draft right now, we\'re in ' + memory['phase'] + '!')
 
-    @b.command()
-    async def bid(ctx, *args):
+    @commands.command()
+    async def bid(self, ctx, *args):
         '''Allows players to bid on draft slots.
         '''
         if not type(ctx.channel) == discord.DMChannel:
@@ -533,8 +535,8 @@ class Draft:
         else:
             await ctx.send('Now\'s not the time for bidding.')
 
-    @b.command()
-    async def stay(ctx, *args):
+    @commands.command()
+    async def stay(self, ctx, *args):
         '''The command to refuse to budge during a clash.
         '''
         if not type(ctx.channel) == discord.DMChannel:
@@ -550,8 +552,8 @@ class Draft:
         else:
             await ctx.send('Now\'s not the time to submit a clash choice.')
 
-    @b.command()
-    async def concede(ctx, *args):
+    @commands.command()
+    async def concede(self, ctx, *args):
         '''The command to cede during a clash.
         '''
         if not type(ctx.channel) == discord.DMChannel:
@@ -568,8 +570,8 @@ class Draft:
             await ctx.send('Now\'s not the time to submit a clash choice.')
 
 
-    @b.command()
-    async def table(ctx, *args):
+    @commands.command()
+    async def table(self, ctx, *args):
         '''Shows the current draft progress
         '''
         if memory['phase'] == 'the draft':
@@ -577,8 +579,8 @@ class Draft:
         else:
             await ctx.send('There\'s no draft going on.')
 
-    @b.command()
-    async def offer(ctx, *args):
+    @commands.command()
+    async def offer(self, ctx, *args):
         '''Allows players to offer trades to other players.
         '''
         lower_args = [arg.lower() for arg in args]
@@ -773,8 +775,8 @@ class Draft:
         else:
             await ctx.send('There\'s no draft going on.')
 
-    @b.command()
-    async def deny(ctx, *args):
+    @commands.command()
+    async def deny(self, ctx, *args):
         '''Lets players deny trades offered them.
         '''
         lower_args = [arg.lower() for arg in args]

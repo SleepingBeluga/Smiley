@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 async def debug(ctx, message):
     '''Prints a message in the context passed
     '''
@@ -5,14 +7,14 @@ async def debug(ctx, message):
 
 class Game_Channels:
     # - - - - Absolute mess of code below. Mostly channel stuff. Tread at your own risk. - - - -
-    @b.command()
-    async def campaigns(ctx, *args):
+    @commands.command()
+    async def campaigns(self, ctx, *args):
         '''Get the link to the campaigns spreadsheet
         '''
         await ctx.send("Campaign list: https://docs.google.com/spreadsheets/d/1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY")
 
-    @b.command()
-    async def addgame(ctx, *args):
+    @commands.command()
+    async def addgame(self, ctx, *args):
         '''Create a WD or PD game with you as the GM
         '''
         gameType = args[0].lower()
@@ -65,8 +67,8 @@ class Game_Channels:
             await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
             await sheets.newgame(str('#' + gameName),str(ctx.author.display_name), str(gameType).upper())
 
-    @b.command()
-    async def enter(ctx, *args):
+    @commands.command()
+    async def enter(self, ctx, *args):
         '''Join a game channel
         '''
         gameName = ''
@@ -135,8 +137,8 @@ class Game_Channels:
         else:
             await game.set_permissions(ctx.author, read_messages=True)
 
-    @b.command()
-    async def exit(ctx, *args):
+    @commands.command()
+    async def exit(self, ctx, *args):
         '''Leave a game channel
         '''
         gameName = ''
@@ -158,8 +160,8 @@ class Game_Channels:
         else:
             await game.set_permissions(ctx.author, read_messages=False)
 
-    @b.command()
-    async def archive(ctx, *args):
+    @commands.command()
+    async def archive(self, ctx, *args):
         '''Move an inactive game to archives
         '''
         gameName = ''
@@ -201,8 +203,8 @@ class Game_Channels:
                         await ctx.TextChannel.edit(category=archiveID)
                         await sheets.changeState(gameName,'N')
 
-    @b.command()
-    async def unarchive(ctx, *args):
+    @commands.command()
+    async def unarchive(self, ctx, *args):
         '''Move an archived game back out of archives
         '''
         gameType = args[0].lower()
@@ -253,8 +255,8 @@ class Game_Channels:
                             await ctx.TextChannel.edit(category=WDID)
                         await sheets.changeState(gameName,'Y')
 
-    @b.command()
-    async def link(ctx, *args):
+    @commands.command()
+    async def link(self, ctx, *args):
         '''Sets the doc link on the spreadsheet for your game
         '''
         link = ''
