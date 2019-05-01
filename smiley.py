@@ -1169,9 +1169,9 @@ async def enter(ctx, *args):
 
     # Let's do some debugging
     if debugging:
-        await debug(joining)
+        await debug(ctx, joining)
         if channelsJoined > 0:
-            await debug("That is trying to join " + channelsJoined)
+            await debug(ctx, "That is trying to join " + channelsJoined)
 
     if gameName == '':
         await ctx.send("Please write out the game you wish to access after the command (i.e. ~enter New York)")
