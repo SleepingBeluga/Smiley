@@ -1147,6 +1147,9 @@ async def enter(ctx, *args):
     for discord.Guild.TextChannel in ctx.guild.channels:
         # First lets just check whether they want all games!
         catName = discord.Guild.TextChannel.category.name
+        if not discord.Guild.TextChannel.category:
+            continue
+        # If the channel has no category, move to the next channel
         if joinAllWD and catName == 'WeaverDice Games':
             joining += discord.Guild.TextChannel.name + ", "
             channelsJoined += 1
