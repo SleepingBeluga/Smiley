@@ -1048,16 +1048,20 @@ async def roll(ctx, *, arg='1d6 1d6'):
 
 @b.command()
 async def addgame(ctx, *args):
+    gameType = args[0].lower()
+    if (gameType != 'wd' and gameType != 'pd'):
+        await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd New York)")
+        return
     gameName = ''
     gameMaster = None
     #gameRole = None
     gamecat = None
 
-    for arg in args:
+    for arg in args[1:]:
         gameName = gameName + str(arg)
 
     if gameName == '':
-        await ctx.send("Please write out your game's name after the command (i.e. ~addgame New York)")
+        await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd New York)")
     else:
 
     #    roleName = gameName + 'er'
@@ -1080,7 +1084,9 @@ async def addgame(ctx, *args):
         }
 
         for discord.CategoryChannel in ctx.guild.categories:
-            if discord.CategoryChannel.name == 'PactDice Games':
+            if (discord.CategoryChannel.name == 'PactDice Games' and gameType == 'pd'):
+                gamecat = discord.CategoryChannel
+            elif (discord.CategoryChannel.name == 'WeaverDice Games' and gameType == 'wd'):
                 gamecat = discord.CategoryChannel
 
         await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
@@ -1098,7 +1104,9 @@ async def enter(ctx, *args):
     for discord.Guild.TextChannel in ctx.guild.channels:
         if discord.Guild.TextChannel.name == gameName:
             game = discord.Guild.TextChannel
-            check = True
+            check = (discord.Guild.TextChannel.category == "PactDice Games" 
+                or discord.Guild.TextChannel.category == "WeaverDice Games"
+                or discord.Guild.TextChannel.category == "Archives")
 
     if gameName == '':
         await ctx.send("Please write out the game you wish to access after the command (i.e. ~enter New York)")
@@ -1138,6 +1146,7 @@ async def archive(ctx, *args):
     gameID = None
     archiveID = None
     PDID = None
+    WDID = None
 
     for arg in args:
         gameName = gameName + str(arg)
@@ -1147,6 +1156,8 @@ async def archive(ctx, *args):
     for discord.Guild.CategoryChannel in ctx.message.guild.categories:
         if discord.Guild.CategoryChannel.name == 'PactDice Games':
             PDID = discord.Guild.CategoryChannel
+        if discord.Guild.CategoryChannel.name == 'WeaverDice Games':
+            WDID = discord.Guild.CategoryChannel
         elif discord.Guild.CategoryChannel.name == 'Archives':
             archiveID = discord.Guild.CategoryChannel
 
@@ -1161,7 +1172,7 @@ async def archive(ctx, *args):
     elif namecheck == False:
         await ctx.send("No.")
     else:
-        if gameID != PDID:
+        if gameID != PDID and gameID != WDID:
             await ctx.send("That game could not be found.")
         else:
             for ctx.TextChannel in ctx.message.guild.text_channels:
@@ -1171,20 +1182,27 @@ async def archive(ctx, *args):
 
 @b.command()
 async def unarchive(ctx, *args):
+    gameType = args[0].lower()
+    if (gameType != 'wd' and gameType != 'pd'):
+        await ctx.send("Please write out your game's name after the command (i.e. ~unarchive pd New York)")
+        return
     gameName = ''
     gameRole = None
     gameChan = None
     gameID = None
     archiveID = None
     PDID = None
+    WDID = None
 
     for discord.Guild.CategoryChannel in ctx.message.guild.categories:
         if discord.Guild.CategoryChannel.name == 'PactDice Games':
             PDID = discord.Guild.CategoryChannel
+        elif discord.Guild.CategoryChannel.name == 'WeaverDice Games':
+            WDID = discord.Guild.CategoryChannel
         elif discord.Guild.CategoryChannel.name == 'Archives':
             archiveID = discord.Guild.CategoryChannel
 
-    for arg in args:
+    for arg in args[1:]:
         gameName = gameName + str(arg)
 
     namecheck = (await moresheets.gamecheck(ctx.author.display_name,gameName))
@@ -1195,7 +1213,7 @@ async def unarchive(ctx, *args):
 
     if gameName == '':
         await ctx.send("Please write out the game you wish to unarchive after the command (i.e. ~unarchive New York)")
-    elif gameID == PDID:
+    elif gameID == PDID or gameID == WDID:
         await ctx.send("That game is already active.")
     elif namecheck == False:
         await ctx.send("No.")
@@ -1205,7 +1223,10 @@ async def unarchive(ctx, *args):
         else:
             for ctx.TextChannel in ctx.message.guild.text_channels:
                 if ctx.TextChannel.name == gameName:
-                    await ctx.TextChannel.edit(category=PDID)
+                    if gameType == 'pd':
+                        await ctx.TextChannel.edit(category=PDID)
+                    elif gameType == 'wd':
+                        await ctx.TextChannel.edit(category=WDID)
                     await moresheets.changeState(gameName,'Y')
 
 @b.command()
