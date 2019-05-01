@@ -1162,7 +1162,7 @@ async def enter(ctx, *args):
             joining += discord.Guild.TextChannel.name + ", "
             channelsJoined += 1
             await discord.Guild.TextChannel.set_permissions(ctx.author, read_messages=True)
-        elif discord.Guild.TextChannel.name == gameName:
+        if discord.Guild.TextChannel.name == gameName:
             game = discord.Guild.TextChannel
             joining += game.name
             check = (catName in ['PactDice Games', 'WeaverDice Games', 'Archives'])
