@@ -80,13 +80,13 @@ class WoundCog(commands.Cog):
     '''
     @commands.command()
     async def lesser(self, ctx, type):
-        await roll_wound('lesser', type.lower())
+        await roll_wound(ctx, 'lesser', type.lower())
     @commands.command()
     async def moderate(self, ctx, type):
-        await roll_wound('moderate', type.lower())
+        await roll_wound(ctx, 'moderate', type.lower())
     @commands.command()
     async def critical(self, ctx, type):
-        await roll_wound('critical', type.lower())
+        await roll_wound(ctx, 'critical', type.lower())
 
     @commands.command()
     async def cut(self, ctx, type):
