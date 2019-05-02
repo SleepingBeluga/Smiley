@@ -211,7 +211,7 @@ async def gamecheck(name, game):
 
     return check
 
-async def addlink(name, link):
+async def addlink(name, campaign, link):
 
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
@@ -221,7 +221,7 @@ async def addlink(name, link):
     rowNum = 0
 
     for row in values:
-        if str(row[1]) == name:
+        if str(row[1]) == name and str(row[0]) == ('#'+campaign):
             break
         else:
             rowNum = rowNum + 1

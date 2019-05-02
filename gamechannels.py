@@ -12,7 +12,7 @@ class Game_Channels(commands.Cog):
     async def campaigns(self, ctx, *args):
         '''Get the link to the campaigns spreadsheet
         '''
-        await ctx.send("Campaign list: https://docs.google.com/spreadsheets/d/1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY")
+        await ctx.send("Campaign list: https://docs.google.com/spreadsheets/d/" + sheets.ID1)
 
     @commands.command()
     async def addgame(self, ctx, *args):
@@ -262,11 +262,11 @@ class Game_Channels(commands.Cog):
         '''
         link = ''
 
-        for arg in args:
+        for arg in args[1:]:
             link += str(arg) + ' '
         link = link[:-1]
 
-        await sheets.addlink(ctx.author.display_name,link)
+        await sheets.addlink(ctx.author.display_name,args[0].lower(),link)
 
 
     # - - - - End of Disaster Area - - - -
