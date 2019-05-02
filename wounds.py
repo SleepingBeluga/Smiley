@@ -73,7 +73,7 @@ class WoundCog(commands.Cog):
     @commands.command()
     async def lesser(self, ctx, type):
         if type.lower == 'cut':
-            await lcut.roll()
+            print(await lcut.roll())
     @commands.command()
     async def moderate(self, ctx, type):
         pass
