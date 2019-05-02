@@ -1,4 +1,5 @@
 from discord.ext import commands
+import random
 
 class Rolls(commands.Cog):
     '''For rolling dice
