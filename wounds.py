@@ -28,7 +28,7 @@ class Wound:
 
     async def roll (self, part = None):
         if not part:
-            part = random.choice('Leg','Torso','Torso','Torso','Arm','Head')
+            part = random.choice(['Leg','Torso','Torso','Torso','Arm','Head'])
             # Roll a random target location (based on old rulebook)
         else:
             part = part.capitalize()
@@ -57,6 +57,11 @@ class Wound:
 
         return resstring
 
+wounds = {}
+wounds['lesser'] = {}
+wounds['moderate'] = {}
+wounds['critical'] = {}
+
 bleed = WoundOption('Bleed', 'Applies *Bleed*.')
 slashed = WoundOption('Slashed', 'Inflicts *Scar*.')
 gashed = WoundOption('Gashed','Counts as two minor wounds, one of these goes away on its own after a turn.')
@@ -64,23 +69,24 @@ blinded = WoundOption('Blinded','*Blinded* by blood in eyes.')
 raked = WoundOption('Raked','Counts as two minor wounds, one of these goes away on its own after a turn.')
 hindered = WoundOption('Hindered','*Pain*, one arm.')
 hobbled = WoundOption('Hobbled','*Pain*, one leg.')
-lcut = Wound('Cut','Lesser',[bleed,slashed,gashed],[blinded],[raked],[hindered],[hobbled])
+wounds['lesser']['cut'] = Wound('Cut','Lesser',[bleed,slashed,gashed],[blinded],[raked],[hindered],[hobbled])
 # Lesser Cut
+
+async def roll_wound(ctx, type, severity):
+    ctx.send(await wounds[severity][type])
 
 class WoundCog(commands.Cog):
     '''For rolling wounds
     '''
     @commands.command()
     async def lesser(self, ctx, type):
-        if type.lower == 'cut':
-            print(await lcut.roll())
-        print("'",type,"''")
+        await roll_wound('lesser', type.lower())
     @commands.command()
     async def moderate(self, ctx, type):
-        pass
+        await roll_wound('moderate', type.lower())
     @commands.command()
     async def critical(self, ctx, type):
-        pass
+        await roll_wound('critical', type.lower())
 
     @commands.command()
     async def cut(self, ctx, type):
