@@ -1,49 +1,6 @@
 from discord.ext import commands
 import random, asyncio
 
-bleed = WoundOption('Bleed', 'Applies *Bleed*.')
-slashed = WoundOption('Slashed', 'Inflicts *Scar*.')
-gashed = WoundOption('Gashed','Counts as two minor wounds, one of these goes away on its own after a turn.')
-blinded = WoundOption('Blinded','*Blinded* by blood in eyes.')
-raked = WoundOption('Raked','Counts as two minor wounds, one of these goes away on its own after a turn.')
-hindered = WoundOption('Hindered','*Pain*, one arm.')
-hobbled = WoundOption('Hobbled','*Pain*, one leg.')
-lcut = Wound('Cut','Lesser',[bleed,slashed,gashed],[blinded],[raked],[hindered],[hobbled])
-# Lesser Cut
-
-class WoundCog(commands.Cog):
-    '''For rolling wounds
-    '''
-    @commands.command()
-    async def lesser(self, ctx, type):
-        if type.lower == 'cut':
-            await lcut.roll()
-    @commands.command()
-    async def moderate(self, ctx, type):
-        pass
-    @commands.command()
-    async def critical(self, ctx, type):
-        pass
-
-    @commands.command()
-    async def cut(self, ctx, type):
-        pass
-    @commands.command()
-    async def pierce(self, ctx, type):
-        pass
-    @commands.command()
-    async def bash(self, ctx, type):
-        pass
-    @commands.command()
-    async def burn(self, ctx, type):
-        pass
-    @commands.command()
-    async def shock(self, ctx, type):
-        pass
-    @commands.command()
-    async def rend(self, ctx, type):
-        pass
-
 class WoundOption:
     '''A possible result from a Wound
     '''
@@ -99,3 +56,46 @@ class Wound:
         resstring = f'{self.severity} {self.type} - {res.name}: {res.text}'
 
         return resstring
+
+bleed = WoundOption('Bleed', 'Applies *Bleed*.')
+slashed = WoundOption('Slashed', 'Inflicts *Scar*.')
+gashed = WoundOption('Gashed','Counts as two minor wounds, one of these goes away on its own after a turn.')
+blinded = WoundOption('Blinded','*Blinded* by blood in eyes.')
+raked = WoundOption('Raked','Counts as two minor wounds, one of these goes away on its own after a turn.')
+hindered = WoundOption('Hindered','*Pain*, one arm.')
+hobbled = WoundOption('Hobbled','*Pain*, one leg.')
+lcut = Wound('Cut','Lesser',[bleed,slashed,gashed],[blinded],[raked],[hindered],[hobbled])
+# Lesser Cut
+
+class WoundCog(commands.Cog):
+    '''For rolling wounds
+    '''
+    @commands.command()
+    async def lesser(self, ctx, type):
+        if type.lower == 'cut':
+            await lcut.roll()
+    @commands.command()
+    async def moderate(self, ctx, type):
+        pass
+    @commands.command()
+    async def critical(self, ctx, type):
+        pass
+
+    @commands.command()
+    async def cut(self, ctx, type):
+        pass
+    @commands.command()
+    async def pierce(self, ctx, type):
+        pass
+    @commands.command()
+    async def bash(self, ctx, type):
+        pass
+    @commands.command()
+    async def burn(self, ctx, type):
+        pass
+    @commands.command()
+    async def shock(self, ctx, type):
+        pass
+    @commands.command()
+    async def rend(self, ctx, type):
+        pass
