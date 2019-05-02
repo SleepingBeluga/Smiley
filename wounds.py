@@ -53,14 +53,15 @@ class Wound:
 
         res = random.choice(pool)
 
-        resstring = f'{self.severity} {self.type} - {res.name}: {res.text}'
+        resstring = f'{self.severity} {self.type} ({part}): ```{res.name}: {res.text}```'
 
         return resstring
 
-wounds = {}
-wounds['lesser'] = {}
-wounds['moderate'] = {}
-wounds['critical'] = {}
+woundd = {}
+
+woundd['lesser'] = {}
+woundd['moderate'] = {}
+woundd['critical'] = {}
 
 bleed = WoundOption('Bleed', 'Applies *Bleed*.')
 slashed = WoundOption('Slashed', 'Inflicts *Scar*.')
@@ -69,41 +70,40 @@ blinded = WoundOption('Blinded','*Blinded* by blood in eyes.')
 raked = WoundOption('Raked','Counts as two minor wounds, one of these goes away on its own after a turn.')
 hindered = WoundOption('Hindered','*Pain*, one arm.')
 hobbled = WoundOption('Hobbled','*Pain*, one leg.')
-wounds['lesser']['cut'] = Wound('Cut','Lesser',[bleed,slashed,gashed],[blinded],[raked],[hindered],[hobbled])
-print(wounds['lesser']['cut'].type)
+woundd['lesser']['cut'] = Wound('Cut','Lesser',[bleed,slashed,gashed],[blinded],[raked],[hindered],[hobbled])
 # Lesser Cut
 
-async def roll_wound(ctx, type, severity):
-    ctx.send(await wounds[severity][type])
+async def roll_wound(ctx, severity, wtype,):
+    await ctx.send(await woundd[severity.lower()][wtype.lower()].roll())
 
 class WoundCog(commands.Cog):
     '''For rolling wounds
     '''
     @commands.command()
-    async def lesser(self, ctx, type):
-        await roll_wound(ctx, 'lesser', type.lower())
+    async def lesser(self, ctx, wtype):
+        await roll_wound(ctx, 'lesser', wtype)
     @commands.command()
     async def moderate(self, ctx, type):
-        await roll_wound(ctx, 'moderate', type.lower())
+        await roll_wound(ctx, 'moderate', wtype)
     @commands.command()
     async def critical(self, ctx, type):
-        await roll_wound(ctx, 'critical', type.lower())
+        await roll_wound(ctx, 'critical', wtype)
 
     @commands.command()
-    async def cut(self, ctx, type):
+    async def cut(self, ctx, sev):
         pass
     @commands.command()
-    async def pierce(self, ctx, type):
+    async def pierce(self, ctx, sev):
         pass
     @commands.command()
-    async def bash(self, ctx, type):
+    async def bash(self, ctx, sev):
         pass
     @commands.command()
-    async def burn(self, ctx, type):
+    async def burn(self, ctx, sev):
         pass
     @commands.command()
-    async def shock(self, ctx, type):
+    async def shock(self, ctx, sev):
         pass
     @commands.command()
-    async def rend(self, ctx, type):
+    async def rend(self, ctx, sev):
         pass

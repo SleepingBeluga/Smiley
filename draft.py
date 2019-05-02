@@ -1,6 +1,67 @@
 from discord.ext import commands
 import discord, random, asyncio
 
+memory = {}
+
+async def setup():
+    '''My initializing function.
+    '''
+
+    memory['channel'] = None
+    memory['phase'] = 'none'
+    memory['round'] = None
+    memory['bidding'] = False
+    memory['clashing'] = False
+    # Set all the 'state' indicators to defaults
+
+    memory['players'] = []
+    memory['to resolve'] = []
+    memory['player colors'] = []
+
+    memory['pending trades'] = []
+    memory['trade contents'] = {}
+
+    memory['proper names'] = {}
+    memory['bids'] = {}
+    memory['clash choices'] = {}
+    memory['black marks'] = {}
+    memory['white marks'] = {}
+    memory['limits'] = {}
+    # Make empty arrays for all the player things
+
+    memory['rows to show'] = 0
+
+    memory['clash'] = False
+
+    memory['quitconfirm'] = False
+
+    memory['cats'] = ('puissance', 'longevity', 'access', 'executions', 'research', \
+                          'schools',   'priority',  'family')
+    memory['puissance']  = ['', '', '', '', '',    '', '', '']
+    memory['longevity']  = ['', '', '', '', '',    '', '', '']
+    memory['access']     = ['', '', '', '', '',    '', '', '']
+    memory['executions'] = ['', '', '', '', '',    '', '', '']
+    memory['research']   = ['', '', '', '', '',    '', '', '']
+    memory['schools']    = ['', '', '', '', '',    '', '', '']
+    memory['priority']   = ['', '', '', '', '',    '', '', '']
+    memory['family']     = ['', '', '', '', '',    '', '', '']
+
+    memory['clashes'] = [[],[],[]]
+    # More empty things
+
+    memory['colors'] = {"purple": (0.2,0.1,0.5),
+                        "blue":   (0.1,0.3,0.8),
+                        "green":  (0.2,0.5,0.1),
+                        "yellow": (0.7,0.6,0.0), # Leave out first
+                        "orange": (0.7,0.4,0.0), # Leave out second
+                        "red":    (0.6,0.0,0.0)
+                        }
+    # Define colors
+
+    memory['clashesin'] = asyncio.Event()
+    memory['bidsin'] = asyncio.Event()
+    # Events for the end of clash and bids
+
 async def subround(clash):
     '''My main loop. Executes subrounds and resolves clashes.
     Parameter: bool clash - True if function should handle post-clash bids
@@ -462,7 +523,7 @@ class Draft(commands.Cog):
         '''Starts the draft after players join.
         '''
         if memory['phase'] == 'setup':
-            if len(memory['players']) >= 1 and len(memory['players']) <= 6:
+            if len(memory['players']) >= 4 and len(memory['players']) <= 6:
                 await ctx.send('Starting the draft!')
                 memory['channel'] = ctx
                 memory['phase'] = 'the draft'
