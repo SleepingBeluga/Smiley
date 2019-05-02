@@ -13,7 +13,7 @@ I'm friendly, and I can do Pact Dice drafts and dice rolls!
 
 b = commands.Bot(command_prefix=('~'))
 memory = {}
-fopen = open
+fopen = open # I'm sorry God, this is the hackiest shit ever
 
 async def setup():
     '''My initializing function.

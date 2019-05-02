@@ -1,5 +1,5 @@
 from discord.ext import commands
-import discord
+import discord, random, asyncio
 
 async def subround(clash):
     '''My main loop. Executes subrounds and resolves clashes.
