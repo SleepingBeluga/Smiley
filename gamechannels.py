@@ -28,7 +28,7 @@ class Game_Channels(commands.Cog):
         gamecat = None
 
         for arg in args[1:]:
-            gameName = gameName + str(arg)
+            gameName = gameName + str(arg).lower()
 
         # List of restricted titles
         restricted_names = ['all', 'allactive', 'wdall', 'pdall', 'allarchive']
@@ -81,7 +81,7 @@ class Game_Channels(commands.Cog):
             if arg.lower() == "-d":
                 debugging = True
                 continue
-            gameName = gameName + str(arg)
+            gameName = gameName + str(arg).lower()
 
         joinAllWD = False
         joinAllPD = False
@@ -147,7 +147,7 @@ class Game_Channels(commands.Cog):
         check = False
 
         for arg in args:
-            gameName = gameName + str(arg)
+            gameName = gameName + str(arg).lower()
 
         for channel in ctx.guild.channels:
             if channel.name == gameName:
@@ -172,7 +172,7 @@ class Game_Channels(commands.Cog):
         WDID = None
 
         for arg in args:
-            gameName = gameName + str(arg)
+            gameName = gameName + str(arg).lower()
 
         namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
         moderator = ('Mod Team' in ctx.author.roles)
@@ -229,7 +229,7 @@ class Game_Channels(commands.Cog):
                 archiveID = category
 
         for arg in args[1:]:
-            gameName = gameName + str(arg)
+            gameName = gameName + str(arg).lower()
 
         namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
         moderator = ('Mod Team' in ctx.author.roles)
