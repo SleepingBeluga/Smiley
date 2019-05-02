@@ -4,7 +4,7 @@
 import discord
 from discord.ext import commands
 import time, random, asyncio
-import sheets, draft, dice, gamechannels
+import sheets, draft, dice, gamechannels, wounds
 
 '''My (Smiley's) Main Script
 
