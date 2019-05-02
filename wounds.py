@@ -70,6 +70,7 @@ raked = WoundOption('Raked','Counts as two minor wounds, one of these goes away 
 hindered = WoundOption('Hindered','*Pain*, one arm.')
 hobbled = WoundOption('Hobbled','*Pain*, one leg.')
 wounds['lesser']['cut'] = Wound('Cut','Lesser',[bleed,slashed,gashed],[blinded],[raked],[hindered],[hobbled])
+print(wounds['lesser']['cut'].type)
 # Lesser Cut
 
 async def roll_wound(ctx, type, severity):
