@@ -96,6 +96,7 @@ async def reset(ctx, *args):
 b.add_cog(draft.Draft())
 b.add_cog(gamechannels.Game_Channels())
 b.add_cog(dice.Rolls())
+b.add_cog(wounds.WoundCog())
 # Add the cogs to the bot
 
 b.loop.create_task(setup())
