@@ -143,10 +143,10 @@ class WoundCog(commands.Cog):
     async def lesser(self, ctx, wtype, part=None):
         await roll_wound(ctx, 'lesser', wtype, part)
     @commands.command()
-    async def moderate(self, ctx, type, part=None):
+    async def moderate(self, ctx, wtype, part=None):
         await roll_wound(ctx, 'moderate', wtype, part)
     @commands.command()
-    async def critical(self, ctx, type, part=None):
+    async def critical(self, ctx, wtype, part=None):
         await roll_wound(ctx, 'critical', wtype, part)
 
     @commands.command()
