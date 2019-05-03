@@ -37,7 +37,7 @@ class Wound:
         else:
             part = part.capitalize()
             # Part was chosen/required
-        if not random.randint(1,4) == 4:
+        if (not random.randint(1,4) == 4) and (not (self.any == [] or self.any == None)):
             pool = self.any
         # Use an 'any' result pool
 
@@ -73,7 +73,7 @@ class Wound:
             elif part == 'Head':
                 pool = self.head
             for spec in pool:
-                resstring += '\n' + f'```{spec.name}: {spec.text}```'
+                resstring += ' ' + f'```{spec.name}: {spec.text}```'
         # Specific extras
 
         return resstring
