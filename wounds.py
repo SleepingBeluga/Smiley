@@ -27,7 +27,7 @@ class Wound:
         # Lists of WoundOptions for different locations
 
     async def roll (self, part=None):
-        if not part in ['Leg','Torso','Arm','Head']:
+        if part and not part in ['Leg','Torso','Arm','Head']:
             return "I don't know that body part."
         if not part:
             part = random.choice(['Leg','Torso','Torso','Torso','Arm','Head'])
