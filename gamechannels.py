@@ -1,5 +1,5 @@
 from discord.ext import commands
-import discord
+import discord, sheets
 
 async def debug(ctx, message):
     '''Prints a message in the context passed
