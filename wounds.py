@@ -134,6 +134,13 @@ leg2 = WoundOption('Sent Flying','Thrown to one side and knocked down, *staggere
 woundd['moderate']['bash'] = Wound('Bash','Moderate',[any1,any2],[head1,head2],[torso1,torso2],[arm1,arm2],[leg1,leg2])
 # Moderate Bash
 
+head1 = WoundOption('Brained','Target’s head cracked open. Wits, Social & Know set to 0, can’t act of own volition, *Death Sentence*.')
+torso1 = WoundOption('Caved In','Chest crushed or spine broken.  Athletics, Brawn, Dex set to 0. Can think/act/communicate in limited way, but can’t move. *Death Sentence*.')
+arm1 = WoundOption('Pulverized','Limb is pulverized and pinned/mashed to ground. Can’t move without losing hope of recovering limb.')
+leg1 = WoundOption('Pulverized','Limb is pulverized and pinned/mashed to ground. Can’t move without losing hope of recovering limb.')
+woundd['critical']['bash'] = Wound('Bash','Critical',[],[head1],[torso1],[arm1],[leg1])
+# Critical Bash
+
 
 async def roll_wound(ctx, severity, wtype, part=None):
     await ctx.send(await woundd[severity.lower()][wtype.lower()].roll(part))
