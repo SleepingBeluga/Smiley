@@ -168,6 +168,28 @@ leg1 = WoundOption('Limb Pierced','Limb disabled, *pain*, *scars*.')
 woundd['critical']['pierce'] = Wound('Pierce','Critical',[],[head1],[torso1],[arm1],[leg1])
 # Critical Pierce
 
+any1 = WoundOption('Tear', 'One quality granted by armor removed as costume damaged, easily repairable.')
+any2 = WoundOption('Twisted', 'Subject is weakened, Brawn penalized by 2.')
+any3 = WoundOption('Ruined','Wound *scars*.')
+head1 = WoundOption('Defaced','Wound *scars*.')
+torso1 = WoundOption('Savaged','Subject is weakened, Brawn penalized by 2.')
+arm1 = WoundOption('Sprained Arm','Limb disabled.')
+leg1 = WoundOption('Sprained Leg','Limb disabled.')
+woundd['lesser']['rend'] = Wound('Rend','Lesser',[any1,any2,any3],[head1],[torso1],[arm1],[leg1])
+# Lesser Rend
+
+any1 = WoundOption('Destroyed', 'Two benefits of costume on hit part are stripped away.')
+any2 = WoundOption('Mangled', '*Pain*, but affects all activity/parts. Wound *scars*.')
+any3 = WoundOption('Mutilated','Long-term -1 to Brawn, Athletics, or Guts. Guts check after 2 weeks to see if this heals, requires 6+, but +1 to roll per week of expert medical care. 2nd chance after 1 month, but requires 8+. *Scars*, takes twice as long to recover from.')
+head1 = WoundOption('Disfigured','Long term -1 to Dex, Wits or Social, obvious scars. Guts check after 2 weeks to see if this heals, requires 6+, but +1 to roll per week of expert medical care. 2nd chance after 1 month, but requires 8+.')
+tal1 = WoundOption('Scourged','*Pain*, but affects all activity/parts. Wound *scars*.')
+woundd['moderate']['rend'] = Wound('Rend','Moderate',[any1,any2,any3],[head1],[tal1],[tal1],[tal1])
+# Moderate Rend
+
+any1 = WoundOption('Annihilated', 'Roll 3d7 for stats, reduce each result by 2. Roll Guts vs. death for each stat reduced to 0. Guts check after 2 weeks to see if stat damage heals, requires 6+, but +1 to roll per week of expert medical care. 2nd chance after 1 month, but requires 8+.')
+woundd['critical']['rend'] = Wound('Rend','Critical',[any1],[],[],[],[])
+# Critical Rend
+
 async def roll_wound(ctx, severity, wtype, part=None):
     await ctx.send(await woundd[severity.lower()][wtype.lower()].roll(part))
 
