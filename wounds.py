@@ -61,7 +61,7 @@ class Wound:
 
         res = random.choice(pool)
 
-        resstring = f'{self.severity} {self.type} ({part}): ```{res.name}: {res.text}```'
+        resstring = f'{self.severity} {self.type} ({part}) - {res.name}: {res.text}'
 
         if res.name == 'Demolished':
             if part == 'Torso':
@@ -73,7 +73,7 @@ class Wound:
             elif part == 'Head':
                 pool = self.head
             for spec in pool:
-                resstring += ' ' + f'```{spec.name}: {spec.text}```'
+                resstring += ' ' + f'{spec.name}: {spec.text}'
         # Specific extras
 
         return resstring
@@ -163,8 +163,8 @@ woundd['moderate']['pierce'] = Wound('Pierce','Moderate',[any1,any2,any3],[head1
 
 head1 = WoundOption('Headshot','Death, cannot be saved.')
 torso1 = WoundOption('Heartshot','*Death Sentence*, all stats except Guts set to 0.')
-arm1 = WoundOption('Limb Pierced','Limb disabled *pain*, *scars*.')
-leg1 = WoundOption('Limb Pierced','Limb disabled *pain*, *scars*.')
+arm1 = WoundOption('Limb Pierced','Limb disabled, *pain*, *scars*.')
+leg1 = WoundOption('Limb Pierced','Limb disabled, *pain*, *scars*.')
 woundd['critical']['pierce'] = Wound('Pierce','Critical',[],[head1],[torso1],[arm1],[leg1])
 # Critical Pierce
 
