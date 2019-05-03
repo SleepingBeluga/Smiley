@@ -75,9 +75,9 @@ class Wound:
             for spec in pool:
                 resstring += ' ' + f'{spec.name}: {spec.text}'
         elif res.name == 'Scalded':
-            resstring += '\n' + await woundd['lesser']['rend'].roll(part)
+            resstring += '\n' + await woundd['moderate']['rend'].roll(part)
         elif res.name == 'Disintegrated':
-            while random.int(0,1) == 1:
+            while random.randint(0,1) == 1:
                 resstring += f'\nHeads. ' + await woundd['moderate']['burn'].roll(part)
             resstring += '\nTails.'
         # Specific extras
