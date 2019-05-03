@@ -74,6 +74,12 @@ class Wound:
                 pool = self.head
             for spec in pool:
                 resstring += ' ' + f'{spec.name}: {spec.text}'
+        elif res.name == 'Scalded':
+            resstring += '\n' + woundd['lesser']['rend'].roll(part)
+        elif res.name == 'Disintegrated':
+            while random.int(0,1) == 1:
+                resstring += f'\nHeads. {woundd['moderate']['burn'].roll(part)}'
+            resstring += '\nTails.'
         # Specific extras
 
         return resstring
@@ -186,9 +192,27 @@ tal1 = WoundOption('Scourged','*Pain*, but affects all activity/parts. Wound *sc
 woundd['moderate']['rend'] = Wound('Rend','Moderate',[any1,any2,any3],[head1],[tal1],[tal1],[tal1])
 # Moderate Rend
 
-any1 = WoundOption('Annihilated', 'Roll 3d7 for stats, reduce each result by 2. Roll Guts vs. death for each stat reduced to 0. Guts check after 2 weeks to see if stat damage heals, requires 6+, but +1 to roll per week of expert medical care. 2nd chance after 1 month, but requires 8+.')
+any1 = WoundOption('Annihilated', 'Roll 3d7 for stats, reduce each result by 2. Roll Guts vs. death for each stat reduced to 0. Guts checks per stat after 2 weeks to see if stat damage heals, requires 6+, but +1 to roll per week of expert medical care. 2nd chances after 1 month, but requires 8+.')
 woundd['critical']['rend'] = Wound('Rend','Critical',[any1],[],[],[],[])
 # Critical Rend
+
+any1 = WoundOption('Smouldering', 'Deals no damage if target is covered up. Lesser wound.')
+any2 = WoundOption('Singed', 'Deals no damage if target is covered up. Lesser wound.')
+any3 = WoundOption('Blistered','Additional lesser wound if not covered up.')
+any4 = WoundOption('Disfigured','Wound *scars*. Additional lesser wound if not covered up.')
+woundd['lesser']['burn'] = Wound('Burn','Lesser',[any1,any2,any3,any4],[],[],[],[])
+# Lesser Burn
+
+any1 = WoundOption('Blackened', 'Removes one quality from worn gear as costume is damaged.')
+any2 = WoundOption('Scalded', 'Is lesser wound if subject is covered up. Otherwise, apply effects of lesser wound and moderate rend.')
+any3 = WoundOption('Screaming','Subject must make Guts (morale) roll to do more than scream and flail. Suffer *pain*, affecting all rolls, for two rounds.')
+any4 = WoundOption('Oh God, It Burns!','Fire/chemical sets in and continues burning. Subject rolls for another moderate burn at end of next turn unless quenched/washed away (and continue to do so each round until problem is fixed). Suffer *pain*, affecting all rolls, while burning.')
+woundd['moderate']['burn'] = Wound('Burn','Moderate',[any1,any2,any3,any4],[],[],[],[])
+# Moderate Burn
+
+any1 = WoundOption('Disintegrated', 'Critical wound, roll on moderate wound chart for effect, then flip coin. If heads, repeat this action.')
+woundd['critical']['burn'] = Wound('Burn','Critical',[any1],[],[],[],[])
+# Critical Burn
 
 async def roll_wound(ctx, severity, wtype, part=None):
     await ctx.send(await woundd[severity.lower()][wtype.lower()].roll(part))
