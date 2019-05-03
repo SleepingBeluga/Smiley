@@ -86,16 +86,16 @@ woundd['critical'] = {}
 
 any1 = WoundOption('Bleed', 'Applies *Bleed*.')
 any2 = WoundOption('Slashed', 'Inflicts *Scar*.')
-any3 = WoundOption('Gashed','Counts as two minor wounds, one of these goes away on its own after a turn.')
+any3 = WoundOption('Gashed','Counts as two lesser wounds, one of these goes away on its own after a turn.')
 head1 = WoundOption('Blinded','*Blinded* by blood in eyes.')
-torso1 = WoundOption('Raked','Counts as two minor wounds, one of these goes away on its own after a turn.')
+torso1 = WoundOption('Raked','Counts as two lesser wounds, one of these goes away on its own after a turn.')
 arm1 = WoundOption('Hindered','*Pain*, one arm.')
 leg1 = WoundOption('Hobbled','*Pain*, one leg.')
 woundd['lesser']['cut'] = Wound('Cut','Lesser',[any1,any2,any3],[head1],[torso1],[arm1],[leg1])
 # Lesser Cut
 
 any1 = WoundOption('Hacked', 'If the struck part is already wounded, roll brawn again, aiming for a 4+, if successful, foe suffers an additional moderate wound (no associated effect).')
-any2 = WoundOption('Butchered', 'Counts as moderate plus minor wound, inflicts *scarring*.')
+any2 = WoundOption('Butchered', 'Counts as moderate plus lesser wound, inflicts *scarring*.')
 any3 = WoundOption('Slice','Subject provokes an attack of opportunity from those nearby/from assailant.')
 head1 = WoundOption('Dice','Subject provokes an attack of opportunity from those nearby/from assailant.')
 torso1 = WoundOption('Tear','Guts reduced by 1. Does not impact maximum wounds, does impact rolls.')
@@ -111,20 +111,20 @@ leg1 = WoundOption('Dismembered','Loss of leg.')
 woundd['critical']['cut'] = Wound('Cut','Critical',[],[head1],[torso1],[arm1],[leg1])
 # Critical Cut
 
-any1 = WoundOption('Smashed', 'Knocked to the ground. This minor wound is temporary and goes away at the end of the target’s next turn.')
+any1 = WoundOption('Smashed', 'Knocked to the ground. This lesser wound is temporary and goes away at the end of the target’s next turn.')
 any2 = WoundOption('Bashed', 'Knocked 10’ away and back, *staggered*.')
-any3 = WoundOption('Crushed','Damage becomes two temporary minor wounds, can bypass one layer of armor with the first to deliver the second. The target heals one of the temporary wounds at the end of the next round and the round following it.')
+any3 = WoundOption('Crushed','Damage becomes two temporary lesser wounds, can bypass one layer of armor with the first to deliver the second. The target heals one of the temporary wounds at the end of the next round and the round following it.')
 head1 = WoundOption('Dazed','*Confused* for one round. Duration extends to three rounds if already been confused in last 24 hours.')
 torso1 = WoundOption('Winded','All minor abilities with need for refreshers or a stamina cost are put on cooldown.')
 arm1 = WoundOption('Disarmed','*Disarmed*.')
-leg1 = WoundOption('Tripped','Knocked to the ground. This minor wound is temporary and goes away at the end of the target’s next turn.')
+leg1 = WoundOption('Tripped','Knocked to the ground. This lesser wound is temporary and goes away at the end of the target’s next turn.')
 woundd['lesser']['bash'] = Wound('Bash','Lesser',[any1,any2,any3],[head1],[torso1],[arm1],[leg1])
 # Lesser Bash
 
 any1 = WoundOption('Demolished', 'If struck body part is unarmored, target suffers both type-specific consequences below.')
 any2 = WoundOption('Walloped', 'Thrown 10’ back or to one side and knocked down, staggered on the ensuing turn. If the individual cannot be thrown at least 5’ due to intervening obstacles, they instead suffer an added, temporary moderate bash instead (no associated effect, fades after one round).')
 head1 = WoundOption('Skull Crack','Mildly *confused* for long duration, need to roll only 2+ to get bearings. Roll vs. Guts at end of encounter to shrug off, on failure, wait 1 day before rolling again, then wait 2.')
-head2 = WoundOption('K.O.','Target must make additional Guts check or have all remaining wound slots filled with minor wounds.  Minor wounds disappear at end of next turn if cape remains conscious. (No added effect)')
+head2 = WoundOption('K.O.','Target must make additional Guts check or have all remaining wound slots filled with lesser wounds. Lesser wounds disappear at end of next turn if cape remains conscious. (No added effect)')
 torso1 = WoundOption('Broken Rib','*Pain*, torso.')
 torso2 = WoundOption('Internally Injured','-1 to the two lowest of the following: Brawn, Athletics, or Guts. If equal, apply in that order (Brawn first…)')
 arm1 = WoundOption('Fracture Arm','Arm disabled. Roll Guts post-combat to see if it\'s broken.')
@@ -141,6 +141,32 @@ leg1 = WoundOption('Pulverized','Limb is pulverized and pinned/mashed to ground.
 woundd['critical']['bash'] = Wound('Bash','Critical',[],[head1],[torso1],[arm1],[leg1])
 # Critical Bash
 
+any1 = WoundOption('Pricked', 'No special effect. Lesser wound fades after one round.')
+any2 = WoundOption('Pierced', 'No special effect.')
+any3 = WoundOption('Stuck','Attached to stabbing point. Can’t break free without being released/weapon being dropped or passing Brawn check. Loose objects must be pulled free with minor action.')
+head1 = WoundOption('Blinded','*Blinded*. Lasts until attention is given.')
+torso1 = WoundOption('Gouge','Counts as moderate wound, two moderate wounds if attack roll was 2 or more higher than the block/dodge. (No added effect)')
+arm1 = WoundOption('Pinned','Attached to stabbing point. Can’t break free without being released/weapon being dropped or passing Brawn check. Loose objects must be pulled free with minor action.')
+leg1 = WoundOption('Pinned','Attached to stabbing point. Can’t break free without being released/weapon being dropped or passing Brawn check. Loose objects must be pulled free with minor action.')
+woundd['lesser']['pierce'] = Wound('Pierce','Lesser',[any1,any2,any3],[head1],[torso1],[arm1],[leg1])
+# Lesser Pierce
+
+any1 = WoundOption('Graze', 'No special effect. Treat as lesser wound.')
+any2 = WoundOption('Missed Vitals', 'No other effect besides that of moderate wound.')
+any3 = WoundOption('Through and Through','Take an added moderate wound. (No associated effect)')
+head1 = WoundOption('Hit Head','50% chance of a ‘headshot’ that reduces Guts by 3, is otherwise an ordinary moderate wound. Helmets (armor costume feature or partial armor: head costume feature) will block a ‘headshot’ once, but will not protect the head thereafter. Pierce resistance costume feature, having one’s total health and armor exceed 5, and having large size reduce chance of the ‘headshot’ by 25% each. This reduction is additive.')
+torso1 = WoundOption('Hit Vitals','Active physical stats (Brawn, Athletics, Dex) drop by 2, Guts drops by 1.')
+arm1 = WoundOption('Debilitated','Limb disabled, *pain*.')
+leg1 = WoundOption('Debilitated','Limb disabled, *pain*.')
+woundd['moderate']['pierce'] = Wound('Pierce','Moderate',[any1,any2,any3],[head1],[torso1],[arm1],[leg1])
+# Moderate Pierce
+
+head1 = WoundOption('Headshot','Death, cannot be saved.')
+torso1 = WoundOption('Heartshot','*Death Sentence*, all stats except Guts set to 0.')
+arm1 = WoundOption('Limb Pierced','Limb disabled *pain*, *scars*.')
+leg1 = WoundOption('Limb Pierced','Limb disabled *pain*, *scars*.')
+woundd['critical']['pierce'] = Wound('Pierce','Critical',[],[head1],[torso1],[arm1],[leg1])
+# Critical Pierce
 
 async def roll_wound(ctx, severity, wtype, part=None):
     await ctx.send(await woundd[severity.lower()][wtype.lower()].roll(part))
