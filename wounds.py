@@ -73,7 +73,7 @@ class Wound:
             elif part == 'Head':
                 pool = self.head
             for spec in pool:
-                resstring += ' ' + f'{spec.name}: {spec.text}'
+                resstring += '\n' + f'{spec.name}: {spec.text}'
         elif res.name == 'Scalded':
             resstring += '\n' + await woundd['moderate']['rend'].roll(part)
         elif res.name == 'Disintegrated':
