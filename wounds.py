@@ -27,8 +27,10 @@ class Wound:
         # Lists of WoundOptions for different locations
 
     async def roll (self, part=None):
-        if part and not part in ['Leg','Torso','Arm','Head']:
-            return "I don't know that body part."
+        if part:
+            part = part.capitalize()
+            if not part in ['Leg','Torso','Arm','Head']:
+                return "I don't know that body part."
         if not part:
             part = random.choice(['Leg','Torso','Torso','Torso','Arm','Head'])
             # Roll a random target location (based on old rulebook)
@@ -71,7 +73,7 @@ class Wound:
             elif part == 'Head':
                 pool = self.head
             for spec in pool:
-                resstring += '\n' + f'{part}: ```{spec.name}: {spec.text}```'
+                resstring += '\n' + f'```{spec.name}: {spec.text}```'
         # Specific extras
 
         return resstring
