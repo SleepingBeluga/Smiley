@@ -61,7 +61,7 @@ class Wound:
 
         resstring = f'{self.severity} {self.type} ({part}): ```{res.name}: {res.text}```'
 
-        if res.type == 'Demolished':
+        if res.name == 'Demolished':
             if part == 'Torso':
                 pool = self.torso
             elif part == 'Leg':
