@@ -78,7 +78,7 @@ class Wound:
             resstring += '\n' + await woundd['moderate']['rend'].roll(part)
         elif res.name == 'Disintegrated':
             while random.randint(0,1) == 1:
-                resstring += f'\nHeads. ' + await woundd['moderate']['burn'].roll(part)
+                resstring += f'\nHeads. ' + await woundd['moderate'][self.type.lower()].roll(part)
             resstring += '\nTails.'
         # Specific extras
 
@@ -213,6 +213,24 @@ woundd['moderate']['burn'] = Wound('Burn','Moderate',[any1,any2,any3,any4],[],[]
 any1 = WoundOption('Disintegrated', 'Critical wound, roll on moderate wound chart for effect, then flip coin. If heads, repeat this action.')
 woundd['critical']['burn'] = Wound('Burn','Critical',[any1],[],[],[],[])
 # Critical Burn
+
+any1 = WoundOption('Disoriented', '-2 to Wits checks. If recently shocked, wounded is effectively blinded and deafened for one round.')
+any2 = WoundOption('Dazed', '*Confused* for one round. Duration extends to three rounds if recently shocked.')
+any3 = WoundOption('Thrown','Knocked away and back, *staggered*. Knocked down if recently shocked.')
+any4 = WoundOption('Jolted','Suffer *pain*, affecting all physical (Brawn, Athletics, Dex) rolls, for next round. Two rounds if recently shocked.')
+woundd['lesser']['shock'] = Wound('Shock','Lesser',[any1,any2,any3,any4],[],[],[],[])
+# Lesser Shock
+
+any1 = WoundOption('Blitzed', 'Can only take partial actions. Taking a full round action to recuperate removes this condition. If shocked by another source, taking a full round action to recuperate only allows a Guts check to remove this condition.')
+any2 = WoundOption('Paralyzed', 'Roll Guts. Subtract result from 10. Spread remaining number evenly among Brawn, Athletics and Dex in -1 penalties. Recover two points a turn, as the character chooses.')
+any3 = WoundOption('Scattered','Subject is knocked down and disarmed. If recently shocked, roll 2d4 Dex checks, with each failure casting an item aside (items land within 10’, 5’ for heavier items), starting with held items, then belt, then backpack. Requires 4+.')
+any4 = WoundOption('Devastated','Nearby terrain and one piece of equipment are damaged. Suffer a lesser wound appropriate to the nature of the terrain, in addition to any other effects (falling objects, pinned, etc.). If recently shocked, get knocked down as well.')
+woundd['moderate']['shock'] = Wound('Shock','Moderate',[any1,any2,any3,any4],[],[],[],[])
+# Moderate Shock
+
+any1 = WoundOption('Disintegrated', 'Critical wound, roll on moderate shock chart for effect, then flip coin. If heads, repeat this action.')
+woundd['critical']['shock'] = Wound('Shock','Critical',[any1],[],[],[],[])
+# Critical Shock
 
 async def roll_wound(ctx, severity, wtype, part=None):
     await ctx.send(await woundd[severity.lower()][wtype.lower()].roll(part))
