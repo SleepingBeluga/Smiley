@@ -78,7 +78,7 @@ class Wound:
             resstring += '\n' + woundd['lesser']['rend'].roll(part)
         elif res.name == 'Disintegrated':
             while random.int(0,1) == 1:
-                resstring += f'\nHeads. {woundd['moderate']['burn'].roll(part)}'
+                resstring += f'\nHeads. ' + woundd['moderate']['burn'].roll(part)
             resstring += '\nTails.'
         # Specific extras
 
