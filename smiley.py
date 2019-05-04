@@ -8,8 +8,7 @@ import sheets, draft, dice, gamechannels, wounds
 from wounds import WoundOption, Wound
 
 '''My (Smiley's) Main Script
-
-I'm friendly, and I can do Pact Dice drafts and dice rolls!
+I'm friendly, and I have commands to support playing PD and WD!
 '''
 
 b = commands.Bot(command_prefix=('~'))
@@ -40,7 +39,6 @@ b.add_cog(wounds.WoundCog())
 # Add the cogs to the bot
 
 b.loop.create_task(draft.setup())
-#b.loop.create_task(wounds.wounds_setup())
 # Run the setup function before doing anything!
 
 with open('secret') as s:
