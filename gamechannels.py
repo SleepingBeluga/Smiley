@@ -129,7 +129,7 @@ class Game_Channels(commands.Cog):
 
         if gameName == '':
             await ctx.send("Please write out the game you wish to access after the command (i.e. ~enter New York)")
-        elif check == False:
+        elif check == False and not (joinAllWD or joinAllPD or joinAllArchive):
             await ctx.send("That game could not be found.")
          #   roleName = gameName + 'er'
 
