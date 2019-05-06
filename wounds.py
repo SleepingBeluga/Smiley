@@ -211,7 +211,7 @@ any4 = WoundOption('Oh God, It Burns!','Fire/chemical sets in and continues burn
 woundd['moderate']['burn'] = Wound('Burn','Moderate',[any1,any2,any3,any4],[],[],[],[])
 # Moderate Burn
 
-any1 = WoundOption('Disintegrated', 'Critical wound, roll on moderate wound chart for effect, then flip coin. If heads, repeat this action.')
+any1 = WoundOption('Disintegrated', 'Critical wound, roll on moderate burn chart for effect, then flip coin. If heads, repeat this action.')
 woundd['critical']['burn'] = Wound('Burn','Critical',[any1],[],[],[],[])
 # Critical Burn
 
