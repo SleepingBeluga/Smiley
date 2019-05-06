@@ -77,7 +77,7 @@ class Wound:
         elif res.name == 'Scalded':
             resstring += '\n' + await woundd['moderate']['rend'].roll(part)
         elif res.name == 'Disintegrated':
-            resstring += f'\nHeads. ' + await woundd['moderate'][self.type.lower()].roll(part)
+            resstring += '\n' + await woundd['moderate'][self.type.lower()].roll(part)
             while random.randint(0,1) == 1:
                 resstring += f'\nHeads. ' + await woundd['moderate'][self.type.lower()].roll(part)
             resstring += '\nTails.'
