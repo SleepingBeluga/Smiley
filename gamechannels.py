@@ -1,5 +1,6 @@
 from discord.ext import commands
 import discord, sheets
+import difflib # Used to find closest name for enter command
 
 async def debug(ctx, message):
     '''Prints a message in the context passed
@@ -70,12 +71,17 @@ class Game_Channels(commands.Cog):
 
     @commands.command()
     async def enter(self, ctx, *args):
-        '''Join a game channel
+        '''Join a game channel. Do not need to specify whether a wd or pd game.
+
+        Special argument includes wdall, pdall, allactive, allarchive, all
         '''
         gameName = ''
         game = None
         check = False
         debugging = False
+
+        if arg[0].lower() == "wd" or arg[0].lower() == "pd":
+            arg[0] = ""
 
         for arg in args:
             if arg.lower() == "-d":
@@ -97,6 +103,7 @@ class Game_Channels(commands.Cog):
         # Let's track some info for debugging
         joining = "We are trying to join "
         channelsJoined = 0
+        applicableChannels = []
 
         for channel in ctx.guild.channels:
             # First lets just check whether they want all games!
@@ -104,6 +111,8 @@ class Game_Channels(commands.Cog):
                 continue
             # If the channel has no category, move to the next channel
             catName = channel.category.name
+            if (catName in ['PactDice Games', 'WeaverDice Games', 'Archives']):
+                applicableChannels += [channel.name]
             if joinAllWD and catName == 'WeaverDice Games':
                 joining += channel.name + ", "
                 channelsJoined += 1
@@ -130,7 +139,13 @@ class Game_Channels(commands.Cog):
         if gameName == '':
             await ctx.send("Please write out the game you wish to access after the command (i.e. ~enter New York)")
         elif check == False and not (joinAllWD or joinAllPD or joinAllArchive):
-            await ctx.send("That game could not be found.")
+            closestChannels = difflib.get_close_matches(gameName, applicableChannels)
+            if len(closestChannels) > 1:
+                await ctx.send("That game could not be found, did you mean one of: " + closestChannels)
+            elif len(closestChannels) == 1:
+                await ctx.send("That game could not be found, did you mean " + closestChannels[0])
+            else:
+                await ctx.send("That game could not be found.")
          #   roleName = gameName + 'er'
 
           #  if roleName == 'Game Master':
