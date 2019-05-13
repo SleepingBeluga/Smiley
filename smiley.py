@@ -17,7 +17,7 @@ b = commands.Bot(command_prefix=('~'))
 async def hi(ctx, *args):
     '''The hi command. I'll greet the user.
     '''
-    await ctx.send('Hi, ' + ctx.author.display_name + '!')
+    await ctx.send('Hi, <@' + str(ctx.author.id) + '>!')
 
 @b.command()
 async def reset(ctx, *args):
