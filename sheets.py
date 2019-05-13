@@ -222,17 +222,15 @@ async def addlink(name, campaign, link):
 
     for row in values:
         if str(row[1]) == name and str(row[0]) == ('#'+campaign):
-            break
+            cell = (rowNum, 4)
+            celldata = {"userEnteredValue": {"stringValue": link}}
+            update_cells = {"rows": [{"values": [celldata]}],
+                            "fields": "userEnteredValue",
+                            "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
+            requests = [{"updateCells": update_cells}]
+            batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
         else:
             rowNum = rowNum + 1
-
-    cell = (rowNum, 4)
-    celldata = {"userEnteredValue": {"stringValue": link}}
-    update_cells = {"rows": [{"values": [celldata]}],
-                    "fields": "userEnteredValue",
-                    "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
-    requests = [{"updateCells": update_cells}]
-    batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
 
 async def changeState(name,yesno):
 
