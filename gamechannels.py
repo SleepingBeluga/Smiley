@@ -281,7 +281,9 @@ class Game_Channels(commands.Cog):
             link += str(arg) + ' '
         link = link[:-1]
 
-        await sheets.addlink(ctx.author.id,args[0].lower(),link)
+        failure = await sheets.addlink(ctx.author.id,args[0].lower(),link)
+        if failure:
+            await ctx.send('Error adding link, make sure you have the name right and you\'re the GM')
 
     @commands.command()
     async def owner(self, ctx, *args):
@@ -293,7 +295,7 @@ class Game_Channels(commands.Cog):
 
         for arg in args:
             gameName = gameName + str(arg).lower()
-        
+
         namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
 
         if nameCheck:

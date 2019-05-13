@@ -229,8 +229,10 @@ async def addlink(name, campaign, link):
                             "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
             requests = [{"updateCells": update_cells}]
             batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
+            return 0
         else:
             rowNum = rowNum + 1
+    return -1
 
 async def changeState(name,yesno):
 
