@@ -67,7 +67,7 @@ class Game_Channels(commands.Cog):
                     gamecat = category
 
             await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
-            await sheets.newgame(str('#' + gameName),str(ctx.author.display_name), str(gameType).upper())
+            await sheets.newgame(str('#' + gameName),str(ctx.author.id), str(gameType).upper())
 
     @commands.command()
     async def enter(self, ctx, *args):
@@ -189,7 +189,7 @@ class Game_Channels(commands.Cog):
         for arg in args:
             gameName = gameName + str(arg).lower()
 
-        namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
+        namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
         moderator = ('Mod Team' in ctx.author.roles)
 
         for category in ctx.message.guild.categories:
@@ -246,7 +246,7 @@ class Game_Channels(commands.Cog):
         for arg in args[1:]:
             gameName = gameName + str(arg).lower()
 
-        namecheck = (await sheets.gamecheck(ctx.author.display_name,gameName))
+        namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
         moderator = ('Mod Team' in ctx.author.roles)
 
         for channel in ctx.message.guild.channels:
@@ -281,7 +281,24 @@ class Game_Channels(commands.Cog):
             link += str(arg) + ' '
         link = link[:-1]
 
-        await sheets.addlink(ctx.author.display_name,args[0].lower(),link)
+        await sheets.addlink(ctx.author.id,args[0].lower(),link)
 
+    @commands.command()
+    async def owner(self, ctx, *args):
+        '''Checks the owner of a given campaign
+        '''
+        gameName = ''
+        game = None
+        check = False
+
+        for arg in args:
+            gameName = gameName + str(arg).lower()
+        
+        namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
+
+        if nameCheck:
+            await ctx.send('<@' + namecheck + '> owns ' + gameName)
+        else:
+            await ctx.send('Could not find game ' + gameName)
 
     # - - - - End of Disaster Area - - - -
