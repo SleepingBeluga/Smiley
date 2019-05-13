@@ -220,7 +220,7 @@ async def ownercheck(game):
     game = game.lower()
 
     for row in values:
-        if str(row[0] == str('#' + game)):
+        if str(row[0]) == str('#' + game):
             return row[1]
 
     return ''
