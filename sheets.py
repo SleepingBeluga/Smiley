@@ -211,6 +211,20 @@ async def gamecheck(name, game):
 
     return check
 
+# Find the owner of a specified game
+async def ownercheck(game):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=ID1,
+                                range='Campaigns!A1:E100').execute()
+    values = result.get('values', [])
+    game = game.lower()
+
+    for row in values:
+        if str(row[0] == str('#' + game)):
+            return row[1]
+
+    return ''
+
 async def addlink(name, campaign, link):
 
     sheet = service.spreadsheets()
@@ -221,7 +235,7 @@ async def addlink(name, campaign, link):
     rowNum = 0
 
     for row in values:
-        if str(row[1]) == name and str(row[0]) == ('#'+campaign):
+        if str(row[1]) == str(name) and str(row[0]) == ('#'+campaign):
             cell = (rowNum, 4)
             celldata = {"userEnteredValue": {"stringValue": link}}
             update_cells = {"rows": [{"values": [celldata]}],
@@ -229,10 +243,10 @@ async def addlink(name, campaign, link):
                             "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
             requests = [{"updateCells": update_cells}]
             batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
-            return 0
+            return True
         else:
             rowNum = rowNum + 1
-    return -1
+    return False
 
 async def changeState(name,yesno):
 

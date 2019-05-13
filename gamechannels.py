@@ -296,10 +296,10 @@ class Game_Channels(commands.Cog):
         for arg in args:
             gameName = gameName + str(arg).lower()
 
-        namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
+        ownercheck = (await sheets.ownercheck(gameName))
 
-        if namecheck:
-            await ctx.send('<@' + namecheck + '> owns ' + gameName)
+        if ownercheck != '':
+            await ctx.send('<@' + ownercheck + '> owns ' + gameName)
         else:
             await ctx.send('Could not find game ' + gameName)
 
