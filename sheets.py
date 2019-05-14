@@ -206,7 +206,7 @@ async def gamecheck(name, game):
 
     for row in values:
         if str(row[0]) == str('#' + game):
-            if str(row[1]) == name:
+            if str(row[1]) == str(name):
                 check = True
 
     return check
