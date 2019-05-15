@@ -80,8 +80,8 @@ class Game_Channels(commands.Cog):
         check = False
         debugging = False
 
-        if arg[0].lower() == "wd" or arg[0].lower() == "pd":
-            arg[0] = ""
+        if args[0].lower() == "wd" or args[0].lower() == "pd":
+            args[0] = ""
 
         for arg in args:
             if arg.lower() == "-d":
