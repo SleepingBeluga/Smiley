@@ -4,7 +4,7 @@
 import discord
 from discord.ext import commands
 import time, random, asyncio
-import sheets, draft, dice, gamechannels, wounds
+import sheets, draft, dice, gamechannels, wounds, trigger
 from wounds import WoundOption, Wound
 
 '''My (Smiley's) Main Script
@@ -36,6 +36,7 @@ b.add_cog(draft.Draft())
 b.add_cog(gamechannels.Game_Channels())
 b.add_cog(dice.Rolls())
 b.add_cog(wounds.WoundCog())
+b.add_cog(trigger.Trigger())
 # Add the cogs to the bot
 
 b.loop.create_task(draft.setup())
