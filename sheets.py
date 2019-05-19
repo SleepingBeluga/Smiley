@@ -289,13 +289,43 @@ async def trigger(index):
         else:
             break
     
-    if index + 1 > rowNum or index < 0:
+    if index > rowNum or index < 0:
         # Can not find a trigger at this index
         return ''
     
     if index == 0:
         index = random.randrange(0, rowNum)
+    else:
+        # Because the user specifies from 1
+        index -= 1
 
-    return values[index][0]
+    return str(index + 1) + ": " + str(values[index][0])
+
+async def used(index):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TriggerID,
+                                range='Used!A1:B1000').execute()
+    values = result.get('values', [])
+
+    usedTriggers = []
+    count = 0
+    # Go through and build 
+    for row in values[1:]:
+        if not row:
+            break
+        if str(row[1]) != "":
+            usedTriggers += [str(row[1])]
+    
+    if index > len(usedTriggers) or index < 0:
+        # Can not find a trigger at this index
+        return ''
+    
+    if index == 0:
+        index = random.randrange(0, len(usedTriggers))
+    else:
+        index -= 1
+
+    return str(index + 1) + ": " + str(usedTriggers[index])
+
 
 # ...sorry about the mess X|
