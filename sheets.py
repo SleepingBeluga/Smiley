@@ -1,4 +1,4 @@
-import pickle, os.path, datetime
+import pickle, os.path, datetime, random
 from googleapiclient.discovery import build
 from google.oauth2 import service_account as s_a
 
@@ -144,6 +144,9 @@ and sets the colors for the cell.
 # - - - - More weird channel stuff below. Should hopefully still work when copy-pasted
 
 ID1 = '1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY'
+# Note: this is a temporary sheet to use so that the actual trigger doc
+# is not interfered with
+TriggerID = '1bWigKxmpEObOWTP0uRA_xwmMnF3Lpk9ZQer5msl6WnA'
 
 async def newgame(name, GM, type):
 
@@ -272,5 +275,57 @@ async def changeState(name,yesno):
                     "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
     requests = [{"updateCells": update_cells}]
     batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
+
+async def trigger(index):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TriggerID,
+                                range='Triggers!A1:B100').execute()
+    values = result.get('values', [])
+
+    rowNum = 0
+    for row in values:
+        if str(row[0]) != "":
+            rowNum += 1
+        else:
+            break
+    
+    if index > rowNum or index < 0:
+        # Can not find a trigger at this index
+        return ''
+    
+    if index == 0:
+        index = random.randrange(0, rowNum)
+    else:
+        # Because the user specifies from 1
+        index -= 1
+
+    return str(index + 1) + ": " + str(values[index][0])
+
+async def used(index):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TriggerID,
+                                range='Used!A1:B1000').execute()
+    values = result.get('values', [])
+
+    usedTriggers = []
+    count = 0
+    # Go through and build 
+    for row in values[1:]:
+        if not row:
+            break
+        if str(row[1]) != "":
+            usedTriggers += [str(row[1])]
+    
+    if index > len(usedTriggers) or index < 0:
+        # Can not find a trigger at this index
+        return ''
+    
+    if index == 0:
+        index = random.randrange(0, len(usedTriggers))
+    else:
+        index -= 1
+
+    return str(index + 1) + ": " + str(usedTriggers[index])
+
 
 # ...sorry about the mess X|
