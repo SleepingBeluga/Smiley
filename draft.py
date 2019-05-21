@@ -1,5 +1,6 @@
 from discord.ext import commands
 import discord, random, asyncio
+import sheets
 
 memory = {}
 
