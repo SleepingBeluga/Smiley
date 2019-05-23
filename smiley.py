@@ -11,7 +11,7 @@ from wounds import WoundOption, Wound
 I'm friendly, and I have commands to support playing PD and WD!
 '''
 
-b = commands.Bot(command_prefix=('~'))
+b = commands.Bot(command_prefix=('%'))
 
 @b.command()
 async def hi(ctx, *args):

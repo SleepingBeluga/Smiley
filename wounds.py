@@ -236,7 +236,7 @@ woundd['critical']['shock'] = Wound('Shock','Critical',[any1],[],[],[],[])
 async def roll_wound(ctx, severity, wtype, part=None):
     await ctx.send(await woundd[severity.lower()][wtype.lower()].roll(part))
 
-class WoundCog(commands.Cog):
+class Wounds(commands.Cog):
     '''For rolling wounds
     '''
     @commands.command()
