@@ -21,7 +21,7 @@ class Game_Channels(commands.Cog):
         '''
         gameType = args[0].lower()
         if (gameType != 'wd' and gameType != 'pd'):
-            await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd New York)")
+            await ctx.send("Please write out your game's name after the command (i.e. %addgame pd New York)")
             return
         gameName = ''
         gameMaster = None
@@ -38,7 +38,7 @@ class Game_Channels(commands.Cog):
             return
 
         if gameName == '':
-            await ctx.send("Please write out your game's name after the command (i.e. ~addgame pd New York)")
+            await ctx.send("Please write out your game's name after the command (i.e. %addgame pd New York)")
         else:
 
         #    roleName = gameName + 'er'
@@ -137,7 +137,7 @@ class Game_Channels(commands.Cog):
                 await debug(ctx, "That is trying to join " + channelsJoined)
 
         if gameName == '':
-            await ctx.send("Please write out the game you wish to access after the command (i.e. ~enter New York)")
+            await ctx.send("Please write out the game you wish to access after the command (i.e. %enter New York)")
         elif check == False and not (joinAllWD or joinAllPD or joinAllArchive):
             closestChannels = difflib.get_close_matches(gameName, applicableChannels)
             if len(closestChannels) > 1:
@@ -170,7 +170,7 @@ class Game_Channels(commands.Cog):
                 check = True
 
         if gameName == '':
-            await ctx.send("Please write out where you wish to exit after the command (i.e. ~exit New York)")
+            await ctx.send("Please write out where you wish to exit after the command (i.e. %exit New York)")
         elif check == False:
             await ctx.send("That game could not be found.")
         else:
@@ -205,7 +205,7 @@ class Game_Channels(commands.Cog):
                 gameID = channel.category
 
         if gameName == '':
-            await ctx.send("Please write out the game you wish to archive after the command (i.e. ~archive New York)")
+            await ctx.send("Please write out the game you wish to archive after the command (i.e. %archive New York)")
         elif gameID == archiveID:
             await ctx.send("That game is already archived.")
         elif namecheck == False and moderator == False:
@@ -225,7 +225,7 @@ class Game_Channels(commands.Cog):
         '''
         gameType = args[0].lower()
         if (gameType != 'wd' and gameType != 'pd'):
-            await ctx.send("Please write out your game's name after the command (i.e. ~unarchive pd New York)")
+            await ctx.send("Please write out your game's name after the command (i.e. %unarchive pd New York)")
             return
         gameName = ''
         gameRole = None
@@ -254,7 +254,7 @@ class Game_Channels(commands.Cog):
                 gameID = channel.category
 
         if gameName == '':
-            await ctx.send("Please write out the game you wish to unarchive after the command (i.e. ~unarchive New York)")
+            await ctx.send("Please write out the game you wish to unarchive after the command (i.e. %unarchive New York)")
         elif gameID == PDID or gameID == WDID:
             await ctx.send("That game is already active.")
         elif namecheck == False and moderator == False:

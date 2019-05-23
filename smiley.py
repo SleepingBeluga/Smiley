@@ -24,7 +24,7 @@ async def reset(ctx, *args):
     '''Resets me, stopping any drafts in progress.
     '''
     if not draft.memory['quitconfirm']:
-        await ctx.send('Are you sure? This will reset any drafts in progress. (Use ~reset again to confirm)')
+        await ctx.send('Are you sure? This will reset any drafts in progress. (Use %reset again to confirm)')
         draft.memory['quitconfirm'] = True
         await asyncio.sleep(60)
         draft.memory['quitconfirm'] = False
