@@ -12,8 +12,8 @@ async def channel_cleanup(b):
             mlist=[]
             async for message in channel_list[to_clear].history(limit=1000):
                 delta = (datetime.datetime.utcnow()-message.created_at)
-                tdiff= delta.days*172800 +delta.seconds
-                if tdiff>=:
+                tdiff= delta.days*86400 +delta.seconds
+                if tdiff>=172800:
                     mlist.append(message)
                     with open('output.txt','a+') as out:
                         out.write(f'#{to_clear} {str(message.created_at)} {message.author}: {message.clean_content}\n')
