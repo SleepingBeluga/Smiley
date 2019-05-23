@@ -4,7 +4,7 @@
 import discord
 from discord.ext import commands
 import time, random, asyncio
-import sheets, draft, dice, gamechannels, wounds, trigger
+import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory
 from wounds import WoundOption, Wound
 
 '''My (Smiley's) Main Script
@@ -40,7 +40,10 @@ b.add_cog(trigger.Trigger())
 # Add the cogs to the bot
 
 b.loop.create_task(draft.setup())
-# Run the setup function before doing anything!
+# Run the draft setup function before doing anything!
+
+b.loop.create_task(trimhistory.channel_cleanup(b))
+# Start the channel cleanup task on a loop.
 
 with open('secret') as s:
     token = s.read()[:-1]
