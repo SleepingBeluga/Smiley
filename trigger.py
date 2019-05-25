@@ -1,5 +1,5 @@
 from discord.ext import commands
-import discord, sheets
+import discord, sheets, random
 
 class Trigger(commands.Cog):
     
@@ -34,5 +34,70 @@ class Trigger(commands.Cog):
             await ctx.send(t)
         else:
             await ctx.send("Could not find a used trigger at " + str(index))
+
+    @commands.command()
+    async def luck(self, ctx, *args):
+        '''Get randomised luck.
+        '''
+        i = 0
+        while i < 2:
+            choice = random.randint(1, 4)
+            # Ordering for these is Perk Life, Perk Power, Flaw Life, Flaw Power
+            output = (await sheets.luck(choice))
+            #await ctx.send("Doing some luck stuff!")
+            if (choice == 1):
+                await ctx.send("*Life Perk*: " + output)
+            elif (choice == 2):
+                await ctx.send("*Power Perk*: " + output)
+            elif (choice == 3):
+                await ctx.send("*Life Flaw*: " + output)
+            elif (choice == 4):
+                await ctx.send("*Power Flaw*: " + output)
+            i += 1
+
+    @commands.command()
+    async def perk(self, ctx, *args):
+        '''Get randomised perk. Can specify power or life.
+        '''
+        column = 0
+        if len(args) > 0:
+            if args[0].lower() == "life":
+                column = 1
+            elif args[0].lower() == "power":
+                column = 2
+        
+        if column == 0:
+            column = random.randint(1, 2)
+
+        output = (await sheets.luck(column))
+
+        if column == 1:
+            await ctx.send("*Life Perk*: " + output)
+        else:
+            await ctx.send("*Power Perk*: " + output)
+
+    @commands.command()
+    async def flaw(self, ctx, *args):
+        '''Get randomised flaw. Can specify power or life.
+        '''
+        column = 0
+        if len(args) > 0:
+            if args[0].lower() == "life":
+                column = 3
+            elif args[0].lower() == "power":
+                column = 4
+        
+        if column == 0:
+            column = random.randint(3, 4)
+        
+        output = (await sheets.luck(column))
+
+        if column == 3:
+            await ctx.send("*Life Flaw*: " + output)
+        else:
+            await ctx.send("*Power Flaw*: " + output)
+
+            
+
 
         
