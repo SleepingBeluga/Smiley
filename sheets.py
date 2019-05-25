@@ -147,6 +147,7 @@ ID1 = '1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY'
 # Note: this is a temporary sheet to use so that the actual trigger doc
 # is not interfered with
 TriggerID = '1bWigKxmpEObOWTP0uRA_xwmMnF3Lpk9ZQer5msl6WnA'
+DetailID = '1kWxWhvKzAYl98nuvgCQOchw7mgH7aecyB82hSwMtatQ'
 
 async def newgame(name, GM, type):
 
@@ -308,7 +309,6 @@ async def used(index):
     values = result.get('values', [])
 
     usedTriggers = []
-    count = 0
     # Go through and build 
     for row in values[1:]:
         if not row:
@@ -326,6 +326,29 @@ async def used(index):
         index -= 1
 
     return str(index + 1) + ": " + str(usedTriggers[index])
+
+async def luck(column):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=DetailID,
+                                range='Perks and Flaws #2!A1:F79').execute()
+    values = result.get('values', [])
+
+    relevantLuck = []
+    count = 1
+    # Go through specific column
+    for row in values[1:]:
+        count += 1
+        if not row:
+            break
+        try:
+            if str(row[1+column]) != "":
+                relevantLuck += [str(row[1+column])]
+        except:
+            # Don't do anything
+            print("Failed to execute luck("+str(column)+") on line "+str(count))
+    
+    index = random.randint(0, len(relevantLuck)-1)
+    return str(relevantLuck[index])
 
 
 # ...sorry about the mess X|
