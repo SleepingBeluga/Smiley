@@ -98,7 +98,7 @@ class Trigger(commands.Cog):
             await ctx.send("*Power Flaw*: " + output)
 
     @commands.command()
-    async def power(self, ctx, p_or_f):
+    async def power(self, ctx, p_or_f = None):
         '''Get a random power perk or flaw. Optionally specify whether you want a perk or flaw.
         '''
         p_or_f = p_or_f.lower()
@@ -116,7 +116,7 @@ class Trigger(commands.Cog):
             await ctx.send("*Power Flaw*: " + output)
 
     @commands.command()
-    async def life(self, ctx, p_or_f):
+    async def life(self, ctx, p_or_f = None):
         '''Get a random life perk or flaw. Optionally specify whether you want a perk or flaw.
         '''
         p_or_f = p_or_f.lower()
