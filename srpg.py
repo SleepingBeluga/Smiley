@@ -18,7 +18,7 @@ class SRPG(commands.Cog):
         to_send = f"**Disposition**: {random.choice(self.dispo_list)}, **Personality/Archetype**: {random.choice(self.person_list)}, {random.choice(self.arche_list)}"
 
         while '{random.choice(lean_list)}' in to_send:
-            to_send.replace('{random.choice(lean_list)}',random.choice(lean_list),1)
+            to_send.replace('{random.choice(lean_list)}',random.choice(self.lean_list),1)
         # Hacky, sorry!
 
         await ctx.send(to_send)
