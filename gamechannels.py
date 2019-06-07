@@ -284,6 +284,12 @@ class Game_Channels(commands.Cog):
         failure = await sheets.addlink(ctx.author.id,args[0].lower(),link)
         if failure:
             await ctx.send('Error adding link, make sure you have the name right and you\'re the GM')
+        else:
+            # Let's make this the topic
+            for channel in ctx.message.guild.channels:
+                if channel.name == args[0].lower():
+                    await channel.edit(topic=link)
+            
 
     @commands.command()
     async def owner(self, ctx, *args):
