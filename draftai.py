@@ -9,7 +9,7 @@ class Other:
     type = 0
     gen = random.Random()
 
-    def __init__(self, mem):
+    async def __init__(self, mem):
         self.type = len(mem['bots'])
 
         if self.type == 0:
@@ -51,7 +51,7 @@ class Other:
             self.gen = random.Random(737373737123456)
             self.values = [3,3,3,3,3,3,3,3]
 
-    def auto_bid(self, mem):
+    async def auto_bid(self, mem):
         await asyncio.sleep(20)
         if (mem['to resolve'] == mem['players']) or self.name in mem['to resolve']:
             self.okay = True
@@ -100,7 +100,7 @@ class Other:
 
             return returning
 
-    def auto_clash(self):
+    async def auto_clash(self):
         await asyncio.sleep(20)
         if (self.type == 0) or (self.type == 1) or (self.type == 2):
             return True
