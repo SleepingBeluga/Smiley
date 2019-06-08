@@ -1,4 +1,4 @@
-import random, draft, asyncio
+import random, draft, time
 
 class Other:
 
@@ -9,7 +9,7 @@ class Other:
     type = 0
     gen = random.Random()
 
-    async def __init__(self, mem):
+    def __init__(self, mem):
         self.type = len(mem['bots'])
 
         if self.type == 0:
@@ -51,8 +51,8 @@ class Other:
             self.gen = random.Random(737373737123456)
             self.values = [3,3,3,3,3,3,3,3]
 
-    async def auto_bid(self, mem):
-        await asyncio.sleep(20)
+    def auto_bid(self, mem):
+        time.sleep(20)
         if (mem['to resolve'] == mem['players']) or self.name in mem['to resolve']:
             self.okay = True
             returning = []
@@ -100,7 +100,7 @@ class Other:
 
             return returning
 
-    async def auto_clash(self):
+    def auto_clash(self):
         await asyncio.sleep(20)
         if (self.type == 0) or (self.type == 1) or (self.type == 2):
             return True
