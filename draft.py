@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord, random, asyncio
-import sheets
+import sheets, draftai
 
 memory = {}
 
@@ -49,6 +49,9 @@ async def setup():
 
     memory['clashes'] = [[],[],[]]
     # More empty things
+
+    memory['bots'] = []
+    # For holding bot objects
 
     memory['colors'] = {"purple": (0.2,0.1,0.5),
                         "blue":   (0.1,0.3,0.8),
@@ -205,6 +208,8 @@ async def get_bids():
             memory['bids'][player] = None
     memory['bidding'] = True
     #asyncio.run(bid_reminder())
+    await bots_bid()
+    # Has bots make their bids, if any
     await memory['bidsin'].wait()
     memory['bidsin'].clear()
     memory['bidding'] = False
@@ -457,6 +462,8 @@ async def get_clash_choices():
             memory['clash choices'][player] = None
     memory['clashing'] = True
     #asyncio.run(clash_reminder())
+    await bots_clash()
+    # Has bots make their clash choices, if any
     await memory['clashesin'].wait()
     memory['clashesin'].clear()
     memory['clashing'] = False
@@ -490,6 +497,44 @@ async def check_clash_choices():
     if not None in memory['clash choices'].values():
         memory['clashesin'].set()
 
+# Gonna add some bot stuff here on. Mostly just modified versions of the player stuff
+
+async def bots_bid():
+    for bot in memory['bots']:
+        botName = bot.name
+
+        if memory['bidding']:
+            if str(botName) in memory['to resolve']:
+                returned = bot.auto_bid(memory)
+                cat = returned[0]
+                rung = int(returned[1])
+                if cat in memory['cats']:
+                    if not str(botName) in memory[cat]:
+                        if (rung <= len(memory['players']) and rung >= memory['limits'][str(botName)]) or rung == \
+                                memory['limits'][str(botName)]:
+                            if memory[cat][rung - 1] == '':
+                                memory['bids'][str(botName)] = (cat, rung)
+
+    await check_bids()
+
+async def bots_clash():
+    for bot in memory['bots']:
+        botName = bot.name
+
+        returned = bot.auto_clash()
+
+        if returned:
+            if memory['clashing']:
+                if str(botName) in memory['clashes'][0]:
+                    memory['clash choices'][str(botName)] = 'stay'
+        else:
+            if memory['clashing']:
+                if str(botName) in memory['clashes'][0]:
+                    memory['clash choices'][str(botName)] = 'concede'
+
+    await check_clash_choices()
+
+
 class Draft(commands.Cog):
     '''Commands for Pact Dice drafts
     '''
@@ -518,6 +563,24 @@ class Draft(commands.Cog):
             await ctx.send('You can\'t join because there\'s no draft going on! (Use %open to start one)')
         else:
             await ctx.send('You can\'t join right now, we\'re in ' + memory['phase'] + '!')
+
+    @commands.command()
+    async def addbot(self, ctx, *args):
+        '''Adds a bot player
+        '''
+        if memory['phase'] == 'setup':
+            x = draftai.Other(memory)
+            memory['bots'].append(x)
+            if not str(x.name) in memory['players']:
+                memory['players'].append(str(x.name))
+                memory['proper names'][str(x.name)] = x.name
+                await ctx.send(x.name + ' has joined!')
+            else:
+                await ctx.send('Error!')
+        elif memory['phase'] == 'none':
+            await ctx.send('You can\'t make a bot because there\'s no draft going on! (Use %open to start one)')
+        else:
+            await ctx.send('You can\'t make a bot right now, we\'re in ' + memory['phase'] + '!')
 
     @commands.command()
     async def start(self, ctx, *args):
