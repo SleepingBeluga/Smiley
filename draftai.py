@@ -1,4 +1,4 @@
-import random, draft
+import random, draft, asyncio
 
 class Other:
 
@@ -52,6 +52,7 @@ class Other:
             self.values = [3,3,3,3,3,3,3,3]
 
     def auto_bid(self, mem):
+        await asyncio.sleep(20)
         if (mem['to resolve'] == mem['players']) or self.name in mem['to resolve']:
             self.okay = True
             returning = []
@@ -100,6 +101,7 @@ class Other:
             return returning
 
     def auto_clash(self):
+        await asyncio.sleep(20)
         if (self.type == 0) or (self.type == 1) or (self.type == 2):
             return True
         else:
