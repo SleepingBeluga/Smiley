@@ -5,6 +5,12 @@ class Rolls(commands.Cog):
     '''For rolling dice
     '''
     @commands.command()
+    async def r(self, ctx, *, arg='1d6 1d6'):
+        '''Alias for roll
+        '''
+        self.roll(ctx,arg)
+
+    @commands.command()
     async def roll(self, ctx, *, arg='1d6 1d6'):
         '''Roll some dice
         '''
