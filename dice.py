@@ -4,9 +4,6 @@ import random
 class Rolls(commands.Cog):
     '''For rolling dice
     '''
-    __init__ (self):
-        self.r = self.roll
-
     @commands.command()
     async def roll(self, ctx, *, arg='1d6 1d6'):
         '''Roll some dice
