@@ -208,7 +208,7 @@ async def get_bids():
             memory['bids'][player] = None
     memory['bidding'] = True
     #asyncio.run(bid_reminder())
-    if len(memory['bots'] > 0:
+    if len(memory['bots']) > 0:
         await asyncio.sleep(20)
     await bots_bid()
     # Has bots make their bids, if any
