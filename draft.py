@@ -208,7 +208,8 @@ async def get_bids():
             memory['bids'][player] = None
     memory['bidding'] = True
     #asyncio.run(bid_reminder())
-    await asyncio.sleep(20)
+    if len(memory['bots'] > 0:
+        await asyncio.sleep(20)
     await bots_bid()
     # Has bots make their bids, if any
     await memory['bidsin'].wait()
@@ -463,7 +464,8 @@ async def get_clash_choices():
             memory['clash choices'][player] = None
     memory['clashing'] = True
     #asyncio.run(clash_reminder())
-    await asyncio.sleep(20)
+    if len(memory['bots']) > 0:
+        await asyncio.sleep(20)
     await bots_clash()
     # Has bots make their clash choices, if any
     await memory['clashesin'].wait()
