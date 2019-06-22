@@ -33,19 +33,19 @@ async def reset(ctx, *args):
         await ctx.send('OK, I\'ve reset.')
         await draft.setup()
 
-#b.add_cog(draft.Draft())
-#b.add_cog(gamechannels.Game_Channels())
-#b.add_cog(dice.Rolls())
-#b.add_cog(wounds.Wounds())
-#b.add_cog(trigger.Trigger())
-#b.add_cog(srpg.SRPG())
+b.add_cog(draft.Draft())
+b.add_cog(gamechannels.Game_Channels())
+b.add_cog(dice.Rolls())
+b.add_cog(wounds.Wounds())
+b.add_cog(trigger.Trigger())
+b.add_cog(srpg.SRPG())
 b.add_cog(ac.Autocape())
-# Add the cogs to the bot
+ Add the cogs to the bot
 
-#b.loop.create_task(draft.setup())
+b.loop.create_task(draft.setup())
 # Run the draft setup function before doing anything!
 
-#b.loop.create_task(trimhistory.channel_cleanup(b))
+b.loop.create_task(trimhistory.channel_cleanup(b))
 # Start the channel cleanup task on a loop.
 
 with open('secret') as s:
