@@ -40,7 +40,6 @@ b.add_cog(wounds.Wounds())
 b.add_cog(trigger.Trigger())
 b.add_cog(srpg.SRPG())
 b.add_cog(ac.Autocape())
- Add the cogs to the bot
 
 b.loop.create_task(draft.setup())
 # Run the draft setup function before doing anything!
