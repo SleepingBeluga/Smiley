@@ -100,7 +100,6 @@ class Other:
             return returning
 
     def auto_clash(self):
-        time.sleep(20)
         if (self.type == 0) or (self.type == 1) or (self.type == 2):
             return True
         else:
