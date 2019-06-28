@@ -110,7 +110,7 @@ async def subround(clash):
         await subround(True)
     # If the clashes need to be resolved, do another subround for those bids
 
-elif await all_resolved():
+elif (await all_resolved()):
         await memory['channel'].send('Autofilling any remaining open slots...')
         await autofill()
         await update_sheet()
