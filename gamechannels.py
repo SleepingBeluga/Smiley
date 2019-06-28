@@ -282,9 +282,9 @@ class Game_Channels(commands.Cog):
                             await ctx.TextChannel.edit(category=PDID)
                         elif gameType == 'wd':
                             await ctx.TextChannel.edit(category=WDID)
-                        elif category.lower() == 'pd':
+                        elif category and category.lower() == 'pd':
                             await ctx.TextChannel.edit(category=PDID)
-                        elif category.lower() == 'wd':
+                        elif category and category.lower() == 'wd':
                             await ctx.TextChannel.edit(category=WDID)
                         await sheets.changeState(gameName,'Y')
 
@@ -306,7 +306,7 @@ class Game_Channels(commands.Cog):
             for channel in ctx.message.guild.channels:
                 if channel.name == args[0].lower():
                     await channel.edit(topic=link)
-            
+
 
     @commands.command()
     async def owner(self, ctx, *args):
