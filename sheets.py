@@ -198,7 +198,7 @@ async def newgame(name, GM, type):
     batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
 
 async def category(game):
-    sheet = services.spreadsheets()
+    sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
                                 range='Campaigns!A1:E100').execute()
     values = result.get('values', [])
@@ -303,11 +303,11 @@ async def trigger(index):
             rowNum += 1
         else:
             break
-    
+
     if index > rowNum or index < 0:
         # Can not find a trigger at this index
         return ''
-    
+
     if index == 0:
         index = random.randrange(0, rowNum)
     else:
@@ -323,17 +323,17 @@ async def used(index):
     values = result.get('values', [])
 
     usedTriggers = []
-    # Go through and build 
+    # Go through and build
     for row in values[1:]:
         if not row:
             break
         if str(row[1]) != "":
             usedTriggers += [str(row[1])]
-    
+
     if index > len(usedTriggers) or index < 0:
         # Can not find a trigger at this index
         return ''
-    
+
     if index == 0:
         index = random.randrange(0, len(usedTriggers))
     else:
@@ -360,7 +360,7 @@ async def luck(column):
         except:
             # Don't do anything
             print("Failed to execute luck("+str(column)+") on line "+str(count))
-    
+
     index = random.randint(0, len(relevantLuck)-1)
     return str(relevantLuck[index])
 
