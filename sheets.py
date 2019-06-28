@@ -91,12 +91,16 @@ async def new_blank_sheet(memory, NUM_PLAYERS):
                 "startColumnIndex":0,"endColumnIndex":NUM_PLAYERS+4}
     range3 = {"sheetId":0,"startRowIndex":9,"endRowIndex":11+NUM_PLAYERS,
                 "startColumnIndex":3,"endColumnIndex":NUM_PLAYERS+4}
+    range4 = {"sheetId":0,"startRowIndex":0,"endRowIndex":10,
+                "startColumnIndex":NUM_PLAYERS+1,"endColumnIndex":NUM_PLAYERS+4}
     cell = {"userEnteredFormat":{"backgroundColor":background_gray}}
     repeat_cell = {"range":range1, "cell": cell, "fields":"userEnteredFormat(backgroundColor)"}
     requests.append({"repeatCell": repeat_cell})
     repeat_cell = {"range":range2, "cell": cell, "fields":"userEnteredFormat(backgroundColor)"}
     requests.append({"repeatCell": repeat_cell})
     repeat_cell = {"range":range3, "cell": cell, "fields":"userEnteredFormat(backgroundColor)"}
+    requests.append({"repeatCell": repeat_cell})
+    repeat_cell = {"range":range4, "cell": cell, "fields":"userEnteredFormat(backgroundColor)"}
     requests.append({"repeatCell": repeat_cell})
 
     # Fix background borders
@@ -108,6 +112,10 @@ async def new_blank_sheet(memory, NUM_PLAYERS):
                     "innerHorizontal":solid_bg_gray,"left":solid_bg_gray}
     requests.append({"updateBorders":update_borders})
     update_borders = {"range":range3,"innerVertical":solid_bg_gray,
+                    "innerHorizontal":solid_bg_gray,"right":solid_bg_gray,
+                    "bottom":solid_bg_gray}
+    requests.append({"updateBorders":update_borders})
+    update_borders = {"range":range4,"innerVertical":solid_bg_gray,
                     "innerHorizontal":solid_bg_gray,"right":solid_bg_gray,
                     "bottom":solid_bg_gray}
     requests.append({"updateBorders":update_borders})
