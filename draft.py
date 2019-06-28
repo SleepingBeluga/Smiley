@@ -178,7 +178,7 @@ async def update_sheet():
                 index = memory['players'].index(player)
                 row = memory['cats'].index(cat) + 1
                 col = rank + 1
-                memory['requests'].append(await sheets.write_cell(memory, (row,col), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1)))
+                memory['requests'].append(await sheets.write_cell_request(memory, (row,col), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1)))
     # Write into each filled category the player who has it
 
     for index in range(len(memory['players'])):
@@ -187,20 +187,22 @@ async def update_sheet():
         to_write = ''
         for i in range(memory['white marks'][player]):
             to_write += '★'
-        memory['requests'].append(await sheets.write_cell(memory, (row,1), to_write, (0.15,0.15,0.15), (1,1,1)))
+        memory['requests'].append(await sheets.write_cell_request(memory, (row,1), to_write, (0.15,0.15,0.15), (1,1,1)))
         to_write = ''
         for i in range(memory['black marks'][player]):
             to_write += '☆'
-        memory['requests'].append(await sheets.write_cell(memory, (row,2), to_write, (0.15,0.15,0.15), (1,1,1)))
+        memory['requests'].append(await sheets.write_cell_request(memory, (row,2), to_write, (0.15,0.15,0.15), (1,1,1)))
     # Write each player's karma into the karma table
 
     await sheets.execute_updates(memory, memory['requests'])
     # Commit the updates to the spreadsheet
 
 async def do_player_karma_labels():
+    memory['requests'] = []
     for index in range(len(memory['players'])):
         player = memory['players'][index]
-        await sheets.write_cell(memory, (11+index,0), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
+        memory['requests'].append(await sheets.write_cell_request(memory, (11+index,0), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1)))
+    await sheets.execute_updates(memory, memory['requests'])
 
 async def get_bids():
     '''Tells players to submit bids, and waits until all bids are done.
