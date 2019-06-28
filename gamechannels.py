@@ -228,9 +228,12 @@ class Game_Channels(commands.Cog):
         '''Move an archived game back out of archives
         '''
         gameType = args[0].lower()
+        argStart = 1
         if (gameType != 'wd' and gameType != 'pd'):
-            await ctx.send("Please write out your game's name after the command (i.e. %unarchive pd New York)")
-            return
+            # We want to read from the sheet
+            argStart = 0
+            #await ctx.send("Please write out your game's name after the command (i.e. %unarchive pd New York)")
+            #return
         gameName = ''
         gameRole = None
         gameChan = None
@@ -247,10 +250,11 @@ class Game_Channels(commands.Cog):
             elif category.name == 'Archives':
                 archiveID = category
 
-        for arg in args[1:]:
+        for arg in args[argStart:]:
             gameName = gameName + str(arg).lower()
 
         namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
+        category = (await sheets.category(gameName))
         moderator = False
         for role in ctx.author.roles:
             if str(role) == 'Mod Team':
@@ -273,9 +277,14 @@ class Game_Channels(commands.Cog):
             else:
                 for ctx.TextChannel in ctx.message.guild.text_channels:
                     if ctx.TextChannel.name == gameName:
+                        # Prioritise on pd/wd override, then default to sheet data
                         if gameType == 'pd':
                             await ctx.TextChannel.edit(category=PDID)
                         elif gameType == 'wd':
+                            await ctx.TextChannel.edit(category=WDID)
+                        elif category.lower() == 'pd':
+                            await ctx.TextChannel.edit(category=PDID)
+                        elif category.lower() == 'wd':
                             await ctx.TextChannel.edit(category=WDID)
                         await sheets.changeState(gameName,'Y')
 
