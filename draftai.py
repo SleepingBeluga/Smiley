@@ -66,9 +66,6 @@ class Other:
             comp = -1
             bannedNums = []
 
-            print(rank)
-
-
             for cats in mem['cats']:
                 if self.name in mem[cats]:
                     bannedNums.append(check3)
@@ -94,8 +91,6 @@ class Other:
                     break
                 else:
                     check2 += 1
-
-            print(returning)
 
             return returning
 
