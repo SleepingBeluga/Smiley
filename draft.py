@@ -167,6 +167,7 @@ async def update_sheet():
     Parameters: none
     Return: None
     '''
+    memory['requests'] = []
     if memory['rows to show'] > len(memory['players']):
         # Extend sheet at some point in the future
         do_nothing_here_yet = 0
@@ -177,7 +178,7 @@ async def update_sheet():
                 index = memory['players'].index(player)
                 row = memory['cats'].index(cat) + 1
                 col = rank + 1
-                await sheets.write_cell(memory, (row,col), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1))
+                memory['requests'].append(await sheets.write_cell(memory, (row,col), memory['proper names'][player], memory['colors'][memory['player colors'][index]], (1,1,1)))
     # Write into each filled category the player who has it
 
     for index in range(len(memory['players'])):
@@ -186,12 +187,15 @@ async def update_sheet():
         to_write = ''
         for i in range(memory['white marks'][player]):
             to_write += '★'
-        await sheets.write_cell(memory, (row,1), to_write, (0.15,0.15,0.15), (1,1,1))
+        memory['requests'].append(await sheets.write_cell(memory, (row,1), to_write, (0.15,0.15,0.15), (1,1,1)))
         to_write = ''
         for i in range(memory['black marks'][player]):
             to_write += '☆'
-        await sheets.write_cell(memory, (row,2), to_write, (0.15,0.15,0.15), (1,1,1))
+        memory['requests'].append(await sheets.write_cell(memory, (row,2), to_write, (0.15,0.15,0.15), (1,1,1)))
     # Write each player's karma into the karma table
+
+    await sheets.execute_updates(memory, memory['requests'])
+    # Commit the updates to the spreadsheet
 
 async def do_player_karma_labels():
     for index in range(len(memory['players'])):

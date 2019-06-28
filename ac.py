@@ -53,6 +53,3 @@ class Autocape(commands.Cog):
         #  TODO Something happens
         await ctx.author.send("```This hasn't been implemented yet```")
         await ctx.send("Displaying history in PM.")
-
-
-

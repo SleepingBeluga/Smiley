@@ -120,7 +120,7 @@ async def new_blank_sheet(memory, NUM_PLAYERS):
 Generates a generic draft sheet and returns the spreadsheet ID.
 '''
 
-async def write_cell(memory, cell, content, bgcolor, fgcolor):
+async def write_cell_request(memory, cell, content, bgcolor, fgcolor):
     ID = memory["sheetID"]
     bgcolor = {"red": bgcolor[0],
                "green": bgcolor[1],
@@ -134,12 +134,13 @@ async def write_cell(memory, cell, content, bgcolor, fgcolor):
     update_cells = {"rows": [{"values": [celldata]}],
                     "fields": "userEnteredFormat(backgroundColor,textFormat(foregroundColor)),userEnteredValue",
                     "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
-    requests = [{"updateCells":update_cells}]
-    batch_res = memory["sheet"].batchUpdate(spreadsheetId = ID, body={"requests":requests}).execute()
+    return {"updateCells":update_cells}
 '''
-Given a cell, contents, and colors, writes contents
-and sets the colors for the cell.
+Given a cell, contents, and colors, returns a request to write contents
+and sets colors for that cell.
 '''
+async def execute_updates(memory, reqs):
+    batch_res = memory["sheet"].batchUpdate(spreadsheetId = ID, body={"requests":reqs}).execute()
 
 # - - - - More weird channel stuff below. Should hopefully still work when copy-pasted
 
