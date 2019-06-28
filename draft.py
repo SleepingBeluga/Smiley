@@ -487,7 +487,7 @@ async def all_resolved():
     for cat in memory['cats']:
         fullslots = 0
         for slot in memory[cat][:len(memory['players'])]:
-            if not slot == '':
+            if slot:
                 fullslots += 1
         if fullslots < len(memory['players']) - 1:
             return False
@@ -500,8 +500,8 @@ async def autofill():
         for cat in memory['cats']:
             if not player in cat:
                 for index, slot in enumerate(cat):
-                    if not slot == '':
-                        memory['cat'][index] = player
+                    if not slot and index >= memory['limits'][player]:
+                        memory[cat][index] = player
                         break
 
 async def check_bids():
