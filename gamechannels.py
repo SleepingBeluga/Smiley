@@ -93,9 +93,9 @@ class Game_Channels(commands.Cog):
         joinAllPD = False
         joinAllArchive = False
 
-        if gameName in ['wdall', 'all', 'allactive']:
+        if gameName in ['wdall', 'allwd', 'all', 'allactive']:
             joinAllWD = True
-        if gameName in ['pdall', 'all', 'allactive']:
+        if gameName in ['pdall', 'allpd', 'all', 'allactive']:
             joinAllPD = True
         if gameName in ['all', 'allarchive']:
             joinAllArchive = True
@@ -106,7 +106,6 @@ class Game_Channels(commands.Cog):
         applicableChannels = []
 
         for channel in ctx.guild.channels:
-            # First lets just check whether they want all games!
             if not channel.category:
                 continue
             # If the channel has no category, move to the next channel
@@ -146,10 +145,6 @@ class Game_Channels(commands.Cog):
                 await ctx.send("That game could not be found, did you mean " + closestChannels[0])
             else:
                 await ctx.send("That game could not be found.")
-         #   roleName = gameName + 'er'
-
-          #  if roleName == 'Game Master':
-           #     await ctx.send("You must think you're so clever.")
         else:
             await game.set_permissions(ctx.author, read_messages=True)
 
@@ -157,24 +152,49 @@ class Game_Channels(commands.Cog):
     async def exit(self, ctx, *args):
         '''Leave a game channel
         '''
-        gameName = ''
+        to_leave = ''
         game = None
         check = False
 
         for arg in args:
-            gameName = gameName + str(arg).lower()
+            to_leave += str(arg).lower()
+
+        leavepd = to_leave == 'pdall' or to_leave == 'allpd'
+        leavewd = to_leave == 'wdall' or to_leave == 'allwd'
+        leavearchive = to_leave == 'inactive' or to_leave == 'archived' or to_leave == 'allarchive'
+        if to_leave == 'allactive' or to_leave == 'active':
+            leavepd = True
+            leavewd = True
+        if to_leave == 'all':
+            leavepd = True
+            leavewd = True
+            leavearchive = True
 
         for channel in ctx.guild.channels:
-            if channel.name == gameName:
-                game = channel
+            if not channel.category:
+                continue
+            # If the channel has no category, move to the next channel
+            catName = channel.category.name
+            if leavewd and catName == 'WeaverDice Games':
                 check = True
+                await channel.set_permissions(ctx.author, read_messages=False)
+            elif leavepd and catName == 'PactDice Games':
+                check = True
+                await channel.set_permissions(ctx.author, read_messages=False)
+            elif leavearchive and catName == 'Archives':
+                check = True
+                await channel.set_permissions(ctx.author, read_messages=False)
+            if channel.name == to_leave:
+                game = channel
+                check = (catName in ['PactDice Games', 'WeaverDice Games', 'Archives'])
+                if check:
+                    await channel.set_permissions(ctx.author, read_messages=False)
+
 
         if gameName == '':
             await ctx.send("Please write out where you wish to exit after the command (i.e. %exit New York)")
         elif check == False:
             await ctx.send("That game could not be found.")
-        else:
-            await game.set_permissions(ctx.author, read_messages=False)
 
     @commands.command()
     async def archive(self, ctx, *args):
