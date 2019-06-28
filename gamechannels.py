@@ -37,6 +37,11 @@ class Game_Channels(commands.Cog):
             await ctx.send(gameName + " is a restricted term and you can't name your game that. Sorry!")
             return
 
+        for channel in ctx.guild.channels:
+            if channel.name == gameName:
+                await ctx.send('There\'s already a channel called' + gameName +', use another name to avoid confusion.')
+                return
+                
         if gameName == '':
             await ctx.send("Please write out your game's name after the command (i.e. %addgame pd New York)")
         else:
