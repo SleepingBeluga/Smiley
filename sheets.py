@@ -197,6 +197,20 @@ async def newgame(name, GM, type):
     requests = [{"updateCells": update_cells}]
     batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
 
+async def category(game):
+    sheet = services.spreadsheets()
+    result = sheet.values().get(spreadsheetId=ID1,
+                                range='Campaigns!A1:E100').execute()
+    values = result.get('values', [])
+
+    game = game.lower()
+
+    for row in values:
+        if str(row[0]) == str('#' + game):
+            return str(row[3])
+
+    return None
+
 async def gamecheck(name, game):
 
     sheet = service.spreadsheets()
@@ -349,6 +363,5 @@ async def luck(column):
     
     index = random.randint(0, len(relevantLuck)-1)
     return str(relevantLuck[index])
-
 
 # ...sorry about the mess X|
