@@ -500,7 +500,8 @@ async def autofill():
         for cat in memory['cats']:
             if not player in cat:
                 for index, slot in enumerate(cat):
-                    if not slot and index >= memory['limits'][player]:
+                    print(player, cat, index, slot)
+                    if not slot:
                         memory[cat][index] = player
                         break
 
