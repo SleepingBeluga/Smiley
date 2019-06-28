@@ -486,7 +486,7 @@ async def all_resolved():
     '''
     for cat in memory['cats']:
         fullslots = 0
-        for slot in memory[cat][:len(memory['players'])]:
+        for slot in memory[cat]:
             if slot:
                 fullslots += 1
         if fullslots < len(memory['players']) - 1:
