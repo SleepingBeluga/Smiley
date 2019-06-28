@@ -190,7 +190,11 @@ class Game_Channels(commands.Cog):
             gameName = gameName + str(arg).lower()
 
         namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
-        moderator = ('Mod Team' in ctx.author.roles)
+        moderator = False
+        for role in ctx.author.roles:
+            if str(role) == 'Mod Team':
+                moderator = True
+                break
 
         for category in ctx.message.guild.categories:
             if category.name == 'PactDice Games':
@@ -247,7 +251,11 @@ class Game_Channels(commands.Cog):
             gameName = gameName + str(arg).lower()
 
         namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
-        moderator = ('Mod Team' in ctx.author.roles)
+        moderator = False
+        for role in ctx.author.roles:
+            if str(role) == 'Mod Team':
+                moderator = True
+                break
 
         for channel in ctx.message.guild.channels:
             if channel.name == gameName:
