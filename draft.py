@@ -498,8 +498,8 @@ async def autofill():
     '''
     for player in memory['players']:
         for cat in memory['cats']:
-            if not player in cat:
-                for index, slot in enumerate(cat):
+            if not player in memory[cat]:
+                for index, slot in enumerate(memory[cat]):
                     print(player, cat, index, slot)
                     if not slot:
                         memory[cat][index] = player
