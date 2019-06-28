@@ -172,7 +172,7 @@ async def update_sheet():
     '''
     memory['requests'] = []
     if memory['rows to show'] > len(memory['players']):
-        # Extend sheet at some point in the future
+        # Hopefully this doesn't happen
         do_nothing_here_yet = 0
     for cat in memory['cats']:
         for rank in range(memory['rows to show']):

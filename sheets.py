@@ -56,7 +56,7 @@ async def new_blank_sheet(memory, NUM_PLAYERS):
 
     # Formatting borders
     range_ = {"sheetId":0,"startRowIndex":0,"endRowIndex":12+NUM_PLAYERS,
-                "startColumnIndex":0,"endColumnIndex":NUM_PLAYERS+1}
+                "startColumnIndex":0,"endColumnIndex":NUM_PLAYERS+4}
     white = {"blue":1,"red":1,"green":1}
     white_solid = {"style": "SOLID", "color": white}
     update_borders = {"range":range_,"top":white_solid,"left":white_solid,
@@ -69,7 +69,7 @@ async def new_blank_sheet(memory, NUM_PLAYERS):
     requests.append({"deleteDimension": delete_rows})
 
     # Trim columns
-    delete_cols = {"range": {"sheetId":0,"dimension":"COLUMNS","startIndex":NUM_PLAYERS+1}}
+    delete_cols = {"range": {"sheetId":0,"dimension":"COLUMNS","startIndex":NUM_PLAYERS+4}}
     requests.append({"deleteDimension": delete_cols})
 
     # Format cells (broad)
@@ -88,9 +88,9 @@ async def new_blank_sheet(memory, NUM_PLAYERS):
     range1 = {"sheetId":0,"startRowIndex":9,"endRowIndex":11,
                 "startColumnIndex":0,"endColumnIndex":1}
     range2 = {"sheetId":0,"startRowIndex":9,"endRowIndex":10,
-                "startColumnIndex":0,"endColumnIndex":NUM_PLAYERS+1}
+                "startColumnIndex":0,"endColumnIndex":NUM_PLAYERS+4}
     range3 = {"sheetId":0,"startRowIndex":9,"endRowIndex":11+NUM_PLAYERS,
-                "startColumnIndex":3,"endColumnIndex":NUM_PLAYERS+1}
+                "startColumnIndex":3,"endColumnIndex":NUM_PLAYERS+4}
     cell = {"userEnteredFormat":{"backgroundColor":background_gray}}
     repeat_cell = {"range":range1, "cell": cell, "fields":"userEnteredFormat(backgroundColor)"}
     requests.append({"repeatCell": repeat_cell})
@@ -121,6 +121,9 @@ Generates a generic draft sheet and returns the spreadsheet ID.
 '''
 
 async def write_cell_request(memory, cell, content, bgcolor, fgcolor):
+    '''Given a cell, contents, and colors, returns a request to write contents
+    and sets colors for that cell.
+    '''
     ID = memory["sheetID"]
     bgcolor = {"red": bgcolor[0],
                "green": bgcolor[1],
@@ -135,11 +138,10 @@ async def write_cell_request(memory, cell, content, bgcolor, fgcolor):
                     "fields": "userEnteredFormat(backgroundColor,textFormat(foregroundColor)),userEnteredValue",
                     "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
     return {"updateCells":update_cells}
-'''
-Given a cell, contents, and colors, returns a request to write contents
-and sets colors for that cell.
-'''
+
 async def execute_updates(memory, reqs):
+    '''Takes in an array of updates returned from write_cell_request and applies them
+    '''
     ID = memory['sheetID']
     batch_res = memory["sheet"].batchUpdate(spreadsheetId = ID, body={"requests":reqs}).execute()
 
