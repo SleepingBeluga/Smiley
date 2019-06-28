@@ -110,7 +110,7 @@ async def subround(clash):
         await subround(True)
     # If the clashes need to be resolved, do another subround for those bids
 
-elif (await all_resolved()):
+    elif await all_resolved():
         await memory['channel'].send('Autofilling any remaining open slots...')
         await autofill()
         await update_sheet()
@@ -486,7 +486,7 @@ async def all_resolved():
     '''
     for cat in memory['cats']:
         fullslots = 0
-        for slot in memory[cat]:
+        for slot in memory[cat][:len(memory['players'])]:
             if not slot == '':
                 fullslots += 1
         if fullslots < len(memory['players']) - 1:
@@ -501,7 +501,7 @@ async def autofill():
             if not player in cat:
                 for index, slot in enumerate(cat):
                     if not slot == '':
-                        cat[index] = player
+                        memory['cat'][index] = player
                         break
 
 async def check_bids():
