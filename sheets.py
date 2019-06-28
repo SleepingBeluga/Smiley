@@ -140,6 +140,7 @@ Given a cell, contents, and colors, returns a request to write contents
 and sets colors for that cell.
 '''
 async def execute_updates(memory, reqs):
+    ID = memory['sheetID']
     batch_res = memory["sheet"].batchUpdate(spreadsheetId = ID, body={"requests":reqs}).execute()
 
 # - - - - More weird channel stuff below. Should hopefully still work when copy-pasted
