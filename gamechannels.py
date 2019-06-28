@@ -32,7 +32,7 @@ class Game_Channels(commands.Cog):
             gameName = gameName + str(arg).lower()
 
         # List of restricted titles
-        restricted_names = ['all', 'allactive', 'wdall', 'pdall', 'allarchive']
+        restricted_names = ['all', 'allactive', 'inactive', 'active', 'wdall', 'allwd', 'allpd', 'pdall', 'allarchive']
         if gameName in restricted_names:
             await ctx.send(gameName + " is a restricted term and you can't name your game that. Sorry!")
             return
@@ -191,7 +191,7 @@ class Game_Channels(commands.Cog):
                     await channel.set_permissions(ctx.author, read_messages=False)
 
 
-        if gameName == '':
+        if to_leave == '':
             await ctx.send("Please write out where you wish to exit after the command (i.e. %exit New York)")
         elif check == False:
             await ctx.send("That game could not be found.")
