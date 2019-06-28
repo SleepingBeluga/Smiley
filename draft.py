@@ -110,7 +110,10 @@ async def subround(clash):
         await subround(True)
     # If the clashes need to be resolved, do another subround for those bids
 
-    elif memory['round'] == 8:
+    elif all_resolved():
+        await memory['channel'].send('Autofilling any remaining open slots...')
+        await autofill()
+        await update_sheet()
         await memory['channel'].send('That\'s the end of the draft! Thanks for playing!')
         await setup()
     # If it's the last round, end the draft
@@ -479,25 +482,27 @@ async def get_clash_choices():
     memory['clashing'] = False
 
 async def all_resolved():
-    '''Not used because it doesn't work yet. Ideally should calculate when future rounds can be autofilled, but with insigs/abysmal that's not an easy check.
+    '''Should calculate when future rounds can be autofilled.
     '''
-    if any(x == '' for x in memory['puissance'][:len(memory['players'])]):
-        return False
-    if any(x  == ''  for x in memory['longevity'][:len(memory['players'])]):
-        return False
-    if any(x  == ''  for x in memory['access'][:len(memory['players'])]):
-        return False
-    if any(x  == ''  for x in memory['executions'][:len(memory['players'])]):
-        return False
-    if any(x  == ''  for x in memory['research'][:len(memory['players'])]):
-        return False
-    if any(x  == ''  for x in memory['schools'][:len(memory['players'])]):
-        return False
-    if any(x  == ''  for x in memory['priority'][:len(memory['players'])]):
-        return False
-    if any(x  == ''  for x in memory['family'][:len(memory['players'])]):
-        return False
+    for cat in memory['cats']:
+        fullslots = 0
+        for slot in memory[cat]:
+            if slot:
+                fullslots += 1
+        if fullslots < len(memory['players']) - 1:
+            return False
     return True
+
+async def autofill():
+    '''Should autofill any open slots left.
+    '''
+    for player in memory['players']:
+        for cat in memory['cats']:
+            if not player in cat:
+                for index, slot in enumerate(cat):
+                    if not slot:
+                        cat[index] = player
+                        break
 
 async def check_bids():
     if not None in memory['bids'].values():
