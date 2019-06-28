@@ -277,9 +277,14 @@ class Game_Channels(commands.Cog):
             else:
                 for ctx.TextChannel in ctx.message.guild.text_channels:
                     if ctx.TextChannel.name == gameName:
-                        if gameType == 'pd' or category.lower() == 'pd':
+                        # Prioritise on pd/wd override, then default to sheet data
+                        if gameType == 'pd':
                             await ctx.TextChannel.edit(category=PDID)
-                        elif gameType == 'wd' or category.lower() == 'wd':
+                        elif gameType == 'wd':
+                            await ctx.TextChannel.edit(category=WDID)
+                        elif category.lower() == 'pd':
+                            await ctx.TextChannel.edit(category=PDID)
+                        elif category.lower() == 'wd':
                             await ctx.TextChannel.edit(category=WDID)
                         await sheets.changeState(gameName,'Y')
 
