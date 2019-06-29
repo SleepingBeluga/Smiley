@@ -73,7 +73,10 @@ async def subround(clash):
     Return: None
     '''
     if not clash:
-        await memory['channel'].send('It\'s the beginning of round ' + str(memory['round']) + '! (Submit your bids by PMing me with e.x. %bid Executions 2)')
+        instructions = 'It\'s the beginning of round ' + str(memory['round']) + '! Submit your bids by PMing me with e.x. `%bid Executions 2`'
+        if memory['round'] == 1:
+            instructions += '. Note that lower numbers are better. 1 is Supreme, etc.'
+        await memory['channel'].send(instructions)
         # Start a full round & tell players to submit bids
     else:
     # Resolve clashes
@@ -81,9 +84,9 @@ async def subround(clash):
         for player in memory['to resolve']:
             to_say = to_say + memory['proper names'][player] + ', '
         if len(memory['to resolve']) > 1:
-            to_say = to_say + 'please submit your bids by PMing me with e.x. %bid Executions 2'
+            to_say = to_say + 'please submit your bids by PMing me with e.x. `%bid Executions 2`'
         else:
-            to_say = to_say + 'please submit your bid by PMing me with e.x. %bid Executions 2'
+            to_say = to_say + 'please submit your bid by PMing me with e.x. `%bid Executions 2`'
         await memory['channel'].send(to_say)
         await memory['channel'].send('Remember, bids are restricted by the results of the clashes.')
         # Tell players to submit bids
@@ -291,7 +294,7 @@ async def do_clash(continued):
             to_say = to_say + memory['proper names'][player] + ', '
         to_say = to_say[:-2] + ' for ' + memory['bids'][memory['clashes'][0][0]][0].capitalize() \
                              + ' ' + str(memory['bids'][memory['clashes'][0][0]][1]) + '! ' \
-                             + 'Please PM me with either %stay or %concede'
+                             + 'Please PM me with either `%stay` or `%concede`'
         await memory['channel'].send(to_say)
 
     number_of_clashers = len(memory['clashes'][0])
@@ -339,7 +342,7 @@ async def do_clash(continued):
                 await memory['channel'].send(to_say)
 
                 if coin0 == 'tails' and coin1 == 'tails':
-                    await memory['channel'].send('The clash continues! Please choose either %stay or %concede again.')
+                    await memory['channel'].send('The clash continues! Please choose either `%stay` or `%concede` again.')
                     await do_clash(True)
                     return
                 elif coin0 == 'tails':
@@ -445,7 +448,7 @@ async def do_clash(continued):
             to_say = to_say[:-2] + '!'
             await memory['channel'].send(to_say)
         if number_of_clashers > 1:
-            await memory['channel'].send('There\'s more than one clasher remaining! Remaining clashers, PM me with %stay or %concede again!')
+            await memory['channel'].send('There\'s more than one clasher remaining! Remaining clashers, PM me with `%stay` or `%concede` again!')
             await do_clash(True)
             return
         elif number_of_clashers == 1:
@@ -560,7 +563,7 @@ class Draft(commands.Cog):
         '''
         if memory['phase'] == 'none':
             memory['phase'] = 'setup'
-            await ctx.send('Opening a draft! (Use %join to join, and then %start to begin)')
+            await ctx.send('Opening a draft! (Use `%join` to join, and then `%start` to begin)')
         else:
             await ctx.send('A draft is already ongoing! Finish it before trying again.')
 
@@ -576,7 +579,7 @@ class Draft(commands.Cog):
             else:
                 await ctx.send('You\'ve already joined!')
         elif memory['phase'] == 'none':
-            await ctx.send('You can\'t join because there\'s no draft going on! (Use %open to start one)')
+            await ctx.send('You can\'t join because there\'s no draft going on! (Use `%open` to start one)')
         else:
             await ctx.send('You can\'t join right now, we\'re in ' + memory['phase'] + '!')
 
@@ -594,7 +597,7 @@ class Draft(commands.Cog):
             else:
                 await ctx.send('Error!')
         elif memory['phase'] == 'none':
-            await ctx.send('You can\'t make a bot because there\'s no draft going on! (Use %open to start one)')
+            await ctx.send('You can\'t make a bot because there\'s no draft going on! (Use `%open` to start one)')
         else:
             await ctx.send('You can\'t make a bot right now, we\'re in ' + memory['phase'] + '!')
 
@@ -627,7 +630,7 @@ class Draft(commands.Cog):
             else:
                 await ctx.send('You must have between 4 and 6 players to start.')
         elif memory['phase'] == 'none':
-            await ctx.send('You can\'t start the draft yet, you need players first! (Use %open to let players join)')
+            await ctx.send('You can\'t start the draft yet, you need players first! (Use `%open` to let players join)')
         else:
             await ctx.send('You can\'t start a draft right now, we\'re in ' + memory['phase'] + '!')
 
@@ -664,14 +667,14 @@ class Draft(commands.Cog):
                                     to_say += str(len(memory['players']))
                                 else:
                                     to_say += str(memory['limits'][str(ctx.author)])
-                                to_say += '. Format your message like this: %bid puissance 4'
+                                to_say += '. Format your message like this: `%bid puissance 4`'
                                 await ctx.send(to_say)
                         else:
                             await ctx.send('You already have a rung in that category! Pick another, please.')
                     else:
-                        await ctx.send ('I don\'t know that category. Format your message like this: %bid puissance 4')
+                        await ctx.send ('I don\'t know that category. Format your message like this: `%bid puissance 4`')
                 else:
-                    await ctx.send('Format your message like this: %bid puissance 4')
+                    await ctx.send('Format your message like this: `%bid puissance 4`')
             else:
                 await ctx.send('I don\'t need a bid from you right now.')
         else:
@@ -878,7 +881,7 @@ class Draft(commands.Cog):
                                                                         to_say += ' black mark, '
                                                                     elif item[0] == 'bmark':
                                                                         to_say += item[1] + ' black marks, '
-                                                                to_say = to_say[:-2] + '! Reply with %confirmtrade ' + ctx.author.display_name + ' to confirm, or %denytrade ' + ctx.author.display_name + ' to deny.'
+                                                                to_say = to_say[:-2] + '! Reply with `%confirmtrade ' + ctx.author.display_name + '` to confirm, or `%denytrade ' + ctx.author.display_name + '` to deny.'
 
                                                                 h_players = [str(ctx.author),recipient]
                                                                 h_players.sort()
@@ -901,15 +904,15 @@ class Draft(commands.Cog):
                                             await ctx.send('You can only offer things that you have!')
                                     else:
                                         await ctx.send('You can offer a category, like puissance, with the category\'s name or black or white marks with \'bmark\' or \'wmark\'')
-                                        await ctx.send('Format your message like this: %offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1')
+                                        await ctx.send('Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
                                 else:
-                                    await ctx.send('Don\'t forget the \'for\'! Format your message like this: %offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1')
+                                    await ctx.send('Don\'t forget the \'for\'! Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
                             else:
                                 await ctx.send('Your recipient already has a trade pending! To avoid shenanigans, a player can only have one trade pending at a time.')
                         else:
-                            await ctx.send('That recipient isn\'t in the draft! Format your message like this: %offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1')
+                            await ctx.send('That recipient isn\'t in the draft! Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
                     else:
-                        await ctx.send('Format your message like this: %offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1')
+                        await ctx.send('Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
                 else:
                     await ctx.send('You already have a trade pending! To avoid shenanigans, you can only have one trade pending at once.')
             else:
