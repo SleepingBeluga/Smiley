@@ -2,11 +2,6 @@ from discord.ext import commands
 import discord, sheets
 import difflib # Used to find closest name for enter command
 
-async def debug(ctx, message):
-    '''Prints a message in the context passed
-    '''
-    await ctx.send(message)
-
 class Game_Channels(commands.Cog):
     # - - - - Absolute mess of code below. Mostly channel stuff. Tread at your own risk. - - - -
     @commands.command()
@@ -41,7 +36,7 @@ class Game_Channels(commands.Cog):
             if channel.name == gameName:
                 await ctx.send('There\'s already a channel called' + gameName +', use another name to avoid confusion.')
                 return
-                
+
         if gameName == '':
             await ctx.send("Please write out your game's name after the command (i.e. %addgame pd New York)")
         else:
