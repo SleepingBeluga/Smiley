@@ -28,7 +28,7 @@ async def setup():
     memory['black marks'] = {}
     memory['white marks'] = {}
     memory['limits'] = {}
-    # Make empty arrays for all the player things
+    # Make empty arrays/dicts for all the player things
 
     memory['rows to show'] = 0
 
