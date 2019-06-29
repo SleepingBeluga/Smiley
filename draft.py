@@ -173,6 +173,10 @@ async def update_sheet():
     # Commit the updates to the spreadsheet
 
 async def do_player_karma_labels():
+    '''Writes player names to the google sheet by their karma
+    Parameters: none
+    Return: None
+    '''
     memory['requests'] = []
     for index in range(len(memory['players'])):
         player = memory['players'][index]
