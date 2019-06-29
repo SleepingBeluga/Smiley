@@ -127,37 +127,6 @@ async def subround(clash):
         await subround(False)
     # Go on to the next full round!
 
-async def show_cats():
-    '''Displays the categories so you can see who has what.
-    This function is not called by anything, and has been replaced by google
-     sheets integration.
-    '''
-
-    for cat in memory['cats']:
-        to_say = cat.capitalize()
-        for i in range(11 - len(cat)):
-            to_say += ' '
-        to_say += '| '
-        for i in range(memory['rows to show']):
-            if memory[cat][i] == '':
-                for j in range(14):
-                    to_say += ' '
-            else:
-                to_say += ' ' + memory['proper names'][memory[cat][i]][:-1] + '​' + memory['proper names'][memory[cat][i]][-1]
-                for j in range(13 - len(memory[cat][i])):
-                    to_say += ' '
-            to_say += '|'
-        await memory['channel'].send(to_say)
-
-    for player in memory['players']:
-        to_say = memory['proper names'][player][:-1] + '​' + memory['proper names'][player][-1] + ': '
-        for i in range(memory['white marks'][player]):
-            to_say += '☆'
-        to_say += ' | '
-        for i in range(memory['black marks'][player]):
-            to_say += '★'
-        await memory['channel'].send(to_say)
-
 async def blank_sheet():
     '''Makes a new sheet for a PD Draft.
     Parameters: none
