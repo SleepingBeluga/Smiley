@@ -192,18 +192,26 @@ async def get_bids():
         else:
             memory['bids'][player] = None
     memory['bidding'] = True
-    #asyncio.run(bid_reminder())
+    # Get things set up so people can bid
+
     if len(memory['bots']) > 0:
         await asyncio.sleep(5)
     await bots_bid()
     # Has bots make their bids, if any
+
+    #asyncio.run(bid_reminder())
     await memory['bidsin'].wait()
+    # Wait for all bids to be in
+
     memory['bidsin'].clear()
     memory['bidding'] = False
     for player in memory['players']:
         memory['limits'][player] = 0
+    # End bidding
 
 async def bid_reminder():
+    ''' Not currently called - should remind people to bid every so often if their bids aren't in.
+    '''
     asyncio.sleep(240)
     while not memory['bidsin'].is_set():
         to_say = 'Still waiting for '
@@ -219,44 +227,56 @@ async def bid_reminder():
 
 async def calc_clashes():
     '''Figures out if there are clashes and who's in each.
+    Also gives non-clashing players their choice.
     '''
     bid = None
     bid_player = None
     clashes_so_far = 0
     found_clash = False
+    # Initialize variables
+
     for player in memory['to resolve']:
         if not (player in memory['clashes'][0] or \
                 player in memory['clashes'][1] or \
                 player in memory['clashes'][2]):
+        # For each player (as long as they're not already involved in a know clash)
             bid = memory['bids'][player]
             for player2 in memory['to resolve']:
                 if not (player2 in memory['clashes'][0] or \
                         player2 in memory['clashes'][1] or \
                         player2 in memory['clashes'][2]):
                     if bid == memory['bids'][player2] and not player == player2:
+                    # If any other player has the same bid
                         memory['clashes'][clashes_so_far].append(player2)
                         if not player in memory['clashes'][clashes_so_far]:
                             memory['clashes'][clashes_so_far].append(player)
                             found_clash = True
+                        # Save the clash information
         if found_clash:
             clashes_so_far += 1
             found_clash = False
+        # Track amount of clashes
     if clashes_so_far == 0:
         await memory['channel'].send('There are no clashes.')
     elif clashes_so_far == 1:
         await memory['channel'].send('There\'s a clash!')
     else:
         await memory['channel'].send('There are ' + str(clashes_so_far) + ' clashes!')
+    # Announce the found clashes
 
     for player in memory['to resolve']:
         if not (player in memory['clashes'][0] or \
                 player in memory['clashes'][1] or \
                 player in memory['clashes'][2]):
             memory[memory['bids'][player][0]][memory['bids'][player][1] - 1] = player
+    # For players that aren't clashing, just give them their bid
 
     if clashes_so_far > 0:
         memory['clash'] = True
+    # If we're clashing, make sure everything knows!
+
     memory['to resolve'] = []
+    # Reset the array, everything is calculated
 
 async def do_clash(continued):
     '''Performs clashes and adds players who need to rebid to 'to resolve'.
@@ -269,8 +289,10 @@ async def do_clash(continued):
                              + ' ' + str(memory['bids'][memory['clashes'][0][0]][1]) + '! ' \
                              + 'Please PM me with either `%stay` or `%concede`'
         await memory['channel'].send(to_say)
+    # Tell players who's clashing and to submit their choices
 
     number_of_clashers = len(memory['clashes'][0])
+    # Determine the size of the clash
 
     if number_of_clashers == 2:
         player0 = memory['clashes'][0][0]
@@ -278,11 +300,11 @@ async def do_clash(continued):
         for player in memory['players']:
             memory['clash choices'][player] = ""
         await get_clash_choices()
+        # Get clash choices for two-player clashes
+
         if memory['clash choices'][player0] == 'stay':
             if memory['clash choices'][player1] == 'stay':
                 await memory['channel'].send('They both stayed!')
-
-                # Anti luck manipulation barriers around the random parts
 
                 # MUSA DERELINQUAS ME SERMONIBUS          🐀
                 coin0 = random.choice(('heads','tails')) #🐀
