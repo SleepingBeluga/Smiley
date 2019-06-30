@@ -909,7 +909,7 @@ class Draft(commands.Cog):
                     else:
                         await ctx.send('Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
                 else:
-                    await ctx.send('You already have a trade pending! To avoid shenanigans, you can only have one trade pending at once.')
+                    await ctx.send('You already have a trade pending! To avoid shenanigans, you can only have one trade pending at a time.')
             else:
                 await ctx.send('You\'re not in the draft!')
         else:
