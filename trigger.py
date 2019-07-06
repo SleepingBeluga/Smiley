@@ -37,23 +37,37 @@ class Trigger(commands.Cog):
 
     @commands.command()
     async def luck(self, ctx, *args):
-        '''Get randomised luck.
+        '''Get randomised luck. Can also search by passing the title.
         '''
-        i = 0
-        while i < 2:
-            choice = random.randint(1, 4)
-            # Ordering for these is Perk Life, Perk Power, Flaw Life, Flaw Power
-            output = (await sheets.luck(choice))
-            #await ctx.send("Doing some luck stuff!")
-            if (choice == 1):
-                await ctx.send("*Life Perk*: " + output)
-            elif (choice == 2):
-                await ctx.send("*Power Perk*: " + output)
-            elif (choice == 3):
-                await ctx.send("*Life Flaw*: " + output)
-            elif (choice == 4):
-                await ctx.send("*Power Flaw*: " + output)
-            i += 1
+        if args:
+            to_find = ' '.join(args)
+            for col in range(1,4):
+                output = await sheets.luck(col, False, to_find)
+                if output:
+                    if (col == 1):
+                        await ctx.send("*Life Perk*: " + output)
+                    elif (col == 2):
+                        await ctx.send("*Power Perk*: " + output)
+                    elif (col == 3):
+                        await ctx.send("*Life Flaw*: " + output)
+                    elif (col == 4):
+                        await ctx.send("*Power Flaw*: " + output)
+                    return
+            await ctx.send('Couldn\'t find a perk or flaw matching \'' + to_find + '\'')
+        else:
+            for _ in range(2):
+                choice = random.randint(1, 4)
+                # Ordering for these is Perk Life, Perk Power, Flaw Life, Flaw Power
+                output = (await sheets.luck(choice))
+                #await ctx.send("Doing some luck stuff!")
+                if (choice == 1):
+                    await ctx.send("*Life Perk*: " + output)
+                elif (choice == 2):
+                    await ctx.send("*Power Perk*: " + output)
+                elif (choice == 3):
+                    await ctx.send("*Life Flaw*: " + output)
+                elif (choice == 4):
+                    await ctx.send("*Power Flaw*: " + output)
 
     @commands.command()
     async def perk(self, ctx, *args):

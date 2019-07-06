@@ -1,4 +1,4 @@
-import pickle, os.path, datetime, random
+import pickle, os.path, datetime, random, difflib
 from googleapiclient.discovery import build
 from google.oauth2 import service_account as s_a
 
@@ -354,7 +354,7 @@ async def used(index):
 
     return str(index + 1) + ": " + str(usedTriggers[index])
 
-async def luck(column, beta = False):
+async def luck(column, beta = False, search = None):
     sheet = service.spreadsheets()
     if not beta:
         result = sheet.values().get(spreadsheetId=DetailID,
@@ -371,14 +371,17 @@ async def luck(column, beta = False):
         if not row:
             break
         try:
-            if str(row[1+column]) != "":
+            if not str(row[1+column]) == "":
                 relevantLuck += [str(row[1+column])]
+                if search:
+                    if difflib.SequenceMatcher(None, search, relevantLuck[:len(search)]) > 0.7:
+                        index = count
         except:
-            # Don't do anything
-            print("Failed to execute luck("+str(column)+") on line "+str(count))
+            pass
 
-    index = random.randint(0, len(relevantLuck)-1)
-    return str(relevantLuck[index])
-
+    if not search:
+        index = random.randint(0, len(relevantLuck)-1)
+    if index:
+        return str(relevantLuck[index])
 
 # ...sorry about the mess X|
