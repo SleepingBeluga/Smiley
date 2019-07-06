@@ -356,6 +356,7 @@ async def used(index):
 
 async def luck(column, beta = False, search = None):
     sheet = service.spreadsheets()
+    index = None
     if not beta:
         result = sheet.values().get(spreadsheetId=DetailID,
                                     range='LUCK!A1:F79').execute()
