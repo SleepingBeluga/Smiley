@@ -375,7 +375,9 @@ async def luck(column, beta = False, search = None):
             if not str(row[1+column]) == "":
                 relevantLuck += [str(row[1+column])]
                 if search:
-                    if difflib.SequenceMatcher(None, search, relevantLuck[:len(search)]) > 0.7:
+                    distance = difflib.SequenceMatcher(None, search, relevantLuck[:len(search)].lower())
+                    print(search, relevantLuck[:len(search)].lower(), distance)
+                    if distance > 0.7:
                         index = count
         except:
             pass
