@@ -379,7 +379,7 @@ async def luck(column, beta = False, search = None):
                     distance = difflib.SequenceMatcher(None, search, found[:len(search)].lower()).ratio()
                     print(search, found[:len(search)].lower(), distance)
                     if distance > 0.7:
-                        index = count
+                        return found
         except:
             pass
 
