@@ -360,7 +360,7 @@ async def luck(column, beta = False):
         result = sheet.values().get(spreadsheetId=DetailID,
                                     range='LUCK!A1:F79').execute()
     else:
-        result = sheet.values().get(spreadsheetId=DetailID,
+        result = sheet.values().get(spreadsheetId=SuggestionID,
                                     range='Perks and Flaws!A1:F79').execute()
     values = result.get('values', [])
     relevantLuck = []
