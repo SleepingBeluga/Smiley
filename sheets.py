@@ -373,10 +373,11 @@ async def luck(column, beta = False, search = None):
             break
         try:
             if not str(row[1+column]) == "":
-                relevantLuck += [str(row[1+column])]
+                found = str(row[1+column])
+                relevantLuck.append(found)
                 if search:
-                    distance = difflib.SequenceMatcher(None, search, relevantLuck[:len(search)].lower())
-                    print(search, relevantLuck[:len(search)].lower(), distance)
+                    distance = difflib.SequenceMatcher(None, search, found[:len(search)].lower())
+                    print(search, found[:len(search)].lower(), distance)
                     if distance > 0.7:
                         index = count
         except:
