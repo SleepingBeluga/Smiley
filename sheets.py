@@ -159,7 +159,7 @@ ID1 = '1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY'
 # Note: this is a temporary sheet to use so that the actual trigger doc
 # is not interfered with
 TriggerID = '1bWigKxmpEObOWTP0uRA_xwmMnF3Lpk9ZQer5msl6WnA'
-DetailID = '1kWxWhvKzAYl98nuvgCQOchw7mgH7aecyB82hSwMtatQ'
+DetailID = '1aHyZ7c7TIgt903mPinOakrgli2WZu5IRtiGYPCnCqDE'
 
 async def newgame(name, GM, type):
 
@@ -356,7 +356,7 @@ async def used(index):
 async def luck(column):
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=DetailID,
-                                range='Perks and Flaws #2!A1:F79').execute()
+                                range='LUCK!A1:F79').execute()
     values = result.get('values', [])
 
     relevantLuck = []
