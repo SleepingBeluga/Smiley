@@ -134,7 +134,7 @@ class Trigger(commands.Cog):
             await ctx.send("*Life Flaw*: " + output)
 
     @commands.command()
-    async def betaluck(self, ctx, *args):
+    async def fanluck(self, ctx, *args):
         '''Get randomised luck.
         '''
         i = 0
@@ -154,8 +154,8 @@ class Trigger(commands.Cog):
             i += 1
 
     @commands.command()
-    async def betaperk(self, ctx, *args):
-        '''Get randomised perk. Can specify power or life.
+    async def fanperk(self, ctx, *args):
+        '''Get randomised perk. Can specify power or life. (Includes fanmade results)
         '''
         column = 0
         if len(args) > 0:
@@ -175,8 +175,8 @@ class Trigger(commands.Cog):
             await ctx.send("*Power Perk*: " + output)
 
     @commands.command()
-    async def betaflaw(self, ctx, *args):
-        '''Get randomised flaw. Can specify power or life.
+    async def fanflaw(self, ctx, *args):
+        '''Get randomised flaw. Can specify power or life. (Includes fanmade results)
         '''
         column = 0
         if len(args) > 0:
@@ -196,8 +196,8 @@ class Trigger(commands.Cog):
             await ctx.send("*Power Flaw*: " + output)
 
     @commands.command()
-    async def betapower(self, ctx, p_or_f = ""):
-        '''Get a random power perk or flaw. Optionally specify whether you want a perk or flaw.
+    async def fanpower(self, ctx, p_or_f = ""):
+        '''Get a random power perk or flaw. Optionally specify whether you want a perk or flaw. (Includes fanmade results)
         '''
         p_or_f = p_or_f.lower()
         if p_or_f == 'perk':
@@ -214,8 +214,8 @@ class Trigger(commands.Cog):
             await ctx.send("*Power Flaw*: " + output)
 
     @commands.command()
-    async def betalife(self, ctx, p_or_f = ""):
-        '''Get a random life perk or flaw. Optionally specify whether you want a perk or flaw.
+    async def fanlife(self, ctx, p_or_f = ""):
+        '''Get a random life perk or flaw. Optionally specify whether you want a perk or flaw.(Includes fanmade results)
         '''
         p_or_f = p_or_f.lower()
         if p_or_f == 'perk':
