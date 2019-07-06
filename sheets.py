@@ -160,6 +160,7 @@ ID1 = '1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY'
 # is not interfered with
 TriggerID = '1bWigKxmpEObOWTP0uRA_xwmMnF3Lpk9ZQer5msl6WnA'
 DetailID = '1aHyZ7c7TIgt903mPinOakrgli2WZu5IRtiGYPCnCqDE'
+SuggestionID = '1kWxWhvKzAYl98nuvgCQOchw7mgH7aecyB82hSwMtatQ'
 
 async def newgame(name, GM, type):
 
@@ -353,12 +354,15 @@ async def used(index):
 
     return str(index + 1) + ": " + str(usedTriggers[index])
 
-async def luck(column):
+async def luck(column, beta = False):
     sheet = service.spreadsheets()
-    result = sheet.values().get(spreadsheetId=DetailID,
-                                range='LUCK!A1:F79').execute()
+    if not beta:
+        result = sheet.values().get(spreadsheetId=DetailID,
+                                    range='LUCK!A1:F79').execute()
+    else:
+        result = sheet.values().get(spreadsheetId=DetailID,
+                                    range='Perks and Flaws!A1:F79').execute()
     values = result.get('values', [])
-
     relevantLuck = []
     count = 1
     # Go through specific column
@@ -375,5 +379,6 @@ async def luck(column):
 
     index = random.randint(0, len(relevantLuck)-1)
     return str(relevantLuck[index])
+
 
 # ...sorry about the mess X|

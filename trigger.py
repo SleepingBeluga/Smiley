@@ -132,3 +132,101 @@ class Trigger(commands.Cog):
             await ctx.send("*Life Perk*: " + output)
         else:
             await ctx.send("*Life Flaw*: " + output)
+
+    @commands.command()
+    async def betaluck(self, ctx, *args):
+        '''Get randomised luck.
+        '''
+        i = 0
+        while i < 2:
+            choice = random.randint(1, 4)
+            # Ordering for these is Perk Life, Perk Power, Flaw Life, Flaw Power
+            output = (await sheets.luck(choice, True))
+            #await ctx.send("Doing some luck stuff!")
+            if (choice == 1):
+                await ctx.send("*Life Perk*: " + output)
+            elif (choice == 2):
+                await ctx.send("*Power Perk*: " + output)
+            elif (choice == 3):
+                await ctx.send("*Life Flaw*: " + output)
+            elif (choice == 4):
+                await ctx.send("*Power Flaw*: " + output)
+            i += 1
+
+    @commands.command()
+    async def betaperk(self, ctx, *args):
+        '''Get randomised perk. Can specify power or life.
+        '''
+        column = 0
+        if len(args) > 0:
+            if args[0].lower() == "life":
+                column = 1
+            elif args[0].lower() == "power":
+                column = 2
+
+        if column == 0:
+            column = random.randint(1, 2)
+
+        output = (await sheets.luck(column, True))
+
+        if column == 1:
+            await ctx.send("*Life Perk*: " + output)
+        else:
+            await ctx.send("*Power Perk*: " + output)
+
+    @commands.command()
+    async def betaflaw(self, ctx, *args):
+        '''Get randomised flaw. Can specify power or life.
+        '''
+        column = 0
+        if len(args) > 0:
+            if args[0].lower() == "life":
+                column = 3
+            elif args[0].lower() == "power":
+                column = 4
+
+        if column == 0:
+            column = random.randint(3, 4)
+
+        output = (await sheets.luck(column, True))
+
+        if column == 3:
+            await ctx.send("*Life Flaw*: " + output)
+        else:
+            await ctx.send("*Power Flaw*: " + output)
+
+    @commands.command()
+    async def betapower(self, ctx, p_or_f = ""):
+        '''Get a random power perk or flaw. Optionally specify whether you want a perk or flaw.
+        '''
+        p_or_f = p_or_f.lower()
+        if p_or_f == 'perk':
+            column = 2
+        elif p_or_f == 'flaw':
+            column = 4
+        else:
+            column = random.choice((2,4))
+
+        output = (await sheets.luck(column, True))
+        if column == 2:
+            await ctx.send("*Power Perk*: " + output)
+        else:
+            await ctx.send("*Power Flaw*: " + output)
+
+    @commands.command()
+    async def betalife(self, ctx, p_or_f = ""):
+        '''Get a random life perk or flaw. Optionally specify whether you want a perk or flaw.
+        '''
+        p_or_f = p_or_f.lower()
+        if p_or_f == 'perk':
+            column = 1
+        elif p_or_f == 'flaw':
+            column = 3
+        else:
+            column = random.choice((1,3))
+
+        output = (await sheets.luck(column, True))
+        if column == 1:
+            await ctx.send("*Life Perk*: " + output)
+        else:
+            await ctx.send("*Life Flaw*: " + output)
