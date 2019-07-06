@@ -376,7 +376,7 @@ async def luck(column, beta = False, search = None):
                 found = str(row[1+column])
                 relevantLuck.append(found)
                 if search:
-                    distance = difflib.SequenceMatcher(None, search, found[:len(search)].lower())
+                    distance = difflib.SequenceMatcher(None, search, found[:len(search)].lower()).ratio()
                     print(search, found[:len(search)].lower(), distance)
                     if distance > 0.7:
                         index = count
