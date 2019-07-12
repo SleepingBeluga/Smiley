@@ -1,4 +1,4 @@
-import pickle, os.path, datetime, random
+import pickle, os.path, datetime, random, difflib
 from googleapiclient.discovery import build
 from google.oauth2 import service_account as s_a
 
@@ -159,7 +159,8 @@ ID1 = '1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY'
 # Note: this is a temporary sheet to use so that the actual trigger doc
 # is not interfered with
 TriggerID = '1bWigKxmpEObOWTP0uRA_xwmMnF3Lpk9ZQer5msl6WnA'
-DetailID = '1kWxWhvKzAYl98nuvgCQOchw7mgH7aecyB82hSwMtatQ'
+DetailID = '1aHyZ7c7TIgt903mPinOakrgli2WZu5IRtiGYPCnCqDE'
+SuggestionID = '1kWxWhvKzAYl98nuvgCQOchw7mgH7aecyB82hSwMtatQ'
 
 async def newgame(name, GM, type):
 
@@ -353,12 +354,16 @@ async def used(index):
 
     return str(index + 1) + ": " + str(usedTriggers[index])
 
-async def luck(column):
+async def luck(column, beta = False, search = None):
     sheet = service.spreadsheets()
-    result = sheet.values().get(spreadsheetId=DetailID,
-                                range='Perks and Flaws #2!A1:F79').execute()
+    index = None
+    if not beta:
+        result = sheet.values().get(spreadsheetId=DetailID,
+                                    range='LUCK!A1:F79').execute()
+    else:
+        result = sheet.values().get(spreadsheetId=SuggestionID,
+                                    range='Perks and Flaws!A1:F79').execute()
     values = result.get('values', [])
-
     relevantLuck = []
     count = 1
     # Go through specific column
@@ -367,13 +372,19 @@ async def luck(column):
         if not row:
             break
         try:
-            if str(row[1+column]) != "":
-                relevantLuck += [str(row[1+column])]
+            if not str(row[1+column]) == "":
+                found = str(row[1+column])
+                relevantLuck.append(found)
+                if search:
+                    distance = difflib.SequenceMatcher(None, search, found[:len(search)].lower()).ratio()
+                    if distance > 0.7:
+                        return found
         except:
-            # Don't do anything
-            print("Failed to execute luck("+str(column)+") on line "+str(count))
+            pass
 
-    index = random.randint(0, len(relevantLuck)-1)
-    return str(relevantLuck[index])
+    if not search:
+        index = random.randint(0, len(relevantLuck)-1)
+    if index:
+        return str(relevantLuck[index])
 
 # ...sorry about the mess X|

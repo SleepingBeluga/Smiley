@@ -200,6 +200,8 @@ async def get_bids():
     # Has bots make their bids, if any
 
     #asyncio.run(bid_reminder())
+    # Remind players to submit bids
+
     await memory['bidsin'].wait()
     # Wait for all bids to be in
 
