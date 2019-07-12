@@ -148,7 +148,7 @@ class Rolls(commands.Cog):
 
     @commands.command()
     async def card(self,ctx):
-        suit = random.choice(('Hearts,Spades,Clubs,Diamonds'))
+        suit = random.choice(('Hearts','Spades','Clubs','Diamonds'))
         value = random.choice(('Ace','Two','Three','Four','Five','Six',
                               'Seven','Eight','Nine','Ten','Jack','Queen','King'))
         await ctx.send(value + ' of '+ suit)
