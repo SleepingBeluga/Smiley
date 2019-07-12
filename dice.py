@@ -145,3 +145,10 @@ class Rolls(commands.Cog):
                 response += ' :: '
         # Build the response string
         await ctx.send(response)
+
+    @commands.command()
+    async def card(self,ctx):
+        suit = random.choice(('Hearts,Spades,Clubs,Diamonds'))
+        value = random.choice('Ace','Two','Three','Four','Five','Six',
+                              'Seven','Eight','Nine','Ten','Jack','Queen','King')
+        await ctx.send(value + ' of '+ suit)
