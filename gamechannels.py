@@ -34,7 +34,7 @@ class Game_Channels(commands.Cog):
 
         for channel in ctx.guild.channels:
             if channel.name == gameName:
-                await ctx.send('There\'s already a channel called' + gameName +', use another name to avoid confusion.')
+                await ctx.send('There\'s already a channel called ' + gameName +', use another name to avoid confusion.')
                 return
 
         if gameName == '':
