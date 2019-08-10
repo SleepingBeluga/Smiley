@@ -10,8 +10,12 @@ async def join(ctx, *args):
             chars = json.load(charsfile)
         else:
             chars = {}
+        if str(ctx.author.id) in chars:
+            await ctx.send('You already have a pilot!')
+            return
         chars[str(ctx.author.id)] = char
         json.dump(chars, charsfile)
+        await ctx.send('Pilot created! Check up on them with `%tm check`')
 
 async def check(ctx, *args):
     with open('./tm/chars.json', 'r+') as charsfile:
