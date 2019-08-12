@@ -18,6 +18,7 @@ async def set_time(time):
 
 async def time_forward():
     await set_time(await get_time() + 1)
+    await time_the_healer()
 
 async def tm_loop(b):
     await b.wait_until_ready()
@@ -25,8 +26,15 @@ async def tm_loop(b):
     while True:
         await time_forward()
         await asyncio.sleep(10)
-        if random.random() < 0.8:
+        if random.random() < 0.5:
             await tm_event()
+
+async def time_the_healer():
+    chars = await loadchars()
+    for id, char in chars.items:
+        if char.health == 'Wounded' and random.random() < 0.2:
+            char.health = 'Healthy'
+            await updatechar(char)
 
 async def tm_event():
     await tm_battle()
