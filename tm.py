@@ -31,10 +31,12 @@ async def tm_loop(b):
 
 async def time_the_healer():
     chars = await loadchars()
-    for id, char in chars.items:
-        if char.health == 'Wounded' and random.random() < 0.2:
-            char.health = 'Healthy'
-            await updatechar(char)
+    for id, char in chars.items():
+        pilot = Pilot(id, dict = char)
+        if pilot.health == 'Wounded' and random.random() < 0.2:
+            pilot.health = 'Healthy'
+            pilot.history.append('Day ' + str(await get_time()) + ': Rested and healed.')
+            await updatechar(pilot)
 
 async def tm_event():
     await tm_battle()
