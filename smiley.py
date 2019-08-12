@@ -48,6 +48,9 @@ b.loop.create_task(draft.setup())
 b.loop.create_task(trimhistory.channel_cleanup(b))
 # Start the channel cleanup task on a loop.
 
+b.loop.create_task(tm.tm_loop(b))
+# Start the channel cleanup task on a loop.
+
 with open('secret') as s:
     token = s.read()[:-1]
 # Read the Discord bot token from a soup or secret file

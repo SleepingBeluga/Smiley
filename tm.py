@@ -1,21 +1,40 @@
 from discord.ext import commands
 from shutil import copyfile
-import random, time, discord, json
+import random, time, discord, json, asyncio
 
-async def join(ctx, *args):
-    if args:
-        id = args[0]
-    else:
-        id = str(ctx.author.id)
+async def tm_loop():
+    await b.wait_until_ready()
+    time = 0
+    while True:
+        time += 1
+        asyncio.sleep(10)
+        if random.random() < 0.3:
+            await tm_event(time)
+
+async def tm_event(time):
+    await tm_battle(time)
+
+async def tm_battle(time):
+    chars = await loadchars()
+
+async def loadchars():
     with open('./tm/chars.json', 'r+') as charsfile:
         if len(charsfile.read()):
             charsfile.seek(0)
             chars = json.load(charsfile)
         else:
             chars = {}
-        if id in chars:
-            await ctx.send('You already have a pilot!')
-            return
+    return chars
+
+async def join(ctx, *args):
+    if args:
+        id = args[0]
+    else:
+        id = str(ctx.author.id)
+    chars = await loadchars()
+    if id in chars:
+        await ctx.send('You already have a pilot!')
+        return
     owner = ctx.author.display_name
     new_pilot = Pilot(id, owner)
     char = await new_pilot.get_dict_for_json()
@@ -29,15 +48,10 @@ async def delete(ctx, *args):
         id = args[0]
     else:
         id = str(ctx.author.id)
-    with open('./tm/chars.json', 'r+') as charsfile:
-        if len(charsfile.read()):
-            charsfile.seek(0)
-            chars = json.load(charsfile)
-        else:
-            chars = {}
-        if not id in chars:
-            await ctx.send('You don\'t have a pilot!')
-            return
+    chars = await loadchars()
+    if not id in chars:
+        await ctx.send('You don\'t have a pilot!')
+        return
     with open('./tm/chars.json', 'w+') as charsfile:
         del chars[id]
         json.dump(chars, charsfile)
@@ -49,17 +63,12 @@ async def check(ctx, *args):
     else:
         id = str(ctx.author.id)
 
-    with open('./tm/chars.json', 'r+') as charsfile:
-        if len(charsfile.read()):
-            charsfile.seek(0)
-            chars = json.load(charsfile)
-        else:
-            chars = {}
-        if id in chars:
-            char = Pilot(id, dict = chars[id])
-            await ctx.send('```' + await char.summary() + '```')
-        else:
-            await ctx.send("You don't seem to have a pilot yet.")
+    chars = await loadchars()
+    if id in chars:
+        char = Pilot(id, dict = chars[id])
+        await ctx.send('```' + await char.summary() + '```')
+    else:
+        await ctx.send("You don't seem to have a pilot yet.")
 
 class Pilot():
     def __init__(self, id, owner = None, dict = None):
