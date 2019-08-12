@@ -2,7 +2,7 @@ from discord.ext import commands
 from shutil import copyfile
 import random, time, discord, json, asyncio
 
-async def tm_loop():
+async def tm_loop(b):
     await b.wait_until_ready()
     time = 0
     while True:
