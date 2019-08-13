@@ -44,6 +44,8 @@ async def tm_event():
 async def tm_battle():
     chars = await loadchars()
     options = list(chars.items())
+    if not len(options):
+        return
     id, fighter_d = random.choice(options)
     fighter = Pilot(id, dict = fighter_d)
     opponent = Enemy('Monster','aggressive',[50,20,100,75])
@@ -77,6 +79,18 @@ async def updatechar(char):
     with open('./tm/chars.json', 'w+') as charsfile:
         json.dump(chars, charsfile)
 
+def parse_gen(pattern):
+    pwords = pattern.split(' ')
+    result = []
+    for word in pwords:
+        if not word[0] == '$':
+            result.append(word)
+        else:
+            with open('./tm/gen/' + word[1:]) as lpfile:
+                lowerpattern = random.choice(lpfile.read().splitlines())
+            result.append(parse_gen(lowerpattern))
+    return ' '.join(result)
+
 async def join(ctx, *args):
     if args:
         id = args[0]
@@ -93,6 +107,7 @@ async def join(ctx, *args):
     with open('./tm/chars.json', 'w+') as charsfile:
         json.dump(chars, charsfile)
     await ctx.send('Pilot created! Check up on them with `%tm check`')
+    await check(ctx, id)
 
 async def delete(ctx, *args):
     if args:
@@ -164,9 +179,9 @@ class Pilot():
                 self.gender = 'Female'
                 self.name = names.get_full_name(gender='female')
             self.strategy = ''
-            self.age = ''
+            self.age = max(5,random.lognormvariate(3.5,0.4))
             self.stats = [60,60,60,60]
-            self.mech = ''
+            self.mech = parse_gen('$TopLevelPatterns')
             self.health = 'Healthy'
             self.history = []
         else:

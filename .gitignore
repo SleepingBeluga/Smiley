@@ -2,4 +2,6 @@ secret
 gsecret.json
 __pycache__/
 output.txt
-tm/
+tm/time
+tm/chars.json
+tm/chars.json.old
