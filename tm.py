@@ -1,6 +1,6 @@
 from discord.ext import commands
 from shutil import copyfile
-import random, time, discord, json, asyncio
+import random, time, discord, json, asyncio, names
 
 async def get_time():
     time = None
@@ -154,10 +154,17 @@ class Pilot():
         elif owner:
             self.id = id
             self.owner = owner
-            self.name = ''
+            if random.random() < 0.01:
+                self.gender = 'Non-Binary'
+                self.name = names.get_full_name()
+            elif random.random() < 0.5:
+                self.gender = 'Male'
+                self.name = names.get_full_name(gender='male')
+            else:
+                self.gender = 'Female'
+                self.name = names.get_full_name(gender='female')
             self.strategy = ''
             self.age = ''
-            self.gender = ''
             self.stats = [60,60,60,60]
             self.mech = ''
             self.health = 'Healthy'
