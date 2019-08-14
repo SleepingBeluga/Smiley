@@ -4,7 +4,7 @@
 import discord
 from discord.ext import commands
 import time, random, asyncio
-import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg
+import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm
 import ac
 from wounds import WoundOption, Wound
 
@@ -40,12 +40,16 @@ b.add_cog(wounds.Wounds())
 b.add_cog(trigger.Trigger())
 b.add_cog(srpg.SRPG())
 b.add_cog(ac.Autocape())
+b.add_cog(tm.TinyMech())
 
 b.loop.create_task(draft.setup())
 # Run the draft setup function before doing anything!
 
 b.loop.create_task(trimhistory.channel_cleanup(b))
 # Start the channel cleanup task on a loop.
+
+b.loop.create_task(tm.tm_loop(b))
+# Start running Tiny Mechs in the background.
 
 with open('secret') as s:
     token = s.read()[:-1]
