@@ -151,6 +151,9 @@ async def history(ctx, *args):
     else:
         await ctx.send("You don't seem to have a pilot yet.")
 
+async def mechname(ctx, *args):
+    await ctx.send('The' + parse_gen('$TopLevelPatterns'))
+
 class Enemy():
     def __init__(self, name, strategy, stats):
         self.name = name
@@ -232,3 +235,5 @@ class TinyMech(commands.Cog):
             await delete(ctx, *args)
         elif cmd == 'history':
             await history(ctx, *args)
+        elif cmd == 'mechname':
+            await mechname(ctx, *args)
