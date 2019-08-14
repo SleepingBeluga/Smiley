@@ -1,4 +1,4 @@
-Mk 1
-V1
-Mk 2
-Mk 3
+$SVersion
+$VersionType $VersionNum
+$VersionType $VersionNum
+$VersionType $VersionNum

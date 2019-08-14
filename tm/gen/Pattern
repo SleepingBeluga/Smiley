@@ -1,4 +1,7 @@
 $Adj $SuitNoun
+$LAdj $SuitNoun
+$LAdj $Noun
+$Adj $Noun
 $Noun $SuitNoun
 $Adj $Noun $SuitNoun
 $Adj
