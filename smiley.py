@@ -49,7 +49,7 @@ b.loop.create_task(trimhistory.channel_cleanup(b))
 # Start the channel cleanup task on a loop.
 
 b.loop.create_task(tm.tm_loop(b))
-# Start the channel cleanup task on a loop.
+# Start running Tiny Mechs in the background.
 
 with open('secret') as s:
     token = s.read()[:-1]

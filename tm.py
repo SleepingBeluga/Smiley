@@ -2,6 +2,9 @@ from discord.ext import commands
 from shutil import copyfile
 import random, time, discord, json, asyncio, names
 
+DAY_LENGTH = 360
+# Ten minutes
+
 async def get_time():
     time = None
     with open('./tm/time', 'r+') as timefile:
@@ -21,11 +24,12 @@ async def time_forward():
     await time_the_healer()
 
 async def tm_loop(b):
+    global DAY_LENGTH
     await b.wait_until_ready()
     await get_time()
     while True:
         await time_forward()
-        await asyncio.sleep(10)
+        await asyncio.sleep(DAY_LENGTH)
         if random.random() < 0.5:
             await tm_event()
 
