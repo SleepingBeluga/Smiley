@@ -152,7 +152,7 @@ async def history(ctx, *args):
         await ctx.send("You don't seem to have a pilot yet.")
 
 async def mechname(ctx, *args):
-    await ctx.send('The' + parse_gen('$TopLevelPatterns'))
+    await ctx.send('The ' + parse_gen('$TopLevelPatterns'))
 
 class Enemy():
     def __init__(self, name, strategy, stats):
