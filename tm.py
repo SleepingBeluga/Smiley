@@ -3,7 +3,7 @@ from shutil import copyfile
 import random, time, discord, json, asyncio, names
 
 DAY_LENGTH = 360
-# Ten minutes
+# Six minutes
 
 async def get_time():
     time = None
