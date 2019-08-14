@@ -179,7 +179,7 @@ class Pilot():
                 self.gender = 'Female'
                 self.name = names.get_full_name(gender='female')
             self.strategy = ''
-            self.age = max(5,random.lognormvariate(3.5,0.4))
+            self.age = int(max(5,random.lognormvariate(3.5,0.4)))
             self.stats = [60,60,60,60]
             self.mech = parse_gen('$TopLevelPatterns')
             self.health = 'Healthy'
