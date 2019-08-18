@@ -2,8 +2,8 @@ from discord.ext import commands
 from shutil import copyfile
 import random, time, discord, json, asyncio, names
 
-DAY_LENGTH = 360
-# Six minutes
+DAY_LENGTH = 3600
+# One hour
 
 async def get_time():
     time = None
@@ -33,8 +33,12 @@ async def tm_loop(b):
 
 async def tm_day():
     await time_forward()
-    if random.random() < 0.5:
-        await tm_event()
+    charlist = (await loadchars()).items()
+    if len(charlist):
+        for chardict in charlist:
+            char = await Pilot.async_init(id, dict = charsdict)
+            if random.random() < 0.2:
+                await tm_event(char)
 
 async def time_the_healer():
     chars = await loadchars()
@@ -45,16 +49,11 @@ async def time_the_healer():
             pilot.history.append('Day ' + str(await get_time()) + ': Rested and healed.')
             await updatechar(pilot)
 
-async def tm_event():
-    await tm_battle()
+async def tm_event(char):
+    await tm_battle(char)
 
-async def tm_battle():
-    chars = await loadchars()
-    options = list(chars.items())
-    if not len(options):
-        return
-    id, fighter_d = random.choice(options)
-    fighter = await Pilot.async_init(id, dict = fighter_d)
+async def tm_battle(char):
+    fighter = char
     hc = fighter.record
     mstats = [s + hc*10 for s in [50,20,100,75]]
     opponent = Enemy('Monster','Aggressive',mstats)
