@@ -60,10 +60,10 @@ async def tm_battle(char):
     result = await tm_fight(fighter, opponent)
     if result >= 0:
         fighter.record += 1
-        fighter.history.append('Day ' + str(await get_time()) + ': Won a battle vs ' + opponent.name + '! ')
+        fighter.history.append('Day ' + str(await get_time()) + ': Won a battle vs ' + opponent.name + '!')
     else:
         fighter.record -= 1
-        fighter.history.append('Day ' + str(await get_time()) + ': Lost a battle vs ' + opponent.name + '. ')
+        fighter.history.append('Day ' + str(await get_time()) + ': Lost a battle vs ' + opponent.name + '.')
         fighter.health = 'Wounded'
     await updatechar(fighter)
 
