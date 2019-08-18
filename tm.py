@@ -28,10 +28,13 @@ async def tm_loop(b):
     await b.wait_until_ready()
     await get_time()
     while True:
-        await time_forward()
         await asyncio.sleep(DAY_LENGTH)
-        if random.random() < 0.5:
-            await tm_event()
+        await tm_day()
+
+async def tm_day():
+    await time_forward()
+    if random.random() < 0.5:
+        await tm_event()
 
 async def time_the_healer():
     chars = await loadchars()
@@ -52,21 +55,32 @@ async def tm_battle():
         return
     id, fighter_d = random.choice(options)
     fighter = await Pilot.async_init(id, dict = fighter_d)
-    opponent = Enemy('Monster','Aggressive',[50,20,100,75])
+    hc = fighter.record
+    mstats = [s + hc*10 for s in [50,20,100,75]]
+    opponent = Enemy('Monster','Aggressive',mstats)
     result = await tm_fight(fighter, opponent)
     if result >= 0:
+        fighter.record += 1
         fighter.history.append('Day ' + str(await get_time()) + ': Won a battle vs ' + opponent.name + '! ' + str(result))
     else:
+        fighter.record -= 1
         fighter.history.append('Day ' + str(await get_time()) + ': Lost a battle vs ' + opponent.name + '. ' + str(result))
         fighter.health = 'Wounded'
     await updatechar(fighter)
 
 async def tm_fight(fighter,opponent):
-
+    fstat = await fighter.choose_stat(opponent)
+    ostat = await opponent.choose_stat(fighter)
+    advantage = 0
+    if fstat == ostat - 1:
+        advantage = 1.5
+    elif fstat == ostat + 1:
+        advantage = 0.66
     hows_it_going = 0
     rr = (-10,10) if fighter.health == 'Healthy' else (-10,5)
-    for i, stat in enumerate(fighter.stats):
-        hows_it_going += stat - opponent.stats[(i-1) % 4] + random.randint(rr[0],rr[1])
+    for round in range(3):
+        hows_it_going += fighter.stats[fstat] * advantage - \
+                         opponent.stats[ostat] + random.randint(rr[0],rr[1])
     return hows_it_going
 
 async def loadchars():
@@ -152,6 +166,25 @@ async def history(ctx, *args):
     else:
         await ctx.send("You don't seem to have a pilot yet.")
 
+async def set_strategy(ctx, *args):
+    id = str(ctx.author.id)
+    chars = await loadchars()
+    if id in chars:
+        validstrats = ('Aggressive','Defensive','Lucky')
+        char = await Pilot.async_init(id, dict = chars[id])
+        if args:
+            strat = args[0].capitalize()
+        else:
+            await ctx.send('You must choose a strategy. Valid strategies are: `' + ', '.join(validstrats) + '`')
+        if not strat in validstrats:
+            await ctx.send('Valid strategies are: `' + ', '.join(validstrats) + '`')
+        else:
+            char.strategy = strat
+            await updatechar(char)
+            await ctx.send('Strategy set.')
+    else:
+        await ctx.send("You don't seem to have a pilot yet.")
+
 async def mechname(ctx, *args):
     await ctx.send('The ' + await parse_gen('$TopLevelPatterns'))
 
@@ -165,7 +198,7 @@ class Fight_Thing():
         if self.strategy == 'Aggressive':
             max = 0
             maxind = None
-            for ind, stat in enumerate(stats):
+            for ind, stat in enumerate(self.stats):
                 if stat > max:
                     max = stat
                     maxind = ind
@@ -201,6 +234,7 @@ class Pilot(Fight_Thing):
             self.mech = dict['mech']
             self.health = dict['health']
             self.history = dict['history']
+            self.record = dict['record']
         elif owner:
             self.id = id
             self.owner = owner
@@ -213,12 +247,13 @@ class Pilot(Fight_Thing):
             else:
                 self.gender = 'Female'
                 self.name = names.get_full_name(gender='female')
-            self.strategy = ''
+            self.strategy = 'Defensive'
             self.age = int(max(5,random.lognormvariate(3.5,0.4)))
             self.stats = [60,60,60,60]
             self.mech = await parse_gen('$TopLevelPatterns')
             self.health = 'Healthy'
             self.history = []
+            self.record = 0
         else:
             raise ArgumentError('To create a Pilot either an owner name or a dictionary must be passed')
         return self
@@ -231,7 +266,7 @@ class Pilot(Fight_Thing):
                 'strategy': self.strategy, 'age': self.age,
                 'gender': self.gender, 'stats': self.stats,
                 'mech': self.mech, 'health': self.health,
-                'history': self.history}
+                'history': self.history, 'record': self.record}
 
     async def summary(self):
         return self.name + ', piloting the ' + self.mech + '\n' + \
@@ -267,5 +302,16 @@ class TinyMech(commands.Cog):
             await delete(ctx, *args)
         elif cmd == 'history':
             await history(ctx, *args)
+        elif cmd == 'strategy':
+            await set_strategy(ctx, *args)
         elif cmd == 'mechname':
             await mechname(ctx, *args)
+        elif cmd == 'forceevent':
+            await tm_event()
+        elif cmd == 'forcedays':
+            try:
+                numdays = int(args[0])
+            except:
+                pass
+            for day in range(numdays):
+                await tm_day()
