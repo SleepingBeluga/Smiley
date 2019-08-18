@@ -36,7 +36,7 @@ async def tm_loop(b):
 async def time_the_healer():
     chars = await loadchars()
     for id, char in chars.items():
-        pilot = Pilot(id, dict = char)
+        pilot = await Pilot.async_init(id, dict = char)
         if pilot.health == 'Wounded' and random.random() < 0.2:
             pilot.health = 'Healthy'
             pilot.history.append('Day ' + str(await get_time()) + ': Rested and healed.')
@@ -51,7 +51,7 @@ async def tm_battle():
     if not len(options):
         return
     id, fighter_d = random.choice(options)
-    fighter = Pilot(id, dict = fighter_d)
+    fighter = await Pilot.async_init(id, dict = fighter_d)
     opponent = Enemy('Monster','aggressive',[50,20,100,75])
     result = await tm_fight(fighter, opponent)
     if result >= 0:
@@ -105,7 +105,7 @@ async def join(ctx, *args):
         await ctx.send('You already have a pilot!')
         return
     owner = ctx.author.display_name
-    new_pilot = Pilot(id, owner)
+    new_pilot = await Pilot.async_init(id, owner)
     char = await new_pilot.get_dict_for_json()
     chars[id] = char
     with open('./tm/chars.json', 'w+') as charsfile:
@@ -134,7 +134,7 @@ async def check(ctx, *args):
         id = str(ctx.author.id)
     chars = await loadchars()
     if id in chars:
-        char = Pilot(id, dict = chars[id])
+        char = await Pilot.async_init(id, dict = chars[id])
         await ctx.send('```' + await char.summary() + '```')
     else:
         await ctx.send("You don't seem to have a pilot yet.")
@@ -146,7 +146,7 @@ async def history(ctx, *args):
         id = str(ctx.author.id)
     chars = await loadchars()
     if id in chars:
-        char = Pilot(id, dict = chars[id])
+        char = await Pilot.async_init(id, dict = chars[id])
         await ctx.send('```' + await char.get_history() + '```')
     else:
         await ctx.send("You don't seem to have a pilot yet.")
@@ -161,7 +161,9 @@ class Enemy():
         self.stats = stats
 
 class Pilot():
-    def __init__(self, id, owner = None, dict = None):
+    @classmethod
+    async def async_init(cls, id, owner = None, dict = None):
+        self = Pilot()
         if dict:
             self.id = id
             self.owner = dict['owner']
@@ -193,6 +195,10 @@ class Pilot():
             self.history = []
         else:
             raise ArgumentError('To create a Pilot either an owner name or a dictionary must be passed')
+        return self
+
+    def __init__(self):
+        pass
 
     async def get_dict_for_json(self):
         return {'owner': self.owner, 'name': self.name,
