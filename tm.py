@@ -312,6 +312,6 @@ class TinyMech(commands.Cog):
             try:
                 numdays = int(args[0])
             except:
-                pass
+                numdays = 1
             for day in range(numdays):
                 await tm_day()
