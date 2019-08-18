@@ -52,7 +52,7 @@ async def tm_battle():
         return
     id, fighter_d = random.choice(options)
     fighter = await Pilot.async_init(id, dict = fighter_d)
-    opponent = Enemy('Monster','aggressive',[50,20,100,75])
+    opponent = Enemy('Monster','Aggressive',[50,20,100,75])
     result = await tm_fight(fighter, opponent)
     if result >= 0:
         fighter.history.append('Day ' + str(await get_time()) + ': Won a battle vs ' + opponent.name + '! ' + str(result))
@@ -62,6 +62,7 @@ async def tm_battle():
     await updatechar(fighter)
 
 async def tm_fight(fighter,opponent):
+
     hows_it_going = 0
     rr = (-10,10) if fighter.health == 'Healthy' else (-10,5)
     for i, stat in enumerate(fighter.stats):
@@ -83,7 +84,7 @@ async def updatechar(char):
     with open('./tm/chars.json', 'w+') as charsfile:
         json.dump(chars, charsfile)
 
-def parse_gen(pattern):
+async def parse_gen(pattern):
     pwords = pattern.split(' ')
     result = []
     for word in pwords:
@@ -92,7 +93,7 @@ def parse_gen(pattern):
         else:
             with open('./tm/gen/' + word[1:]) as lpfile:
                 lowerpattern = random.choice(lpfile.read().splitlines())
-            result.append(parse_gen(lowerpattern))
+            result.append(await parse_gen(lowerpattern))
     return ' '.join(result)
 
 async def join(ctx, *args):
@@ -152,15 +153,40 @@ async def history(ctx, *args):
         await ctx.send("You don't seem to have a pilot yet.")
 
 async def mechname(ctx, *args):
-    await ctx.send('The ' + parse_gen('$TopLevelPatterns'))
+    await ctx.send('The ' + await parse_gen('$TopLevelPatterns'))
 
-class Enemy():
+class Fight_Thing():
     def __init__(self, name, strategy, stats):
         self.name = name
         self.strategy = strategy
         self.stats = stats
 
-class Pilot():
+    async def choose_stat(self, opponent):
+        if self.strategy == 'Aggressive':
+            max = 0
+            maxind = None
+            for ind, stat in enumerate(stats):
+                if stat > max:
+                    max = stat
+                    maxind = ind
+            return maxind
+        elif self.strategy == 'Defensive':
+            max = 0
+            maxind = None
+            for ind, stat in enumerate(opponent.stats):
+                if stat > max:
+                    max = stat
+                    maxind = ind
+            return (maxind - 1) % 4
+        elif self.strategy == 'Lucky':
+            return random.randint(0,3)
+        else:
+            return 2
+
+class Enemy(Fight_Thing):
+    pass
+
+class Pilot(Fight_Thing):
     @classmethod
     async def async_init(cls, id, owner = None, dict = None):
         self = Pilot()
@@ -190,7 +216,7 @@ class Pilot():
             self.strategy = ''
             self.age = int(max(5,random.lognormvariate(3.5,0.4)))
             self.stats = [60,60,60,60]
-            self.mech = parse_gen('$TopLevelPatterns')
+            self.mech = await parse_gen('$TopLevelPatterns')
             self.health = 'Healthy'
             self.history = []
         else:
