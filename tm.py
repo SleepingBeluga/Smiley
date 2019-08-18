@@ -35,9 +35,9 @@ async def tm_day():
     await time_forward()
     charlist = (await loadchars()).items()
     if len(charlist):
-        for chardict in charlist:
+        for chartup in charlist:
             if random.random() < 0.2:
-                char = await Pilot.async_init(id, dict = charsdict)
+                char = await Pilot.async_init(chartup[0], dict = chartup[1])
                 await tm_event(char)
 
 async def time_the_healer():
@@ -60,10 +60,10 @@ async def tm_battle(char):
     result = await tm_fight(fighter, opponent)
     if result >= 0:
         fighter.record += 1
-        fighter.history.append('Day ' + str(await get_time()) + ': Won a battle vs ' + opponent.name + '! ' + str(result))
+        fighter.history.append('Day ' + str(await get_time()) + ': Won a battle vs ' + opponent.name + '! ')
     else:
         fighter.record -= 1
-        fighter.history.append('Day ' + str(await get_time()) + ': Lost a battle vs ' + opponent.name + '. ' + str(result))
+        fighter.history.append('Day ' + str(await get_time()) + ': Lost a battle vs ' + opponent.name + '. ')
         fighter.health = 'Wounded'
     await updatechar(fighter)
 
@@ -120,6 +120,7 @@ async def join(ctx, *args):
         return
     owner = ctx.author.display_name
     new_pilot = await Pilot.async_init(id, owner)
+    new_pilot.history.append('Day ' + str(await get_time()) + ': Pilot hired.')
     char = await new_pilot.get_dict_for_json()
     chars[id] = char
     with open('./tm/chars.json', 'w+') as charsfile:
