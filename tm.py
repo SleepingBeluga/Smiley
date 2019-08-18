@@ -36,8 +36,8 @@ async def tm_day():
     charlist = (await loadchars()).items()
     if len(charlist):
         for chardict in charlist:
-            char = await Pilot.async_init(id, dict = charsdict)
             if random.random() < 0.2:
+                char = await Pilot.async_init(id, dict = charsdict)
                 await tm_event(char)
 
 async def time_the_healer():
