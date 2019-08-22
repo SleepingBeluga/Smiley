@@ -1,6 +1,6 @@
 from discord.ext import commands
 from shutil import copyfile
-import random, time, discord, json, asyncio, names
+import random, time, discord, json, asyncio
 
 DAY_LENGTH = 3600
 # One hour
