@@ -48,6 +48,8 @@ class Autocape(commands.Cog):
             await self.load(ctx, *args)
         elif cmd == 'fight':
             await self.fight(ctx, *args)
+        elif cmd == 'rename':
+            await self.rename(ctx, *args)
 
 
     async def newcity(self, ctx, *args):
@@ -251,7 +253,10 @@ class Autocape(commands.Cog):
         if userCape == None:
             await ctx.send("You don't have anyone to fight with.")
         else:
-            targetName = str(args[0])
+            targetName = ''
+            for arg in args:
+                targetName += arg + ' '
+            targetName = targetName[:-1]
             target = None
             for dude in self.records['capes']:
                 if dude.alias.lower() == targetName.lower():
@@ -261,8 +266,34 @@ class Autocape(commands.Cog):
             if target == None:
                 await ctx.send("Target not found.")
             else:
+                if userCape == target:
+                    await ctx.send('Why are you hitting yourself?')
+                    return
                 update += await encounter.fight(userCape, target)
                 if update == '':
                     update += "They both defended. Nothing happened."
                 await ctx.send("```" + update + "```")
+        self.records = {}
+
+    async def rename(self, ctx, *args):
+        self.records['capes'] = []
+        capes = await loadcapes()
+        for id in capes:
+            x = cape.Cape(id, capes[id])
+            self.records['capes'].append(x)
+            self.records['logs'] = '```'
+        userCape = None
+        for dude in self.records['capes']:
+            if str(dude.id) == str(ctx.author.id):
+                userCape = dude
+        if userCape == None:
+            await ctx.send("You don't have anyone to rename.")
+        else:
+            newAlias = ''
+            for arg in args:
+                newAlias += arg + ' '
+            newAlias = newAlias[:-1]
+            userCape.alias = newAlias
+            await userCape.updateCape()
+            await ctx.send("Your cape is now named " + newAlias + ".")
         self.records = {}
