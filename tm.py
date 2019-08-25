@@ -242,7 +242,10 @@ class Pilot(Fight_Thing):
             self.health = dict['health']
             self.history = dict['history']
             self.record = dict['record']
-            self.money = dict['money']
+            if 'money' in dict:
+                self.money = dict['money']
+            else:
+                self.money = 0
         elif owner:
             self.id = id
             self.owner = owner
