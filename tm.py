@@ -318,6 +318,18 @@ class Mech():
     async def async_init(cls, dict = None):
         self = Mech()
         if dict:
+            if type(dict) == type('')
+                self.name = dict
+                self.stats = [1000,1000]
+                if random.random() < 0.67:
+                    if random.random() < 0.5:
+                        strength = 0
+                    else:
+                        strength = 1
+                    self.stats[strength] += 500
+                    self.stats[1 - strength] -= 500
+                for i in range(2):
+                    self.stats[i] += random.randint(-50,50)
             self.name = dict['name']
             self.stats = dict['stats']
         else:
