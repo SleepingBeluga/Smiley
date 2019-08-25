@@ -330,8 +330,9 @@ class Mech():
                     self.stats[1 - strength] -= 500
                 for i in range(2):
                     self.stats[i] += random.randint(-50,50)
-            self.name = dict['name']
-            self.stats = dict['stats']
+            else:
+                self.name = dict['name']
+                self.stats = dict['stats']
         else:
             self.name = await parse_gen('$TopLevelPatterns')
             self.stats = [1000,1000]
