@@ -238,7 +238,7 @@ class Pilot(Fight_Thing):
         elif owner:
             self.id = id
             self.owner = owner
-            if random.random() < 0.01:
+            if random.random() < 0.02:
                 self.gender = 'Non-Binary'
                 self.name = names.get_full_name()
             elif random.random() < 0.5:
@@ -250,6 +250,14 @@ class Pilot(Fight_Thing):
             self.strategy = 'Defensive'
             self.age = int(max(5,random.lognormvariate(3.5,0.4)))
             self.stats = [60,60,60,60]
+            strengths = [random.randint(0,3) for _ in range(2)]
+            for s in strengths:
+                self.stats[s] += 15
+            weaknesses = [random.randint(0,3) for _ in range(2)]
+            for w in weaknesses:
+                self.stats[w] -= 15
+            for i in range(4):
+                self.stats[i] += random.randint(-5,5)
             self.mech = await parse_gen('$TopLevelPatterns')
             self.health = 'Healthy'
             self.history = []
