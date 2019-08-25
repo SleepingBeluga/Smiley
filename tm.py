@@ -59,8 +59,14 @@ async def tm_battle(char):
     opponent = Enemy('Monster','Aggressive',mstats)
     result = await tm_fight(fighter, opponent)
     if result >= 0:
+        topstat = max(fighter.stats)
+        if 200 - topstat * random.randint(1,5) > 0:
+            fighter.stats[random.randint(0,3)] += 1
+        winnings = random.randint(1,50) + random.randint(0,50)
+        winnings = int(winnings * (1.05 ** fighter.record))
         fighter.record += 1
-        fighter.history.append('Day ' + str(await get_time()) + ': Won a battle vs ' + opponent.name + '!')
+        fighter.money += winnings
+        fighter.history.append('Day ' + str(await get_time()) + ': Won a battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!')
     else:
         fighter.record -= 1
         fighter.history.append('Day ' + str(await get_time()) + ': Lost a battle vs ' + opponent.name + '.')
@@ -150,7 +156,8 @@ async def check(ctx, *args):
     chars = await loadchars()
     if id in chars:
         char = await Pilot.async_init(id, dict = chars[id])
-        await ctx.send('```' + await char.summary() + '```')
+        await ctx.send('```' + await char.summary() + \
+                       '``````' + await char.mech.summary() + '```')
     else:
         await ctx.send("You don't seem to have a pilot yet.")
 
@@ -231,10 +238,11 @@ class Pilot(Fight_Thing):
             self.age = dict['age']
             self.gender = dict['gender']
             self.stats = dict['stats']
-            self.mech = dict['mech']
+            self.mech = await Mech.async_init(dict = dict['mech'])
             self.health = dict['health']
             self.history = dict['history']
             self.record = dict['record']
+            self.money = dict['money']
         elif owner:
             self.id = id
             self.owner = owner
@@ -261,10 +269,11 @@ class Pilot(Fight_Thing):
                 self.stats[w] -= 15
             for i in range(4):
                 self.stats[i] += random.randint(-5,5)
-            self.mech = await parse_gen('$TopLevelPatterns')
+            self.mech = await Mech.async_init()
             self.health = 'Healthy'
             self.history = []
             self.record = 0
+            self.money = 0
         else:
             raise ArgumentError('To create a Pilot either an owner name or a dictionary must be passed')
         return self
@@ -276,17 +285,19 @@ class Pilot(Fight_Thing):
         return {'owner': self.owner, 'name': self.name,
                 'strategy': self.strategy, 'age': self.age,
                 'gender': self.gender, 'stats': self.stats,
-                'mech': self.mech, 'health': self.health,
-                'history': self.history, 'record': self.record}
+                'mech': await self.mech.get_dict_for_json(),
+                'health': self.health, 'history': self.history,
+                'record': self.record, 'money': self.money}
 
     async def summary(self):
-        return self.name + ', piloting the ' + self.mech + '\n' + \
-               'Player: '   + self.owner    + '\n' + \
-               'Age: '      + str(self.age) + '\n' + \
-               'Gender: '   + self.gender   + '\n' + \
-               'Strategy: ' + self.strategy + '\n' + \
-               'Health: '   + self.health   + '\n' + \
-               'Stats: '                    + '\n' + \
+        return 'Pilot:\n' + self.name + ', piloting the ' + self.mech.name + '\n' + \
+               'Player: '   + self.owner       + '\n' + \
+               'Age: '      + str(self.age)    + '\n' + \
+               'Gender: '   + self.gender      + '\n' + \
+               'Strategy: ' + self.strategy    + '\n' + \
+               'Health: '   + self.health      + '\n' + \
+               'Money: '    + str(self.money) + '\n' + \
+               'Stats: '                       + '\n' + \
                '   Head: '     + str(self.stats[0]) + '\n' + \
                '   Heart: '    + str(self.stats[1]) + '\n' + \
                '   Strength: ' + str(self.stats[2]) + '\n' + \
@@ -298,6 +309,41 @@ class Pilot(Fight_Thing):
         for event in self.history[-5:]:
             to_ret += '\n' + event
         return to_ret
+
+class Mech():
+    @classmethod
+    async def async_init(cls, dict = None):
+        self = Mech()
+        if dict:
+            self.name = dict['name']
+            self.stats = dict['stats']
+        else:
+            self.name = await parse_gen('$TopLevelPatterns')
+            self.stats = [1000,1000]
+            if random.random() < 0.67:
+                if random.random() < 0.5:
+                    strength = 0
+                else:
+                    strength = 1
+                self.stats[strength] += 500
+                self.stats[1 - strength] -= 500
+            for i in range(2):
+                self.stats[i] += random.randint(-50,50)
+        return self
+
+    def __init__(self):
+        pass
+
+    async def summary(self):
+        return 'Mech:\nThe ' + self.name + '\n' + \
+               'Stats:\n' + \
+               '   Spark: '     + str(self.stats[0]) + '\n' + \
+               '   Steel: '    + str(self.stats[1]) + '\n'
+
+    async def get_dict_for_json(self):
+        return {'name': self.name, 'stats': self.stats}
+
+
 
 class TinyMech(commands.Cog):
     def __init__ (self):
