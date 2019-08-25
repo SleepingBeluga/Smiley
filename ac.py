@@ -46,6 +46,8 @@ class Autocape(commands.Cog):
             await self.addcape(ctx, *args)
         elif cmd == 'load':
             await self.load(ctx, *args)
+        elif cmd == 'fight':
+            await self.fight(ctx, *args)
 
 
     async def newcity(self, ctx, *args):
@@ -233,3 +235,34 @@ class Autocape(commands.Cog):
             await ctx.send("Cleared memory.")
         else:
             await ctx.send("Error.")
+
+    async def fight(self, ctx, *args):
+        update = ''
+        self.records['capes'] = []
+        capes = await loadcapes()
+        for id in capes:
+            x = cape.Cape(id, capes[id])
+            self.records['capes'].append(x)
+            self.records['logs'] = '```'
+        userCape = None
+        for dude in self.records['capes']:
+            if str(dude.id) == str(ctx.author.id):
+                userCape = dude
+        if userCape == None:
+            await ctx.send("You don't have anyone to fight with.")
+        else:
+            targetName = str(args[0])
+            target = None
+            for dude in self.records['capes']:
+                if dude.alias.lower() == targetName.lower():
+                    target = dude
+                elif dude.playerName.lower() == targetName.lower():
+                    target = dude
+            if target == None:
+                await ctx.send("Target not found.")
+            else:
+                update += await encounter.fight(userCape, target)
+                if update == '':
+                    update += "They both defended. Nothing happened."
+                await ctx.send("```" + update + "```")
+        self.records = {}
