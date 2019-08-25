@@ -173,6 +173,27 @@ async def history(ctx, *args):
     else:
         await ctx.send("You don't seem to have a pilot yet.")
 
+async def upgrade(ctx, *args):
+    if args:
+        id = args[0]
+    else:
+        id = str(ctx.author.id)
+    chars = await loadchars()
+    if id in chars:
+        char = await Pilot.async_init(id, dict = chars[id])
+        topstat = max(char.mech.stats)
+        cost = int((topstat*(1.5**(topstat/1000)))/100)*(10)
+        if char.money > cost:
+            char.money -= cost
+            stat = random.randint(0,1)
+            char.mech.stats[stat] += random.randint(100,200)
+            await updatechar(char)
+            await ctx.send('Upgrade purchased!```' + await char.mech.summary() + '```')
+        else:
+            await ctx.send('Your next upgrade costs ' + str(cost) + ' but you only have ' + str(char.money) + ' credits.')
+    else:
+        await ctx.send("You don't seem to have a pilot yet.")
+
 async def set_strategy(ctx, *args):
     id = str(ctx.author.id)
     chars = await loadchars()
@@ -381,6 +402,8 @@ class TinyMech(commands.Cog):
             await mechname(ctx, *args)
         elif cmd == 'forceevent':
             await tm_event()
+        elif cmd == 'upgrade':
+            await upgrade(ctx, *args)
         elif cmd == 'forcedays':
             try:
                 numdays = int(args[0])
