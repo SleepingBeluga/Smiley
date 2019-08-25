@@ -318,7 +318,7 @@ class Mech():
     async def async_init(cls, dict = None):
         self = Mech()
         if dict:
-            if type(dict) == type('')
+            if type(dict) == type(''):
                 self.name = dict
                 self.stats = [1000,1000]
                 if random.random() < 0.67:
