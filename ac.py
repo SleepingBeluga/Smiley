@@ -1,9 +1,42 @@
 # The bot interface for autocape
 from discord.ext import commands
-import discord, random, json
+import discord, random, json, asyncio
 from autocape import cape, city, encounter
 
-#Temporary test memory
+
+async def ac_loop(b):
+    await b.wait_until_ready()
+    while True:
+        await asyncio.sleep(3600)
+        update = ''
+        #if 'city' in thing.records:
+            #for team in thing.records['city'].teams:
+                #for cape in team.capes:
+                    #cape.decide()
+            #for team in thing.records['city'].teams:
+                #for cape in team.capes:
+                    #if cape.state == 0 or cape.state == 2:
+                        #num = random.randint(0, (len(thing.records['city'].capes) - 1))
+                        #tarName = thing.records['city'].capes[num]
+                        #target = thing.records['city'].search(tarName)
+                        #if target.alias != cape.alias:
+                            #update += await encounter.fight(cape, target)
+
+            #if update == '':
+                #update = "Nothing happened."
+            #thing.records['logs'] += update
+
+        #elif 'capes' in thing.records:
+        chars = await loadcons()
+        for fighter in chars:
+            fighter.decide()
+        for cape in chars:
+            if cape.state == 0 or cape.state == 2:
+                num = random.randint(0, (len(chars) - 1))
+                target = chars[num]
+                if target.alias != cape.alias:
+                    update += await encounter.fight(cape, target)
+
 
 async def loadcapes():
     with open('autocape/capes.json', 'r+') as capefile:
@@ -14,22 +47,23 @@ async def loadcapes():
             chars = {}
     return chars
 
+async def loadcons():
+    thing = []
+    capes = await loadcapes()
+    for id in capes:
+        x = cape.Cape(id, capes[id])
+        thing.append(x)
+    return thing
+
+
 class Autocape(commands.Cog):
-
-    def __init__(self):
-        self.records = {}
-
 
     @commands.command()
     async def ac(self, ctx, cmd, *args):
         if cmd == 'newcity':
             await self.newcity(ctx, *args)
-        elif cmd == 'show':
-            await self.show(ctx, *args)
         elif cmd == 'gen':
             await self.gen(ctx, *args)
-        elif cmd == 'checkup':
-            await self.checkup(ctx, *args)
         elif cmd == 'status':
             await self.status(ctx, *args)
         elif cmd == 'history':
@@ -44,8 +78,6 @@ class Autocape(commands.Cog):
             await self.delete(ctx, *args)
         elif cmd == 'addcape':
             await self.addcape(ctx, *args)
-        elif cmd == 'load':
-            await self.load(ctx, *args)
         elif cmd == 'fight':
             await self.fight(ctx, *args)
         elif cmd == 'rename':
@@ -63,35 +95,35 @@ class Autocape(commands.Cog):
         await ctx.send(self.records['city'].name + " created.")
         await ctx.send(self.records['city'].info())
 
-
-    async def show(self,ctx,*args):
-        '''Navigate through the city
-        '''
-        if not self.records or not self.records['city']:
-            await ctx.send("There's nothing to show.")
-        else:
-            capeName = ''
-            for word in args:
-                capeName += word + ' '
-            capeName = capeName[:-1]
-            check = False
-            if args[0] == 'city':
-                await ctx.send(self.records['city'].info())
-                check = True
-            for district in self.records['city'].districts:
-                if args[0] == district.name:
-                    await ctx.send(district.info())
-                    check = True
-            for team in self.records['city'].teams:
-                if args[0] == team.name:
-                    await ctx.send(team.info())
-                    check = True
-                for cape in team.capes:
-                    if capeName == cape.alias:
-                        await ctx.send('```' + cape.status() + '```')
-                        check = True
-            if check == False:
-                await ctx.send("Nothing found.")
+    #
+    # async def show(self,ctx,*args):
+    #     '''Navigate through the city
+    #     '''
+    #     if not self.records or not self.records['city']:
+    #         await ctx.send("There's nothing to show.")
+    #     else:
+    #         capeName = ''
+    #         for word in args:
+    #             capeName += word + ' '
+    #         capeName = capeName[:-1]
+    #         check = False
+    #         if args[0] == 'city':
+    #             await ctx.send(self.records['city'].info())
+    #             check = True
+    #         for district in self.records['city'].districts:
+    #             if args[0] == district.name:
+    #                 await ctx.send(district.info())
+    #                 check = True
+    #         for team in self.records['city'].teams:
+    #             if args[0] == team.name:
+    #                 await ctx.send(team.info())
+    #                 check = True
+    #             for cape in team.capes:
+    #                 if capeName == cape.alias:
+    #                     await ctx.send('```' + cape.status() + '```')
+    #                     check = True
+    #         if check == False:
+    #             await ctx.send("Nothing found.")
 
 
     async def gen(self, ctx, *args):
@@ -111,13 +143,6 @@ class Autocape(commands.Cog):
             json.dump(capes, capefile)
         await ctx.send("```" + x.status() + "```")
         await ctx.send("Cape created.")
-
-
-    async def checkup(self, ctx, *args):
-        '''Checks up on your current cape
-        '''
-        # TODO Something happens
-        await ctx.send("Displaying events since last checkup.")
 
 
     async def status(self, ctx, *args):
@@ -146,49 +171,47 @@ class Autocape(commands.Cog):
 
     async def update(self, ctx, *args):
         update = ''
-        if self.records == {}:
-            await ctx.send("Wheeeee!")
-        elif 'city' in self.records:
-            for team in self.records['city'].teams:
-                for cape in team.capes:
-                    cape.decide()
-            for team in self.records['city'].teams:
-                for cape in team.capes:
-                    if cape.state == 0 or cape.state == 2:
-                        num = random.randint(0,(len(self.records['city'].capes) - 1))
-                        tarName = self.records['city'].capes[num]
-                        target = self.records['city'].search(tarName)
-                        if target.alias != cape.alias:
-                            update += await encounter.fight(cape,target)
+        # if self.records == {}:
+        #      await ctx.send("Wheeeee!")
+        # elif 'city' in self.records:
+        #     for team in self.records['city'].teams:
+        #         for cape in team.capes:
+        #             cape.decide()
+        #     for team in self.records['city'].teams:
+        #         for cape in team.capes:
+        #             if cape.state == 0 or cape.state == 2:
+        #                 num = random.randint(0,(len(self.records['city'].capes) - 1))
+        #                 tarName = self.records['city'].capes[num]
+        #                 target = self.records['city'].search(tarName)
+        #                 if target.alias != cape.alias:
+        #                     update += await encounter.fight(cape,target)
+        #
+        #     if update == '':
+        #         update = "Nothing happened."
+        #     await ctx.send("```" + update + "```")
+        #     self.records['logs'] += update
+        #     await ctx.send("Update complete.")
+        #
+        # elif 'capes' in self.records:
+        chars = await loadcons()
+        for fighter in chars:
+            fighter.decide()
+        for cape in chars:
+                if cape.state == 0 or cape.state == 2:
+                    num = random.randint(0,(len(chars) - 1))
+                    target = chars[num]
+                    if target.alias != cape.alias:
+                        update += await encounter.fight(cape,target)
 
-            if update == '':
-                update = "Nothing happened."
-            await ctx.send("```" + update + "```")
-            self.records['logs'] += update
-            await ctx.send("Update complete.")
-
-        elif 'capes' in self.records:
-            for fighter in self.records['capes']:
-                fighter.decide()
-            for cape in self.records['capes']:
-                    if cape.state == 0 or cape.state == 2:
-                        num = random.randint(0,(len(self.records['capes']) - 1))
-                        target = self.records['capes'][num]
-                        if target.alias != cape.alias:
-                            update += await encounter.fight(cape,target)
-
-            if update == '':
-                update = "Nothing happened."
-            await ctx.send("```" + update + "```")
-            self.records['logs'] += update
-            await ctx.send("Update complete.")
+        if update == '':
+           update = "Nothing happened."
+        await ctx.send("```" + update + "```")
+        self.records['logs'] += update
+        await ctx.send("Update complete.")
 
 
     async def log(self,ctx,*args):
-        if not self.records or not self.records['logs'] or self.records['logs'] == '```':
-            await ctx.send("0二二二二二二二)")
-        else:
-            await ctx.send(self.records['logs'] + '```')
+        await ctx.send("0二二二二二二二)")
 
 
     async def clear(self,ctx,*args):
@@ -222,32 +245,27 @@ class Autocape(commands.Cog):
         await ctx.send("```" + x.status() + "```")
         await ctx.send("Cape created.")
 
-
-    async def load(self, ctx, *args):
-        if args[0] == 'ring':
-            self.records['capes'] = []
-            capes = await loadcapes()
-            for id in capes:
-                x = cape.Cape(id, capes[id])
-                self.records['capes'].append(x)
-                self.records['logs'] = '```'
-            await ctx.send("Loaded all genned capes.")
-        elif args[0] == 'blank':
-            self.records = {}
-            await ctx.send("Cleared memory.")
-        else:
-            await ctx.send("Error.")
+    #
+    # async def load(self, ctx, *args):
+    #     if args[0] == 'ring':
+    #         self.records['capes'] = []
+    #         capes = await loadcapes()
+    #         for id in capes:
+    #             x = cape.Cape(id, capes[id])
+    #             self.records['capes'].append(x)
+    #             self.records['logs'] = '```'
+    #         await ctx.send("Loaded all genned capes.")
+    #     elif args[0] == 'blank':
+    #         self.records = {}
+    #         await ctx.send("Cleared memory.")
+    #     else:
+    #         await ctx.send("Error.")
 
     async def fight(self, ctx, *args):
         update = ''
-        self.records['capes'] = []
-        capes = await loadcapes()
-        for id in capes:
-            x = cape.Cape(id, capes[id])
-            self.records['capes'].append(x)
-            self.records['logs'] = '```'
+        capes = await loadcons()
         userCape = None
-        for dude in self.records['capes']:
+        for dude in capes:
             if str(dude.id) == str(ctx.author.id):
                 userCape = dude
         if userCape == None:
@@ -258,7 +276,7 @@ class Autocape(commands.Cog):
                 targetName += arg + ' '
             targetName = targetName[:-1]
             target = None
-            for dude in self.records['capes']:
+            for dude in capes:
                 if dude.alias.lower() == targetName.lower():
                     target = dude
                 elif dude.playerName.lower() == targetName.lower():
@@ -273,27 +291,54 @@ class Autocape(commands.Cog):
                 if update == '':
                     update += "They both defended. Nothing happened."
                 await ctx.send("```" + update + "```")
-        self.records = {}
 
     async def rename(self, ctx, *args):
-        self.records['capes'] = []
+        thing = str(ctx.author.id)
         capes = await loadcapes()
-        for id in capes:
-            x = cape.Cape(id, capes[id])
-            self.records['capes'].append(x)
-            self.records['logs'] = '```'
-        userCape = None
-        for dude in self.records['capes']:
-            if str(dude.id) == str(ctx.author.id):
-                userCape = dude
-        if userCape == None:
+        if thing not in capes:
             await ctx.send("You don't have anyone to rename.")
-        else:
-            newAlias = ''
-            for arg in args:
-                newAlias += arg + ' '
-            newAlias = newAlias[:-1]
-            userCape.alias = newAlias
-            await userCape.updateCape()
-            await ctx.send("Your cape is now named " + newAlias + ".")
-        self.records = {}
+            return
+        x = cape.Cape(thing, capes[thing])
+        newAlias = ''
+        for arg in args:
+            newAlias += arg + ' '
+        newAlias = newAlias[:-1]
+        x.alias = newAlias
+        await x.updateCape()
+        await ctx.send("Your cape is now named " + newAlias + ".")
+    #
+    # async def loop(self):
+    #     while True:
+    #         await asyncio.sleep(3600)
+    #         update = ''
+    #         if 'city' in self.records:
+    #             for team in self.records['city'].teams:
+    #                 for cape in team.capes:
+    #                     cape.decide()
+    #             for team in self.records['city'].teams:
+    #                 for cape in team.capes:
+    #                     if cape.state == 0 or cape.state == 2:
+    #                         num = random.randint(0, (len(self.records['city'].capes) - 1))
+    #                         tarName = self.records['city'].capes[num]
+    #                         target = self.records['city'].search(tarName)
+    #                         if target.alias != cape.alias:
+    #                             update += await encounter.fight(cape, target)
+    #
+    #             if update == '':
+    #                 update = "Nothing happened."
+    #             self.records['logs'] += update
+    #
+    #         elif 'capes' in self.records:
+    #             for fighter in self.records['capes']:
+    #                 fighter.decide()
+    #             for cape in self.records['capes']:
+    #                 if cape.state == 0 or cape.state == 2:
+    #                     num = random.randint(0, (len(self.records['capes']) - 1))
+    #                     target = self.records['capes'][num]
+    #                     if target.alias != cape.alias:
+    #                         update += await encounter.fight(cape, target)
+    #
+    #             if update == '':
+    #                 update = "Nothing happened."
+    #             self.records['logs'] += update
+    #
