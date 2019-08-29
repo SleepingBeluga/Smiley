@@ -6,6 +6,8 @@ DAY_LENGTH = 3600
 # One hour
 
 async def get_time():
+    ''' Gets the current day from file.
+    If nothing is found, sets the time to 0'''
     time = None
     with open('./tm/time', 'r+') as timefile:
         if len(timefile.read()):
@@ -14,16 +16,21 @@ async def get_time():
             return time
     if not time:
         await set_time(0)
+        return 0
 
 async def set_time(time):
+    '''Writes the parameter 'time' to the time file'''
     with open('./tm/time', 'w+') as timefile:
         timefile.write(str(time))
 
 async def time_forward():
+    '''Increases the time file by one and heals'''
     await set_time(await get_time() + 1)
     await time_the_healer()
 
 async def tm_loop(b):
+    '''The main loop function for tiny mechs
+    Executes tm_day() every DAY_LENGTH seconds'''
     global DAY_LENGTH
     await b.wait_until_ready()
     await get_time()
@@ -32,6 +39,7 @@ async def tm_loop(b):
         await tm_day()
 
 async def tm_day():
+    '''Forwards time and triggers events'''
     await time_forward()
     charlist = (await loadchars()).items()
     if len(charlist):
@@ -41,6 +49,7 @@ async def tm_day():
                 await tm_event(char)
 
 async def time_the_healer():
+    '''Has a chance to heal all pilots'''
     chars = await loadchars()
     for id, char in chars.items():
         pilot = await Pilot.async_init(id, dict = char)
@@ -50,9 +59,11 @@ async def time_the_healer():
             await updatechar(pilot)
 
 async def tm_event(char):
+    '''Chooses what type of event to occur'''
     await tm_battle(char)
 
 async def tm_battle(char):
+    '''Battles char vs a random enemy and saves the result'''
     fighter = char
     hc = fighter.record
     mstats = [s + hc*10 for s in [50,20,100,75]]
@@ -74,6 +85,7 @@ async def tm_battle(char):
     await updatechar(fighter)
 
 async def tm_fight(fighter,opponent):
+    '''Decides who wins'''
     fstat = await fighter.choose_stat(opponent)
     ostat = await opponent.choose_stat(fighter)
     advantage = 0
@@ -89,6 +101,7 @@ async def tm_fight(fighter,opponent):
     return hows_it_going
 
 async def loadchars():
+    '''Returns a dictionary of pilots'''
     with open('./tm/chars.json', 'r+') as charsfile:
         if len(charsfile.read()):
             charsfile.seek(0)
@@ -98,12 +111,14 @@ async def loadchars():
     return chars
 
 async def updatechar(char):
+    '''Overwrites the old data for a character'''
     chars = await loadchars()
     chars[char.id] = await char.get_dict_for_json()
     with open('./tm/chars.json', 'w+') as charsfile:
         json.dump(chars, charsfile)
 
 async def parse_gen(pattern):
+    '''Recursively randomly fills out a pattern template'''
     pwords = pattern.split(' ')
     result = []
     for word in pwords:
@@ -116,6 +131,7 @@ async def parse_gen(pattern):
     return ' '.join(result)
 
 async def join(ctx, *args):
+    '''Allows a player to hire a Tiny Mech pilot'''
     if args:
         id = args[0]
     else:
@@ -135,6 +151,7 @@ async def join(ctx, *args):
     await check(ctx, id)
 
 async def delete(ctx, *args):
+    '''Dismisses a player's pilot'''
     if args:
         id = args[0]
     else:
@@ -149,6 +166,7 @@ async def delete(ctx, *args):
     await ctx.send('Pilot deleted.')
 
 async def check(ctx, *args):
+    '''Displays current info about your pilot and their mech'''
     if args:
         id = args[0]
     else:
@@ -162,6 +180,7 @@ async def check(ctx, *args):
         await ctx.send("You don't seem to have a pilot yet.")
 
 async def history(ctx, *args):
+    '''Displays the five most recent events involving your pilot'''
     if args:
         id = args[0]
     else:
@@ -174,6 +193,7 @@ async def history(ctx, *args):
         await ctx.send("You don't seem to have a pilot yet.")
 
 async def upgrade(ctx, *args):
+    '''Try to purchase a mech upgrade'''
     if args:
         id = args[0]
     else:
@@ -187,6 +207,7 @@ async def upgrade(ctx, *args):
             char.money -= cost
             stat = random.randint(0,1)
             char.mech.stats[stat] += random.randint(100,200)
+            char.history.append('Day ' + str(await get_time()) + ': Upgraded mech for ' + str(cost) + ' credits.')
             await updatechar(char)
             await ctx.send('Upgrade purchased!```' + await char.mech.summary() + '```')
         else:
@@ -195,6 +216,7 @@ async def upgrade(ctx, *args):
         await ctx.send("You don't seem to have a pilot yet.")
 
 async def set_strategy(ctx, *args):
+    '''Set a strategy for your pilot to use in battle'''
     id = str(ctx.author.id)
     chars = await loadchars()
     if id in chars:
@@ -214,6 +236,7 @@ async def set_strategy(ctx, *args):
         await ctx.send("You don't seem to have a pilot yet.")
 
 async def mechname(ctx, *args):
+    '''Generate a random mech name'''
     await ctx.send('The ' + await parse_gen('$TopLevelPatterns'))
 
 class Fight_Thing():
@@ -388,6 +411,8 @@ class TinyMech(commands.Cog):
 
     @commands.command()
     async def tm(self, ctx, cmd, *args):
+        '''Use the tm commands.
+        Options include %tm join, %tm delete, %tm check, %tm history, %tm upgrade, %tm strategy <strategy>'''
         if cmd == 'join':
             await join(ctx, *args)
         elif cmd == 'check':
