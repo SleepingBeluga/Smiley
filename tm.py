@@ -1,6 +1,6 @@
 from discord.ext import commands
 from shutil import copyfile
-import random, time, discord, json, asyncio, names
+import random, time, discord, json, asyncio
 
 DAY_LENGTH = 3600
 # One hour
@@ -411,8 +411,8 @@ class TinyMech(commands.Cog):
 
     @commands.command()
     async def tm(self, ctx, cmd, *args):
-    '''Use the tm commands.
-    Options include %tm join, %tm delete, %tm check, %tm history, %tm upgrade, %tm strategy <strategy>'''
+        '''Use the tm commands.
+        Options include %tm join, %tm delete, %tm check, %tm history, %tm upgrade, %tm strategy <strategy>'''
         if cmd == 'join':
             await join(ctx, *args)
         elif cmd == 'check':
