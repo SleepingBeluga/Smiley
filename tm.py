@@ -66,8 +66,13 @@ async def tm_battle(char):
     '''Battles char vs a random enemy and saves the result'''
     fighter = char
     hc = fighter.record
-    mstats = [s + hc*10 for s in [50,20,100,75]]
-    opponent = Enemy('Monster','Aggressive',mstats)
+    enemies = [Enemy('Monster','Aggressive',[50,20,100,75]),
+               Enemy('Rogue Mech Pilot','Defensive',[80,75,75,75]),
+               Enemy('Enemy Combatant','Aggressive',[90,15,80,60]),
+               Enemy('Carnivorous Plant','Lucky',[20,90,90,20]),
+               Enemy('Pirate','Lucky',[40,40,75,100])]
+    opponent = random.choice(enemies)
+    opponent.stats = [s + hc*10 for s in opponent.stats]
     result = await tm_fight(fighter, opponent)
     if result >= 0:
         topstat = max(fighter.stats)
