@@ -299,10 +299,7 @@ class Pilot(Fight_Thing):
             self.id = id
             self.owner = owner
             if random.random() < 0.02:
-                if random.random() < 0.5:
-                    self.gender = 'Non-Binary'
-                else:
-                    self.gender = 'Agender'
+                self.gender = random.choice(['Non-Binary','Agender','Genderfluid'])
                 self.name = names.get_full_name()
             elif random.random() < 0.5:
                 self.gender = 'Male'
