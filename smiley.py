@@ -51,6 +51,8 @@ b.loop.create_task(trimhistory.channel_cleanup(b))
 b.loop.create_task(tm.tm_loop(b))
 # Start running Tiny Mechs in the background.
 
+b.loop.create_task(ac.ac_loop(b))
+
 with open('secret') as s:
     token = s.read()[:-1]
 # Read the Discord bot token from a soup or secret file
