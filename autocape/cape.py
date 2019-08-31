@@ -13,8 +13,8 @@ class Cape:
 
     def __init__(self, id, dict):
         if dict == None:
-            self.name = sheets.name()  # TODO generate names!
-            self.alias = sheets.capename()  # TODO alias should relate to power!
+            self.name = sheets.name()
+            self.alias = sheets.capename()
             self.generateStatblock()
             # Start the game at basic morale level, can scale from 0.0 and up
             self.morale = 1.0
@@ -26,6 +26,9 @@ class Cape:
             self.playerName = None
             self.pc = False
             self.id = id
+            self.relations = {}
+            self.bff = 'None'
+            self.nemesis = 'None'
             self.logs = ''
             # There is extra stuff to consider, but we can worry about that later
         else:
@@ -41,6 +44,9 @@ class Cape:
             self.playerName = dict['shard']
             self.pc = dict['pc']
             self.id = dict['id']
+            self.relations = dict['relations']
+            self.bff = dict['bff']
+            self.nemesis = dict['nemesis']
             self.logs = dict['logs']
 
     def generateStatblock(self):
@@ -94,6 +100,10 @@ class Cape:
                str(self.power.aspects[1].aspectName) + " aspects"
         if self.location != None:
             status += "\nLocation: " + str(self.location.name)
+        if self.bff != 'None':
+            status += "\nBestie: " + self.bff
+        if self.nemesis != 'None':
+            status += "\nNemesis: " + self.nemesis
         return status
 
     def history(self):
@@ -192,29 +202,34 @@ class Cape:
         else:
             self.morale += shift
 
-    def decide(self):
+    def decide(self, fight):
         grabBag = [0,1,2]
         if self.personality.plus1 == "Brawn" or self.personality.plus1 == "Dexterity":
-            grabBag.append(2)
             grabBag.append(2)
         if self.personality.plus2 == "Brawn" or self.personality.plus2 == "Dexterity":
             grabBag.append(2)
         if self.personality.column == "Aggressive":
             grabBag.append(2)
-        if self.personality.plus1 == "Guts" or self.personality.plus1 == "Wits":
+        if self.personality.plus1 == "Guts" or self.personality.plus1 == "Athletics":
             grabBag.append(1)
-            grabBag.append(1)
-        if self.personality.plus2 == "Guts" or self.personality.plus2 == "Wits":
+        if self.personality.plus2 == "Guts" or self.personality.plus2 == "Athletics":
             grabBag.append(1)
         if self.personality.column == "Assertive":
             grabBag.append(1)
-        if self.personality.plus1 == "Knowledge" or self.personality.plus1 == "Social":
+        if self.personality.plus1 == "Knowledge" or self.personality.plus1 == "Wits":
             grabBag.append(0)
-            grabBag.append(0)
-        if self.personality.plus2 == "Knowledge" or self.personality.plus2 == "Social":
+        if self.personality.plus2 == "Knowledge" or self.personality.plus2 == "Wits":
             grabBag.append(0)
         if self.personality.column == "Indirect":
             grabBag.append(0)
+        if fight == False:
+            grabBag.append(3)
+            if self.personality.plus1 == "Social":
+                grabBag.append(3)
+            if self.personality.plus2 == "Social":
+                grabBag.append(3)
+            if self.personality.column == "Passive":
+                grabBag.append(3)
         num = random.randint(0,(len(grabBag) - 1))
         choice = grabBag[num]
         self.state = choice
@@ -229,7 +244,7 @@ class Cape:
         return {'id':self.id,'name':self.name, 'shard':self.playerName,
                 'alias':self.alias,'personality':self.personality.perJsonDict(),
                 'power':self.power.powJsonDict(),'location':self.location,'pc':self.pc,
-                'logs':self.logs}
+                'relations':self.relations,'bff':self.bff,'nemesis':self.nemesis,'logs':self.logs}
 
     async def win(self, loser):
         if self.state == 0:
@@ -264,3 +279,22 @@ class Cape:
         capes[self.id] = entry
         with open('autocape/capes.json', 'w+') as capefile:
             json.dump(capes, capefile)
+
+    async def talkswith(self, cape, mod):
+        if cape.name not in self.relations:
+            self.relations[cape.name] = 0
+        self.relations[cape.name] += mod
+        self.logs += "Talked with " + str(cape.alias) + " - "
+        if mod >= 5:
+            self.logs += "It was great!\n"
+        elif mod >= 3:
+            self.logs += "It was nice.\n"
+        elif mod > 0:
+            self.logs += "It went okay.\n"
+        elif mod > -2:
+            self.logs += "It was a little awkward.\n"
+        elif mod < -5:
+            self.logs += "It was awful.\n"
+        elif mod < -2:
+            self.logs += "It was very awkward.\n"
+        await self.updateCape()
