@@ -66,13 +66,8 @@ async def tm_battle(char):
     '''Battles char vs a random enemy and saves the result'''
     fighter = char
     hc = fighter.record
-    enemies = [Enemy('Monster','Aggressive',[50,20,100,75]),
-               Enemy('Rogue Mech Pilot','Defensive',[80,75,75,75]),
-               Enemy('Enemy Combatant','Aggressive',[90,15,80,60]),
-               Enemy('Carnivorous Plant','Lucky',[20,90,90,20]),
-               Enemy('Pirate','Lucky',[40,40,75,100])]
-    opponent = random.choice(enemies)
-    opponent.stats = [s + hc*10 for s in opponent.stats]
+    mstats = [s + hc*10 for s in [50,20,100,75]]
+    opponent = Enemy('Monster','Aggressive',mstats)
     result = await tm_fight(fighter, opponent)
     if result >= 0:
         topstat = max(fighter.stats)
@@ -299,7 +294,10 @@ class Pilot(Fight_Thing):
             self.id = id
             self.owner = owner
             if random.random() < 0.02:
-                self.gender = random.choice(['Non-Binary','Agender','Genderfluid'])
+                if random.random() < 0.5:
+                    self.gender = 'Non-Binary'
+                else:
+                    self.gender = 'Agender'
                 self.name = names.get_full_name()
             elif random.random() < 0.5:
                 self.gender = 'Male'
