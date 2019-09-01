@@ -89,7 +89,7 @@ async def tm_fight(fighter,opponent):
     fstat = await fighter.choose_stat(opponent)
     ostat = await opponent.choose_stat(fighter)
     advantage = 0
-    if not type(fstat) = int:
+    if not type(fstat) == int:
         fstat = 2
     if fstat == ostat - 1:
         advantage = 1.5
