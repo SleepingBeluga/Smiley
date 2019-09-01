@@ -94,6 +94,8 @@ async def tm_fight(fighter,opponent):
     fstat = await fighter.choose_stat(opponent)
     ostat = await opponent.choose_stat(fighter)
     advantage = 0
+    if not type(fstat) = int:
+        fstat = 2
     if fstat == ostat - 1:
         advantage = 1.5
     elif fstat == ostat + 1:
@@ -269,8 +271,7 @@ class Fight_Thing():
             return (maxind - 1) % 4
         elif self.strategy == 'Lucky':
             return random.randint(0,3)
-        else:
-            return 2
+        return 2
 
 class Enemy(Fight_Thing):
     pass
