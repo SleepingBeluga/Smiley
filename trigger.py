@@ -244,3 +244,10 @@ class Trigger(commands.Cog):
             await ctx.send("*Life Perk*: " + output)
         else:
             await ctx.send("*Life Flaw*: " + output)
+
+    @commands.command()
+    async def skill(self, ctx, skill, argument):
+        '''Return info on a specified skill. Can also specify a pip number or specialities for extra information.
+        '''
+        output = (await sheets.skill(str(skill), str(argument)))
+        await ctx.send(str(output))

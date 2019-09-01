@@ -387,4 +387,48 @@ async def luck(column, beta = False, search = None):
     if index:
         return str(relevantLuck[index])
 
+async def skill(skill, arg):
+    sheet = service.spreadsheets()
+    index = None
+    result = sheet.values().get(spreadsheetId=SuggestionID,
+                                range='Skills!A2:R3').execute()
+    values = result.get('values', [])
+    row=0
+    if skill == values[row][0]:
+        # Always start with name and categories
+        data = values[row]
+        string = str(data[0]) + "(" + str(data[1])
+        if str(data[2]) != "-":
+            string += ", " + str(data[2])
+        string += ")\n"
+        if arg == None:
+            # Print basic stuff
+            string += str(data[3])
+        elif arg == "short":
+            string += str(data[4])
+        elif arg == "1":
+            string += str(data[5])
+        elif arg == "2":
+            string += str(data[6])
+        elif arg == "3":
+            string += str(data[7])
+        elif arg == "4":
+            string += str(data[8])
+        elif arg == "5":
+            string += str(data[9])
+        elif arg == "specialities":
+            special = False
+            for x in range(0,6):
+                if str(data[10+x]) != "-":
+                    if not special:
+                        special = True
+                        string += "Specialities:"
+                    string += "\n" + str(data[10+x])
+        else:
+            string = "Do not recognise arguement " + str(arg)
+        return string
+                    
+    else:
+        return "Haven't added this skill yet"
+
 # ...sorry about the mess X|
