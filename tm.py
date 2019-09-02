@@ -68,7 +68,7 @@ async def tm_battle(char):
     hc = fighter.record
     enemies = [Enemy('Monster','Aggressive',[50,20,100,75],[1000,1000]),
                Enemy('Rogue Mech Pilot','Defensive',[80,75,75,75],[750,1250]),
-               Enemy('Enemy Combatant','Aggressive',[90,15,80,60],[1250,700]),
+               Enemy('Enemy Soldier','Aggressive',[90,15,80,60],[1250,700]),
                Enemy('Carnivorous Plant','Lucky',[20,90,90,20],[500,2000]),
                Enemy('Pirate','Lucky',[40,40,75,100],[1500,500])]
     opponent = random.choice(enemies)
