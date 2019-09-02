@@ -1,6 +1,6 @@
 from discord.ext import commands
 from shutil import copyfile
-import random, time, discord, json, asyncio
+import random, time, discord, json, asyncio, math
 
 DAY_LENGTH = 3600
 # One hour
@@ -66,11 +66,11 @@ async def tm_battle(char):
     '''Battles char vs a random enemy and saves the result'''
     fighter = char
     hc = fighter.record
-    enemies = [Enemy('Monster','Aggressive',[50,20,100,75]),
-               Enemy('Rogue Mech Pilot','Defensive',[80,75,75,75]),
-               Enemy('Enemy Combatant','Aggressive',[90,15,80,60]),
-               Enemy('Carnivorous Plant','Lucky',[20,90,90,20]),
-               Enemy('Pirate','Lucky',[40,40,75,100])]
+    enemies = [Enemy('Monster','Aggressive',[50,20,100,75],[1000,1000]),
+               Enemy('Rogue Mech Pilot','Defensive',[80,75,75,75],[750,1250]),
+               Enemy('Enemy Combatant','Aggressive',[90,15,80,60],[1250,700]),
+               Enemy('Carnivorous Plant','Lucky',[20,90,90,20],[500,2000]),
+               Enemy('Pirate','Lucky',[40,40,75,100],[1500,500])]
     opponent = random.choice(enemies)
     opponent.stats = [s + hc*10 for s in opponent.stats]
     result = await tm_fight(fighter, opponent)
@@ -93,19 +93,24 @@ async def tm_fight(fighter,opponent):
     '''Decides who wins'''
     fstat = await fighter.choose_stat(opponent)
     ostat = await opponent.choose_stat(fighter)
-    advantage = 0
+    effectiveness = 0
     if not type(fstat) == int:
         fstat = 2
     if fstat == ostat - 1:
-        advantage = 1.5
+        effectiveness = 2
     elif fstat == ostat + 1:
-        advantage = 0.66
-    hows_it_going = 0
-    rr = (-10,10) if fighter.health == 'Healthy' else (-10,5)
-    for round in range(3):
-        hows_it_going += fighter.stats[fstat] * advantage - \
-                         opponent.stats[ostat] + random.randint(rr[0],rr[1])
-    return hows_it_going
+        effectiveness = 0.5
+    statdiff = fighter.stats[fstat] * effectiveness - opponent.stats[ostat]
+    advantage = 2.1/(1 + math.exp(-.07(statdiff))) + 0.4
+    rr = (-50,50) if fighter.health == 'Healthy' else (-50,30)
+    fdam = fighter.mech.stats[0] / 5
+    odam = opponent.stats2[0] / 5
+    fhealth = fighter.mech.stats[1]
+    ohealth = opponent.stats2[1]
+    while fhealth > 0 and ohealth > 0:
+        fhealth -= int(odam / advantage) + rr
+        ohealth -= fdam * advantage + rr
+    return fhealth - ohealth
 
 async def loadchars():
     '''Returns a dictionary of pilots'''
@@ -247,10 +252,11 @@ async def mechname(ctx, *args):
     await ctx.send('The ' + await parse_gen('$TopLevelPatterns'))
 
 class Fight_Thing():
-    def __init__(self, name, strategy, stats):
+    def __init__(self, name, strategy, stats, stats2):
         self.name = name
         self.strategy = strategy
         self.stats = stats
+        self.stats2 = stats2
 
     async def choose_stat(self, opponent):
         if self.strategy == 'Aggressive':
