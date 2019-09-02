@@ -96,6 +96,8 @@ async def tm_fight(fighter,opponent):
     effectiveness = 0
     if not type(fstat) == int:
         fstat = 2
+    if not type(ostat) == int:
+        ostat = 2
     if fstat == ostat - 1:
         effectiveness = 2
     elif fstat == ostat + 1:
