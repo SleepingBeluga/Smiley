@@ -1,6 +1,6 @@
 # The bot interface for autocape
 from discord.ext import commands
-import discord, random, json, asyncio
+import discord, random, json, asyncio, io
 from autocape import cape, city, encounter
 
 
@@ -29,7 +29,7 @@ async def ac_loop(b):
         #elif 'capes' in thing.records:
         chars = await loadcons()
         for fighter in chars:
-            fighter.decide()
+            fighter.decide(False)
         for cape in chars:
             if cape.state == 0 or cape.state == 2:
                 num = random.randint(0, (len(chars) - 1))
@@ -68,6 +68,8 @@ class Autocape(commands.Cog):
             await self.status(ctx, *args)
         elif cmd == 'history':
             await self.history(ctx, *args)
+        elif cmd == 'fullhistory':
+            await self.fullhistory(ctx,*args)
         elif cmd == 'update':
             await self.update(ctx, *args)
         elif cmd == 'log':
@@ -80,8 +82,12 @@ class Autocape(commands.Cog):
             await self.addcape(ctx, *args)
         elif cmd == 'fight':
             await self.fight(ctx, *args)
+        elif cmd == 'talk':
+            await self.talk(ctx, *args)
         elif cmd == 'rename':
             await self.rename(ctx, *args)
+        elif cmd == 'help':
+            await self.help(ctx, *args)
 
 
     async def newcity(self, ctx, *args):
@@ -157,7 +163,26 @@ class Autocape(commands.Cog):
         await ctx.send("```" + x.status() + "```")
 
 
-    async def history(self, ctx, *args):
+    async def history(self,ctx,*args):
+        id = str(ctx.author.id)
+        capes = await loadcapes()
+        if id not in capes:
+            await ctx.send("You don't have a cape.")
+            return
+        x = cape.Cape(id,capes[id])
+        final = ''
+        shorten = x.history()
+        shorten = shorten.splitlines()
+        if len(shorten) >= 5:
+            for z in range(0,5):
+                final += shorten[len(shorten) - z - 1]
+                final += "\n"
+            await ctx.send("```" + final + "```")
+        else:
+            await ctx.send("```" + x.history() + "```")
+
+
+    async def fullhistory(self, ctx, *args):
         '''Reveal prior experiences of your cape
         '''
         id = str(ctx.author.id)
@@ -195,18 +220,20 @@ class Autocape(commands.Cog):
         # elif 'capes' in self.records:
         chars = await loadcons()
         for fighter in chars:
-            fighter.decide()
+            fighter.decide(False)
         for cape in chars:
-                if cape.state == 0 or cape.state == 2:
+                if cape.state != 1:
                     num = random.randint(0,(len(chars) - 1))
                     target = chars[num]
-                    if target.alias != cape.alias:
+                    if target.alias != cape.alias and cape.state != 3:
                         update += await encounter.fight(cape,target)
+                    elif target.alias != cape.alias and cape.state == 3:
+                        update += await encounter.talk(cape,target)
+
 
         if update == '':
            update = "Nothing happened."
         await ctx.send("```" + update + "```")
-        self.records['logs'] += update
         await ctx.send("Update complete.")
 
 
@@ -287,10 +314,42 @@ class Autocape(commands.Cog):
                 if userCape == target:
                     await ctx.send('Why are you hitting yourself?')
                     return
+                userCape.decide(True)
+                target.decide(True)
                 update += await encounter.fight(userCape, target)
                 if update == '':
                     update += "They both defended. Nothing happened."
                 await ctx.send("```" + update + "```")
+
+    async def talk(self, ctx, *args):
+        update = ''
+        capes = await loadcons()
+        userCape = None
+        for dude in capes:
+            if str(dude.id) == str(ctx.author.id):
+                userCape = dude
+        if userCape == None:
+            await ctx.send("You don't have anyone to talk with.")
+        else:
+            targetName = ''
+            for arg in args:
+                targetName += arg + ' '
+            targetName = targetName[:-1]
+            target = None
+            for dude in capes:
+                if dude.alias.lower() == targetName.lower():
+                    target = dude
+                elif dude.playerName.lower() == targetName.lower():
+                    target = dude
+            if target == None:
+                await ctx.send("Target not found.")
+            else:
+                if userCape == target:
+                    await ctx.send(str(userCape.alias) + " babbles to themselves. *Alone*.")
+                    return
+                update += await encounter.talk(userCape, target)
+                await ctx.send("```" + update + "```")
+
 
     async def rename(self, ctx, *args):
         thing = str(ctx.author.id)
@@ -342,3 +401,16 @@ class Autocape(commands.Cog):
     #                 update = "Nothing happened."
     #             self.records['logs'] += update
     #
+
+    async def help(self, ctx, *args):
+        thingy = "```%ac Commands:\n" \
+                 "\tgen\tCreates a cape for you.\n" \
+                 "\tstatus\tShows your cape's status.\n" \
+                 "\thistory\tShows your cape's most recent history.\n" \
+                 "\tfullhistory\tShows your cape's entire history.\n" \
+                 "\tdelete\tPermanently deletes your cape from existence.\n" \
+                 "\tfight\tMakes your cape attack another. Type an alias or their shard's name to target.\n" \
+                 "\ttalk\tMakes your cape talk to another. Type an alias or their shard's name to target.\n" \
+                 "\thelp\tDisplays this." \
+                 "```"
+        await ctx.send(thingy)
