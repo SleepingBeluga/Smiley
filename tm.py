@@ -2,8 +2,8 @@ from discord.ext import commands
 from shutil import copyfile
 import random, time, discord, json, asyncio, math
 
-DAY_LENGTH = 3600
-# One hour
+TIME_LENGTH = 900
+# Fifteen minutes
 
 async def get_time():
     ''' Gets the current day from file.
@@ -18,6 +18,18 @@ async def get_time():
         await set_time(0)
         return 0
 
+async def get_time_string():
+    time = await get_time()
+    day_part = int(time / 24)
+    hour_part = time % 24
+    ampm = 'AM' if hour_part > 11 else 'PM'
+    hour_str = hour_part + 12
+    if hour_str > 12:
+        hour_str -= 12
+    if hour_str > 12:
+        hour_str -= 12
+    return 'Day ' + str(day_part) + ', ' + str(hour_str) + ' ' + ampm
+
 async def set_time(time):
     '''Writes the parameter 'time' to the time file'''
     with open('./tm/time', 'w+') as timefile:
@@ -30,21 +42,22 @@ async def time_forward():
 
 async def tm_loop(b):
     '''The main loop function for tiny mechs
-    Executes tm_day() every DAY_LENGTH seconds'''
-    global DAY_LENGTH
+    Executes tm_day() every TIME_LENGTH seconds'''
+    global TIME_LENGTH
     await b.wait_until_ready()
     await get_time()
     while True:
-        await asyncio.sleep(DAY_LENGTH)
+        await asyncio.sleep(TIME_LENGTH)
         await tm_day()
 
 async def tm_day():
     '''Forwards time and triggers events'''
     await time_forward()
+    await resume_fights()
     charlist = (await loadchars()).items()
     if len(charlist):
         for chartup in charlist:
-            if random.random() < 0.2:
+            if random.random() < 0.05:
                 char = await Pilot.async_init(chartup[0], dict = chartup[1])
                 await tm_event(char)
 
@@ -53,14 +66,16 @@ async def time_the_healer():
     chars = await loadchars()
     for id, char in chars.items():
         pilot = await Pilot.async_init(id, dict = char)
-        if pilot.health == 'Wounded' and random.random() < 0.2:
+        if pilot.health == 'Wounded' and random.random() < 0.1:
             pilot.health = 'Healthy'
-            pilot.history.append('Day ' + str(await get_time()) + ': Rested and healed.')
+            pilot.history.append(await get_time_string() + ': Rested and healed.')
             await updatechar(pilot)
 
 async def tm_event(char):
     '''Chooses what type of event to occur'''
-    await tm_battle(char)
+    fights = await loadfights()
+    if not char.id in fights:
+        await tm_battle(char)
 
 async def tm_battle(char):
     '''Battles char vs a random enemy and saves the result'''
@@ -73,24 +88,9 @@ async def tm_battle(char):
                Enemy('Pirate','Lucky',[40,40,75,100],[1500,500])]
     opponent = random.choice(enemies)
     opponent.stats = [s + hc*10 for s in opponent.stats]
-    result = await tm_fight(fighter, opponent)
-    if result >= 0:
-        topstat = max(fighter.stats)
-        if 200 - topstat * random.randint(1,5) > 0:
-            fighter.stats[random.randint(0,3)] += 1
-        winnings = random.randint(1,50) + random.randint(0,50)
-        winnings = int(winnings * (1.05 ** fighter.record))
-        fighter.record += 1
-        fighter.money += winnings
-        fighter.history.append('Day ' + str(await get_time()) + ': Won a battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!')
-    else:
-        fighter.record -= 1
-        fighter.history.append('Day ' + str(await get_time()) + ': Lost a battle vs ' + opponent.name + '.')
-        fighter.health = 'Wounded'
-    await updatechar(fighter)
+    await tm_start_fight(fighter, opponent)
 
-async def tm_fight(fighter,opponent):
-    '''Decides who wins'''
+async def tm_start_fight(fighter, opponent):
     fstat = await fighter.choose_stat(opponent)
     ostat = await opponent.choose_stat(fighter)
     effectiveness = 0
@@ -109,10 +109,59 @@ async def tm_fight(fighter,opponent):
     odam = opponent.stats2[0] / 5
     fhealth = fighter.mech.stats[1]
     ohealth = opponent.stats2[1]
-    while fhealth > 0 and ohealth > 0:
-        fhealth -= int(odam / advantage) + random.randint(rr[0],rr[1])
-        ohealth -= fdam * advantage + random.randint(rr[0],rr[1])
-    return fhealth - ohealth
+    fighter.history.append(await get_time_string() + ': Started a battle vs ' + opponent.name + '.')
+    await tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
+
+async def tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
+    '''Decides who wins'''
+    fattack = int(fdam * advantage + random.randint(rr[0],rr[1]))
+    oattack = int(odam / advantage) + random.randint(rr[0],rr[1])
+    fhealth -= oattack
+    ohealth -= fattack
+    fighter.history.append(await get_time_string() + ': Hit ' + opponent.name + ' for ' + str(fattack) + ' damage but got hit for ' + str(oattack) + ' in return.')
+    if fhealth <= 0 or ohealth <= 0:
+        await tm_finish_fight(fighter, opponent, fhealth - ohealth)
+    else:
+        await tm_pause_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
+
+async def tm_pause_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
+    fightdict = {'fighter': await fighter.get_dict_for_json(),
+                 'opponent': await opponent.get_dict_for_json(),
+                 'advantage': advantage,
+                 'fhealth': fhealth, 'ohealth': ohealth,
+                 'fdam': fdam, 'odam': odam, 'rr': rr}
+    fights = await loadfights()
+    fights[str(fighter.id)] = fightdict
+    with open('./tm/fights.json','w+') as fightsfile:
+        json.dump(fights, fightsfile)
+
+async def resume_fights():
+    fights = await loadfights()
+    open('./tm/fights.json','w').close()
+    while len(fights):
+        id, fight = fights.popitem()
+        await tm_continue_fight(await Pilot.async_init(id, dict = fight['fighter']),
+                                Enemy(dict = fight['opponent']),
+                                fight['advantage'],
+                                fight['fhealth'], fight['ohealth'],
+                                fight['fdam'], fight['odam'],
+                                fight['rr'])
+
+async def tm_finish_fight(fighter, opponent, result):
+    if result >= 0:
+        topstat = max(fighter.stats)
+        if 200 - topstat * random.randint(1,5) > 0:
+            fighter.stats[random.randint(0,3)] += 1
+        winnings = random.randint(1,50) + random.randint(0,50)
+        winnings = int(winnings * (1.05 ** fighter.record))
+        fighter.record += 1
+        fighter.money += winnings
+        fighter.history.append(await get_time_string() + ': Won the battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!')
+    else:
+        fighter.record -= 1
+        fighter.history.append(await get_time_string() + ': Lost the battle vs ' + opponent.name + '.')
+        fighter.health = 'Wounded'
+    await updatechar(fighter)
 
 async def loadchars():
     '''Returns a dictionary of pilots'''
@@ -123,6 +172,16 @@ async def loadchars():
         else:
             chars = {}
     return chars
+
+async def loadfights():
+    '''Returns a dictionary of fights'''
+    with open('./tm/fights.json', 'r+') as fightsfile:
+        if len(fightsfile.read()):
+            fightsfile.seek(0)
+            fights = json.load(fightsfile)
+        else:
+            fights = {}
+    return fights
 
 async def updatechar(char):
     '''Overwrites the old data for a character'''
@@ -156,7 +215,7 @@ async def join(ctx, *args):
         return
     owner = ctx.author.display_name
     new_pilot = await Pilot.async_init(id, owner)
-    new_pilot.history.append('Day ' + str(await get_time()) + ': Pilot hired.')
+    new_pilot.history.append(await get_time_string() + ': Pilot hired.')
     char = await new_pilot.get_dict_for_json()
     chars[id] = char
     with open('./tm/chars.json', 'w+') as charsfile:
@@ -221,7 +280,7 @@ async def upgrade(ctx, *args):
             char.money -= cost
             stat = random.randint(0,1)
             char.mech.stats[stat] += random.randint(100,200)
-            char.history.append('Day ' + str(await get_time()) + ': Upgraded mech for ' + str(cost) + ' credits.')
+            char.history.append(await get_time_string() + ': Upgraded mech for ' + str(cost) + ' credits.')
             await updatechar(char)
             await ctx.send('Upgrade purchased!```' + await char.mech.summary() + '```')
         else:
@@ -254,11 +313,21 @@ async def mechname(ctx, *args):
     await ctx.send('The ' + await parse_gen('$TopLevelPatterns'))
 
 class Fight_Thing():
-    def __init__(self, name, strategy, stats, stats2):
-        self.name = name
-        self.strategy = strategy
-        self.stats = stats
-        self.stats2 = stats2
+    def __init__(self, name='', strategy='', stats=[], stats2=[], dict = None):
+        if dict:
+            self.name = dict['name']
+            self.strategy = dict['strategy']
+            self.stats = dict['stats']
+            self.stats2 = dict['stats2']
+        else:
+            self.name = name
+            self.strategy = strategy
+            self.stats = stats
+            self.stats2 = stats2
+
+    async def get_dict_for_json(self):
+        return {'name': self.name, 'strategy': self.strategy,
+                'stats': self.stats, 'stats2': self.stats2}
 
     async def choose_stat(self, opponent):
         if self.strategy == 'Aggressive':
@@ -366,8 +435,8 @@ class Pilot(Fight_Thing):
 
     async def get_history(self):
         to_ret = 'Recent history for ' + self.name + \
-                 ' as of day ' + str(await get_time()) + ':'
-        for event in self.history[-5:]:
+                 ' as of ' + (await get_time_string()).lower() + ':'
+        for event in self.history[-8:]:
             to_ret += '\n' + event
         return to_ret
 
