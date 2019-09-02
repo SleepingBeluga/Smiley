@@ -298,7 +298,7 @@ class Pilot(Fight_Thing):
             self.stats = dict['stats']
             self.mech = await Mech.async_init(dict = dict['mech'])
             self.health = dict['health']
-            self.history = dict['history']
+            self.history = dict['history'][-50:]
             self.record = dict['record']
             if 'money' in dict:
                 self.money = dict['money']
