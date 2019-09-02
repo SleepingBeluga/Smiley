@@ -101,7 +101,7 @@ async def tm_fight(fighter,opponent):
     elif fstat == ostat + 1:
         effectiveness = 0.5
     statdiff = fighter.stats[fstat] * effectiveness - opponent.stats[ostat]
-    advantage = 2.1/(1 + math.exp(-.07(statdiff))) + 0.4
+    advantage = 2.1/(1 + math.exp(-.07 * statdiff)) + 0.4
     rr = (-50,50) if fighter.health == 'Healthy' else (-50,30)
     fdam = fighter.mech.stats[0] / 5
     odam = opponent.stats2[0] / 5
