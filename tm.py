@@ -108,8 +108,8 @@ async def tm_fight(fighter,opponent):
     fhealth = fighter.mech.stats[1]
     ohealth = opponent.stats2[1]
     while fhealth > 0 and ohealth > 0:
-        fhealth -= int(odam / advantage) + rr
-        ohealth -= fdam * advantage + rr
+        fhealth -= int(odam / advantage) + random.randint(rr[0],rr[1])
+        ohealth -= fdam * advantage + random.randint(rr[0],rr[1])
     return fhealth - ohealth
 
 async def loadchars():
