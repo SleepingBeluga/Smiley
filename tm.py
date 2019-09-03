@@ -1,6 +1,6 @@
 from discord.ext import commands
 from shutil import copyfile
-import random, time, discord, json, asyncio, math
+import random, time, discord, json, asyncio, names, math
 
 TIME_LENGTH = 900
 # Fifteen minutes
