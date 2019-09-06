@@ -195,6 +195,14 @@ async def updatechar(char):
     with open('./tm/chars.json', 'w+') as charsfile:
         json.dump(chars, charsfile)
 
+async def deletefight(id):
+    fights = await loadfights()
+    if id in fights:
+        del fights[id]
+    with open('./tm/fights.json', 'w+') as fightsfile:
+        json.dump(fights, fightsfile)
+
+
 async def parse_gen(pattern):
     '''Recursively randomly fills out a pattern template'''
     pwords = pattern.split(' ')
