@@ -111,6 +111,7 @@ async def tm_start_fight(fighter, opponent):
     fhealth = fighter.mech.stats[1]
     ohealth = opponent.stats2[1]
     fighter.history.append(await get_time_string() + ': Started a battle vs ' + opponent.name + '.')
+    await updatechar(fighter)
     await tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
 
 async def tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
@@ -120,6 +121,7 @@ async def tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam
     fhealth -= min(oattack,1)
     ohealth -= min(fattack,1)
     fighter.history.append(await get_time_string() + ': Hit ' + opponent.name + ' for ' + str(fattack) + ' damage but got hit for ' + str(oattack) + ' in return.')
+    await updatechar(fighter)
     if fhealth <= 0 or ohealth <= 0:
         await tm_finish_fight(fighter, opponent, fhealth - ohealth)
     else:
@@ -150,7 +152,7 @@ async def resume_fights():
 
 async def tm_finish_fight(fighter, opponent, result):
     chars = await loadchars()
-    fighter = chars[fighter.id]
+    fighter = await Pilot.async_init(fighter.id, dict=chars[fighter.id])
     if result >= 0:
         topstat = max(fighter.stats)
         if 200 - topstat * random.randint(1,5) > 0:
