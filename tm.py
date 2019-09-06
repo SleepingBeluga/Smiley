@@ -115,8 +115,8 @@ async def tm_start_fight(fighter, opponent):
 
 async def tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
     '''Decides who wins'''
-    fattack = int(fdam * advantage * random.random() * rr[1] + rr[0]
-    oattack = int(odam / advantage) * random.random() * rr[1] + rr[0])
+    fattack = int(fdam * advantage * random.random() * rr[1] + rr[0])
+    oattack = int(odam / advantage * random.random() * rr[1] + rr[0])
     fhealth -= min(oattack,1)
     ohealth -= min(fattack,1)
     fighter.history.append(await get_time_string() + ': Hit ' + opponent.name + ' for ' + str(fattack) + ' damage but got hit for ' + str(oattack) + ' in return.')
