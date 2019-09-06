@@ -88,6 +88,7 @@ async def tm_battle(char):
                Enemy('Pirate','Lucky',[40,40,75,100],[1500,500])]
     opponent = random.choice(enemies)
     opponent.stats = [s + hc*10 for s in opponent.stats]
+    opponent.stats2 = [s + hc*75 for s in opponent.stats2]
     await tm_start_fight(fighter, opponent)
 
 async def tm_start_fight(fighter, opponent):
@@ -104,21 +105,23 @@ async def tm_start_fight(fighter, opponent):
         effectiveness = 0.5
     statdiff = fighter.stats[fstat] * effectiveness - opponent.stats[ostat]
     advantage = 2.1/(1 + math.exp(-.07 * statdiff)) + 0.4
-    rr = (-50,50) if fighter.health == 'Healthy' else (-50,30)
+    rr = (0.8,1.2) if fighter.health == 'Healthy' else (0.8,1)
     fdam = fighter.mech.stats[0] / 5
     odam = opponent.stats2[0] / 5
     fhealth = fighter.mech.stats[1]
     ohealth = opponent.stats2[1]
     fighter.history.append(await get_time_string() + ': Started a battle vs ' + opponent.name + '.')
+    await updatechar(fighter)
     await tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
 
 async def tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
     '''Decides who wins'''
-    fattack = int(fdam * advantage + random.randint(rr[0],rr[1]))
-    oattack = int(odam / advantage) + random.randint(rr[0],rr[1])
+    fattack = max(1,int(fdam * advantage * (random.random() * rr[1] + rr[0])))
+    oattack = max(1,int(odam / advantage * (random.random() * rr[1] + rr[0])))
     fhealth -= oattack
     ohealth -= fattack
     fighter.history.append(await get_time_string() + ': Hit ' + opponent.name + ' for ' + str(fattack) + ' damage but got hit for ' + str(oattack) + ' in return.')
+    await updatechar(fighter)
     if fhealth <= 0 or ohealth <= 0:
         await tm_finish_fight(fighter, opponent, fhealth - ohealth)
     else:
@@ -148,6 +151,8 @@ async def resume_fights():
                                 fight['rr'])
 
 async def tm_finish_fight(fighter, opponent, result):
+    chars = await loadchars()
+    fighter = await Pilot.async_init(fighter.id, dict=chars[fighter.id])
     if result >= 0:
         topstat = max(fighter.stats)
         if 200 - topstat * random.randint(1,5) > 0:
@@ -189,6 +194,14 @@ async def updatechar(char):
     chars[char.id] = await char.get_dict_for_json()
     with open('./tm/chars.json', 'w+') as charsfile:
         json.dump(chars, charsfile)
+
+async def deletefight(id):
+    fights = await loadfights()
+    if id in fights:
+        del fights[id]
+    with open('./tm/fights.json', 'w+') as fightsfile:
+        json.dump(fights, fightsfile)
+
 
 async def parse_gen(pattern):
     '''Recursively randomly fills out a pattern template'''
