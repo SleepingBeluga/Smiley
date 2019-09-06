@@ -88,6 +88,7 @@ async def tm_battle(char):
                Enemy('Pirate','Lucky',[40,40,75,100],[1500,500])]
     opponent = random.choice(enemies)
     opponent.stats = [s + hc*10 for s in opponent.stats]
+    opponent.stats2 = [s + hc*75 for s in opponent.stats2]
     await tm_start_fight(fighter, opponent)
 
 async def tm_start_fight(fighter, opponent):
@@ -104,7 +105,7 @@ async def tm_start_fight(fighter, opponent):
         effectiveness = 0.5
     statdiff = fighter.stats[fstat] * effectiveness - opponent.stats[ostat]
     advantage = 2.1/(1 + math.exp(-.07 * statdiff)) + 0.4
-    rr = (-50,50) if fighter.health == 'Healthy' else (-50,30)
+    rr = (0.8,1.2) if fighter.health == 'Healthy' else (0.8,1)
     fdam = fighter.mech.stats[0] / 5
     odam = opponent.stats2[0] / 5
     fhealth = fighter.mech.stats[1]
@@ -114,10 +115,10 @@ async def tm_start_fight(fighter, opponent):
 
 async def tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
     '''Decides who wins'''
-    fattack = int(fdam * advantage + random.randint(rr[0],rr[1]))
-    oattack = int(odam / advantage) + random.randint(rr[0],rr[1])
-    fhealth -= oattack
-    ohealth -= fattack
+    fattack = int(fdam * advantage * random.random() * rr[1] + rr[0]
+    oattack = int(odam / advantage) * random.random() * rr[1] + rr[0])
+    fhealth -= min(oattack,1)
+    ohealth -= min(fattack,1)
     fighter.history.append(await get_time_string() + ': Hit ' + opponent.name + ' for ' + str(fattack) + ' damage but got hit for ' + str(oattack) + ' in return.')
     if fhealth <= 0 or ohealth <= 0:
         await tm_finish_fight(fighter, opponent, fhealth - ohealth)
@@ -148,6 +149,8 @@ async def resume_fights():
                                 fight['rr'])
 
 async def tm_finish_fight(fighter, opponent, result):
+    chars = await loadchars()
+    fighter = chars[fighter.id]
     if result >= 0:
         topstat = max(fighter.stats)
         if 200 - topstat * random.randint(1,5) > 0:
