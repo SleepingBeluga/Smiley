@@ -387,4 +387,93 @@ async def luck(column, beta = False, search = None):
     if index:
         return str(relevantLuck[index])
 
+async def skill(ctx, skill, arg):
+    sheet = service.spreadsheets()
+    index = None
+    result = sheet.values().get(spreadsheetId=SuggestionID,
+                                range='Skills!A2:R34').execute()
+    values = result.get('values', [])
+    category = skill
+    skill = skill.lower()
+    arg = arg.lower()
+    if skill in ["list", "brawn", "athletics", "dexterity", "social", "wits", "knowledge", "guts"]:
+        # We are listing skills!
+        statBreakdown = {
+            "brawn": [],
+            "athletics": [],
+            "dexterity": [],
+            "social": [],
+            "wits": [],
+            "knowledge": [],
+            "guts": []
+        }
+        for row in values:
+            for key in statBreakdown.keys():
+                if key == str(row[1]).lower():
+                    statBreakdown[key] += [str(row[0])]
+                if key == str(row[2]).lower():
+                    statBreakdown[key] += [str(row[0])]
+        
+        if skill in ["brawn", "athletics", "dexterity", "social", "wits", "knowledge", "guts"]:
+            string = category + ":\n"
+            listing = ""
+            for i in statBreakdown[skill]:
+                listing += i + ", "
+            string += listing[:-2]
+            return string
+        else:
+            string = ""
+            for category in ["Brawn", "Athletics", "Dexterity", "Social", "Wits", "Knowledge", "Guts"]:
+                string += category + ":\n"
+                listing = ""
+                for i in statBreakdown[category.lower()]:
+                    listing += i + ", "
+                string += listing[:-2] + "\n\n"
+            return string
+
+    for row in values:
+        if skill == str(row[0]).lower():
+            # Always start with name and categories
+            string = str(row[0]) + "(" + str(row[1])
+            if str(row[2]) != "-":
+                string += ", " + str(row[2])
+            string += ")\n"
+            if arg == "basic":
+                # Print basic stuff
+                string += str(row[3])
+                if str(row[16]) == "Y":
+                    string += "\n"
+                    string += "There is additional information for this skill "
+                    string += "that is not stored here, check the Misc doc."
+            elif arg == "short":
+                string += str(row[4])
+            elif arg == "1":
+                string += "Pip ●: "
+                string += str(row[5])
+            elif arg == "2":
+                string += "Pip ●●: "
+                string += str(row[6])
+            elif arg == "3":
+                string += "Pip ●●●: "
+                string += str(row[7])
+            elif arg == "4":
+                string += "Pip ●●●●: "
+                string += str(row[8])
+            elif arg == "5":
+                string += "Pip ●●●●●: "
+                string += str(row[9])
+            elif arg == "specialities" or arg == "speciality":
+                special = False
+                for x in range(0,6):
+                    if str(row[10+x]) != "-":
+                        if not special:
+                            special = True
+                            string += "Specialities:"
+                        string += "\n" + str(row[10+x])
+            else:
+                string = "Do not recognise arguement " + str(arg)
+            return string
+                    
+    return "Haven't added this skill yet"
+
 # ...sorry about the mess X|
