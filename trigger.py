@@ -246,8 +246,22 @@ class Trigger(commands.Cog):
             await ctx.send("*Life Flaw*: " + output)
 
     @commands.command()
-    async def skill(self, ctx, skill, argument):
+    async def skill(self, ctx, *args):
         '''Return info on a specified skill. Can also specify a pip number or specialities for extra information.
+            
+            Arguments:
+            basic - Basic rundown/description of skill, default argument if none is specified
+            short - Lists the short version of all pips
+            1-5 - Lists long version of specified pip
+            specialities - Lists specialities
         '''
-        output = (await sheets.skill(str(skill), str(argument)))
-        await ctx.send(str(output))
+        if len(args) == 0:
+            await ctx.send("Need to specify the skill!")
+            return
+        output = ""
+        if len(args) == 1:
+            output = (await sheets.skill(str(args[0]), "basic"))
+        else:
+            output = (await sheets.skill(str(args[0]), str(args[1])))
+
+        await ctx.send("```{}```".format(str(output)))

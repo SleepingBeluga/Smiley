@@ -391,44 +391,49 @@ async def skill(skill, arg):
     sheet = service.spreadsheets()
     index = None
     result = sheet.values().get(spreadsheetId=SuggestionID,
-                                range='Skills!A2:R3').execute()
+                                range='Skills!A2:R34').execute()
     values = result.get('values', [])
-    row=0
-    if skill == values[row][0]:
-        # Always start with name and categories
-        data = values[row]
-        string = str(data[0]) + "(" + str(data[1])
-        if str(data[2]) != "-":
-            string += ", " + str(data[2])
-        string += ")\n"
-        if arg == None:
-            # Print basic stuff
-            string += str(data[3])
-        elif arg == "short":
-            string += str(data[4])
-        elif arg == "1":
-            string += str(data[5])
-        elif arg == "2":
-            string += str(data[6])
-        elif arg == "3":
-            string += str(data[7])
-        elif arg == "4":
-            string += str(data[8])
-        elif arg == "5":
-            string += str(data[9])
-        elif arg == "specialities":
-            special = False
-            for x in range(0,6):
-                if str(data[10+x]) != "-":
-                    if not special:
-                        special = True
-                        string += "Specialities:"
-                    string += "\n" + str(data[10+x])
-        else:
-            string = "Do not recognise arguement " + str(arg)
-        return string
+    skill = skill.lower()
+    arg = arg.lower()
+    for row in values:
+        if skill == str(row[0]).lower():
+            # Always start with name and categories
+            string = str(row[0]) + "(" + str(row[1])
+            if str(row[2]) != "-":
+                string += ", " + str(row[2])
+            string += ")\n"
+            if arg == "basic":
+                # Print basic stuff
+                string += str(row[3])
+            elif arg == "short":
+                string += str(row[4])
+            elif arg == "1":
+                string += "Pip ●: "
+                string += str(row[5])
+            elif arg == "2":
+                string += "Pip ●●: "
+                string += str(row[6])
+            elif arg == "3":
+                string += "Pip ●●●: "
+                string += str(row[7])
+            elif arg == "4":
+                string += "Pip ●●●●: "
+                string += str(row[8])
+            elif arg == "5":
+                string += "Pip ●●●●●: "
+                string += str(row[9])
+            elif arg == "specialities" or arg == "speciality":
+                special = False
+                for x in range(0,6):
+                    if str(row[10+x]) != "-":
+                        if not special:
+                            special = True
+                            string += "Specialities:"
+                        string += "\n" + str(row[10+x])
+            else:
+                string = "Do not recognise arguement " + str(arg)
+            return string
                     
-    else:
-        return "Haven't added this skill yet"
+    return "Haven't added this skill yet"
 
 # ...sorry about the mess X|
