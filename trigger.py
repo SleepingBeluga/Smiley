@@ -249,19 +249,23 @@ class Trigger(commands.Cog):
     async def skill(self, ctx, *args):
         '''Return info on a specified skill. Can also specify a pip number or specialities for extra information.
             
-            Arguments:
+            Arguments appended to skill:
             basic - Basic rundown/description of skill, default argument if none is specified
             short - Lists the short version of all pips
             1-5 - Lists long version of specified pip
             specialities - Lists specialities
+
+            Arguments instead of skill name:
+            list - lists all of the skills in a comma separated string
+            Athletics/Brawn/etc. - Specify a Stat and get a comma separated string of relevant stats
         '''
         if len(args) == 0:
             await ctx.send("Need to specify the skill!")
             return
         output = ""
         if len(args) == 1:
-            output = (await sheets.skill(str(args[0]), "basic"))
+            output = (await sheets.skill(ctx,str(args[0]), "basic"))
         else:
-            output = (await sheets.skill(str(args[0]), str(args[1])))
+            output = (await sheets.skill(ctx,str(args[0]), str(args[1])))
 
         await ctx.send("```{}```".format(str(output)))
