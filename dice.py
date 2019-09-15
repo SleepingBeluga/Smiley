@@ -158,6 +158,7 @@ class Rolls(commands.Cog):
         type = type.lower()
         if not type in ('major','minor','any'):
             await ctx.send('The type of the card must be major, minor, or any.')
+            return
         major = random.choice(('The Fool', 'I. The Magician',
                                'II. The High Priestess', 'III. The Empress',
                                'IV. The Emperor', 'V. The Hierophant',
