@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord, sheets, random
 
-class Trigger(commands.Cog):
+class Triggers_And_More(commands.Cog):
 
     @commands.command()
     async def trigger(self, ctx, *args):
@@ -248,7 +248,7 @@ class Trigger(commands.Cog):
     @commands.command()
     async def skill(self, ctx, *args):
         '''Return info on a specified skill. Can also specify a pip number or specialities for extra information.
-            
+
             Arguments appended to skill:
             basic - Basic rundown/description of skill, default argument if none is specified
             short - Lists the short version of all pips
@@ -269,3 +269,30 @@ class Trigger(commands.Cog):
             output = (await sheets.skill(ctx,str(args[0]), str(args[1])))
 
         await ctx.send("```{}```".format(str(output)))
+
+    @commands.command()
+    async def status(self, ctx, name, name2 = ''):
+        '''Return info on a specified status effect.
+
+           The single argument is the name of a status effect.
+        '''
+        status_d = {'bleed': "Bleed - If the subject does not take a full round to patch themselves up, they suffer a minor wound after [Guts score] turns.",
+                    'scar': "Scar - The injury looks bad, it’s hard to hide, and it takes twice as long to recover from, whether through rest/over time or by way of medical attention.",
+                    'blinded': "Blinded - Similar to Disabled. Must roll Wits for even mundane attempts to see surroundings (those that would not have to be rolled for). Make roll at -2 penalty, typically a 4+ to succeed; attempts at evasion or other factors may make this more difficult. Otherwise limited to sensing things within 5’. Deafened is the same thing, but for hearing/communication.",
+                    'deafened': "Blinded - Similar to Disabled. Must roll Wits for even mundane attempts to hear surroundings (those that would not have to be rolled for). Make roll at -2 penalty, typically a 4+ to succeed; attempts at evasion or other factors may make this more difficult. Otherwise limited to sensing things within 5’. Blinded is the same thing, but for sight.",
+                    'disabled': "Disabled - Typically affects a limb. Must roll [appropriate stat] for even mundane attempts to use limb (those that wound not have to be rolled for). Make roll at -2 penalty, typically a 4+ to succeed. Can use arms for very light (5 lbs or less) burdens, can move at walking pace.",
+                    'disarmed': "Disarmed - Held item is knocked into a space within 10’. 5’ for items weighing 5 lbs or more.",
+                    'knocked down': "Knocked Down - Ass hits the floor. Standing or attempting a close-quarters attack and failing provokes an attack from those nearby, movement allowance is reduced by half in the process of getting up.",
+                    'staggered': "Staggered - Off balance, shoved away. Get moved back a distance, typically 5’. Adjust by 5’ one way or the other depending on difference in Brawn, size; heavier people and armored individuals move less. Staggered individuals are penalized on their next turn: attacks suffer -1 and their movement is reduced by ½ if they try to move in a direction they weren’t pushed in, by ¾ if they try to move against that direction.",
+                    'confused': "Confused - Concussed, thoughts scattered. Wits roll (4+) to identify targets, directions, where things are respective to each other. On a failure, can still act, but targets are chosen randomly, movement runs risk of stumbling into wall.",
+                    'pain': "Pain - Suffer a temporary minor wound when exerting the affected part, or when the part is struck again, with the wound fading at the end of the next turn, if another wasn’t inflicted. ‘Exertion’ is respective to body part - arm is limited in tests of strength, rare Athletics checks (ie. climbing), leg is movements faster than a walk, jumping, climbing, body is making any Guts or Athletic checks for stamina, and head is any Wits or Know check (typically only a psychic attack).",
+                    'death sentence': "Death Sentence - Subject is dying. Each round, an empty wound slot fills up with a moderate wound. Once filled, moderate wounds start becoming critical ones. Typically helpless, intervention can stop or slow progression."}
+        if not name:
+            await ctx.send("Please specify a status effect")
+            return
+        name = (name.lower() + ' ' + name2.lower()).strip()
+        if not name in status_d:
+            await ctx.send("I don't know that status effect")
+            return
+        else:
+            await ctx.send(status_d[name])
