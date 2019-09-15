@@ -152,3 +152,33 @@ class Rolls(commands.Cog):
         value = random.choice(('Ace','Two','Three','Four','Five','Six',
                               'Seven','Eight','Nine','Ten','Jack','Queen','King'))
         await ctx.send(value + ' of '+ suit)
+
+    @commands.command()
+    async def tarot(self,ctx,type = 'any'):
+        type = type.lower()
+        if not type in ('major','minor','any'):
+            await ctx.send('The type of the card must be major, minor, or any.')
+        major = random.choice(('The Fool', 'I. The Magician',
+                               'II. The High Priestess', 'III. The Empress',
+                               'IV. The Emperor', 'V. The Hierophant',
+                               'VI. The Lovers','VII. The Chariot',
+                               'VIII. Justice', 'IX. The Hermit',
+                               'X. Wheel of Fortune', 'XI. Strength',
+                               'XII. The Hanged Man', 'XIII. Death',
+                               'XIV. Temperance', 'XV. The Devil',
+                               'XVI. The Tower', 'XVII. The Star',
+                               'XVIII. The Moon', 'XIX. The Sun',
+                               'XX. Judgement', 'XXI. The World'))
+        value = random.choice(('Ace','Two','Three','Four','Five','Six',
+                              'Seven','Eight','Nine','Ten','Page','Knight',
+                              'Queen','King'))
+        suit = random.choice(('Wands','Swords','Pentacles','Cups'))
+        if type == 'any':
+            if random.randint(1,78) > 56:
+                type = 'major'
+            else:
+                type = 'minor'
+        if type == 'major':
+            await ctx.send(major)
+        else:
+            await ctx.send(value + ' of '+ suit)
