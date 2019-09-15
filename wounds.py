@@ -37,7 +37,7 @@ class Wound:
         else:
             part = part.capitalize()
             # Part was chosen/required
-        if (not random.randint(1,4) == 4) and (not (self.any == [] or self.any == None)):
+        if (not random.randint(1,4) > 4 - len(self.any)) and (not self.any == None):
             pool = self.any
         # Use an 'any' result pool
 
