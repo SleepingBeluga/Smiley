@@ -86,10 +86,11 @@ class AutoLogs(commands.Cog):
         out = ['error',0]
         thing = {}
         plyrs = []
-        mark1 = False
-        mark3 = False
-        mark5 = False
-        mark6 = False
+        loop2startmarkfound = False
+        loop2endmarkfound = False
+        allmarksfound = False
+        loop1startmarkfound = False
+        loop1endmarkfound = False
         authCheck = ''
         date = datetime.datetime(int(args[0]),int(args[1]),int(args[2]))
         sets = []
@@ -98,25 +99,25 @@ class AutoLogs(commands.Cog):
         async with ctx.typing():
             if len(args) == 3:
                 async for message in ctx.history(limit=10000,oldest_first=True,after=date):
-                        if endMarker in message.content and mark5 is True:
-                            mark6 = True
+                        if endMarker in message.content and loop1startmarkfound is True and loop1endmarkfound is False:
+                            loop1endmarkfound = True
                             enddate = message.created_at
                             print('check4')
-                        if startMarker in message.content and mark5 is False:
-                            mark5 = True
-                        if mark5 == True and mark6 == False and '%' not in message.content and message.author.bot == False:
+                        if startMarker in message.content and loop1startmarkfound is False and loop1endmarkfound is False:
+                            loop1startmarkfound = True
+                        if loop1startmarkfound == True and loop1endmarkfound == False and '%' not in message.content and message.author.bot == False:
                             if message.author.display_name not in plyrs and message.author.display_name != GM:
                                 plyrs.append(message.author.display_name)
             else:
                 await ctx.send("Error with input. Correct command format: %log [year] [month] [day]")
 
-        if mark5 == False:
+        if loop1startmarkfound == False:
             await ctx.send("Error: Start Marker not found.")
-            mark3 = True
+            allmarksfound = True
 
-        if mark6 == False:
+        if loop1endmarkfound == False:
             await ctx.send("Error: End Marker not found.")
-            mark3 = True
+            allmarksfound = True
 
         # if mark3 == False:
         #     async with ctx.typing():
@@ -136,19 +137,19 @@ class AutoLogs(commands.Cog):
         #                 else:
         #                     out = await docs.append(out, message.content.replace('||',''))
 
-        if mark3 is False:
+        if allmarksfound is False:
             async with ctx.typing():
                 async for message in ctx.history(limit=10000,oldest_first=True,after=date):
-                    if endMarker in message.content and mark1 is True:
+                    if endMarker in message.content and loop2startmarkfound is True and loop2endmarkfound is False:
                         print('check2')
                         await docs.add_text(out, sets, text=text)
                         await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
-                        mark1 = False
-                    if startMarker in message.content and mark1 is False:
+                        loop2endmarkfound = True
+                    if startMarker in message.content and loop2startmarkfound is False and loop2endmarkfound is False:
                         print('check1')
                         out = await docs.new_log_doc(thing, ctx.channel.name.capitalize(), num, plyrs)
-                        mark1 = True
-                    elif mark1 is True and '%' not in message.content and message.author.bot is False:
+                        loop2startmarkfound = True
+                    elif loop2startmarkfound is True and loop2endmarkfound is False and '%' not in message.content and message.author.bot is False:
                         print('check')
                         if message.author.display_name != authCheck:
                             authCheck = message.author.display_name
