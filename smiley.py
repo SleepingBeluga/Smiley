@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 import time, random, asyncio
 import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm
-import ac
+import ac, autologs
 from wounds import WoundOption, Wound
 
 '''My (Smiley's) Main Script
@@ -41,6 +41,7 @@ b.add_cog(trigger.Triggers_And_More())
 b.add_cog(srpg.SRPG())
 b.add_cog(ac.Autocape())
 b.add_cog(tm.TinyMech())
+b.add_cog(autologs.AutoLogs())
 
 b.loop.create_task(draft.setup())
 # Run the draft setup function before doing anything!
