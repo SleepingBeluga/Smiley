@@ -27,6 +27,8 @@ class AutoLogs(commands.Cog):
                 'end':'||||',
                 'GM':ctx.author.display_name,
                 'num':1,
+                'comments': True,
+                'marks': True
             }
         if args[0] == 'default':
             data[ctx.channel.name] = {
@@ -34,6 +36,8 @@ class AutoLogs(commands.Cog):
                 'end': '||||',
                 'GM': ctx.author.display_name,
                 'num': 1,
+                'comments': True,
+                'marks': True
             }
             with open('logchansets.json', 'w+') as filechan:
                 json.dump(data, filechan)
@@ -63,6 +67,22 @@ class AutoLogs(commands.Cog):
             with open('logchansets.json', 'w+') as filechan:
                 json.dump(data, filechan)
             await ctx.send("Channel settings reset.")
+        if args[0] == 'comments':
+            if 'true' in args[1] or 'True' in args[1]:
+                data[ctx.channel.name]['comments'] = True
+            elif 'false' in args[1] or 'False' in args[1]:
+                data[ctx.channel.name]['comments'] = False
+            with open('logchansets.json', 'w+') as filechan:
+                json.dump(data, filechan)
+            await ctx.send("Keep comments set to " + args[1] + ".")
+        if args[0] == 'marks':
+            if 'true' in args[1] or 'True' in args[1]:
+                data[ctx.channel.name]['marks'] = True
+            elif 'false' in args[1] or 'False' in args[1]:
+                data[ctx.channel.name]['marks'] = False
+            with open('logchansets.json', 'w+') as filechan:
+                json.dump(data, filechan)
+            await ctx.send("Keep marks set to " + args[1] + ".")
 
 
     @commands.command()
@@ -78,6 +98,8 @@ class AutoLogs(commands.Cog):
                 'end':'||||',
                 'GM':ctx.author.display_name,
                 'num':1,
+                'comments': True,
+                'keepends': True
             }
         endMarker = data[ctx.channel.name]['end']
         startMarker = data[ctx.channel.name]['start']
@@ -99,11 +121,9 @@ class AutoLogs(commands.Cog):
         async with ctx.typing():
             if len(args) == 3:
                 async for message in ctx.history(limit=10000,oldest_first=True,after=date):
-                        if endMarker in message.content and loop1startmarkfound is True and loop1endmarkfound is False:
+                        if endMarker in message.content and loop1startmarkfound is True and loop1endmarkfound is False and '%' not in message.content and message.author.bot is False:
                             loop1endmarkfound = True
-                            enddate = message.created_at
-                            print('check4')
-                        if startMarker in message.content and loop1startmarkfound is False and loop1endmarkfound is False:
+                        if startMarker in message.content and loop1startmarkfound is False and loop1endmarkfound is False and '%' not in message.content and message.author.bot is False:
                             loop1startmarkfound = True
                         if loop1startmarkfound == True and loop1endmarkfound == False and '%' not in message.content and message.author.bot == False:
                             if message.author.display_name not in plyrs and message.author.display_name != GM:
@@ -140,23 +160,52 @@ class AutoLogs(commands.Cog):
         if allmarksfound is False:
             async with ctx.typing():
                 async for message in ctx.history(limit=10000,oldest_first=True,after=date):
-                    if endMarker in message.content and loop2startmarkfound is True and loop2endmarkfound is False:
-                        print('check2')
-                        await docs.add_text(out, sets, text=text)
-                        await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
+                    if endMarker in message.content and loop2startmarkfound is True and loop2endmarkfound is False and '%' not in message.content and message.author.bot is False:
+                        if message.author.display_name != authCheck:
+                            authCheck = message.author.display_name
+                            sets.append([len(text) + out[1] + 77,len(text) + out[1] + len(message.author.display_name) + 77])
+                            text += " ___________________________________________________________________________\n" + \
+                                    message.author.display_name + '\n' + \
+                                    message.content.replace('\n\n', '\n') + '\n'
+                        else:
+                            text += message.content.replace('\n\n','\n') + '\n'
                         loop2endmarkfound = True
-                    if startMarker in message.content and loop2startmarkfound is False and loop2endmarkfound is False:
-                        print('check1')
-                        out = await docs.new_log_doc(thing, ctx.channel.name.capitalize(), num, plyrs)
+                    if startMarker in message.content and loop2startmarkfound is False and loop2endmarkfound is False and '%' not in message.content and message.author.bot is False:
+                        out = await docs.new_log_doc(thing, ctx.channel.name.replace('_',' ').capitalize(), num, plyrs)
+                        if message.author.display_name != authCheck:
+                            authCheck = message.author.display_name
+                            sets.append([len(text) + out[1] + 77,len(text) + out[1] + len(message.author.display_name) + 77])
+                            text += " ___________________________________________________________________________\n" + \
+                                    message.author.display_name + '\n' + \
+                                    message.content.replace('\n\n','\n') + '\n'
+                        else:
+                            text += message.content.replace('\n\n','\n') + '\n'
                         loop2startmarkfound = True
                     elif loop2startmarkfound is True and loop2endmarkfound is False and '%' not in message.content and message.author.bot is False:
-                        print('check')
                         if message.author.display_name != authCheck:
                             authCheck = message.author.display_name
                             sets.append([len(text)+out[1] + 77,len(text)+out[1]+len(message.author.display_name) + 77])
                             text += " ___________________________________________________________________________\n" + \
-                                    message.author.display_name + '\n' + message.content.replace('||','') + '\n'
-
+                                    message.author.display_name + '\n' + message.content.replace('\n\n','\n') + '\n'
                         else:
-                            text += message.content.replace('||','') + '\n'
-                        print('check3')
+                            text += message.content.replace('\n\n','\n') + '\n'
+
+        if data[ctx.channel.name]['marks'] is False:
+            text = text.replace('\n||','').replace('||','').replace('\n...\n', '\n')
+            text = text.replace('\n' + startMarker,'').replace(startMarker,'').replace('\n' + endMarker,'').replace(endMarker,'')
+
+        if data[ctx.channel.name]['comments'] is False:
+            comStart = text.find('((')
+            while (comStart != -1):
+                comEnd = text.find('))')
+                if comEnd != -1:
+                    oldtext = text
+                    text = oldtext[:comStart] + oldtext[comEnd+3:]
+                comStart = text.find('((')
+
+        await docs.add_text(out, sets, text=text)
+        await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
+
+        data[ctx.channel.name]['num'] += 1
+        with open('logchansets.json', 'w+') as filechan:
+            json.dump(data, filechan)
