@@ -1,5 +1,5 @@
 from discord.ext import commands
-import docs, discord, datetime, json
+import docs, discord, datetime, json, asyncio
 
 class AutoLogs(commands.Cog):
 
@@ -7,7 +7,7 @@ class AutoLogs(commands.Cog):
     async def logtest(self,ctx,*args):
         test = {}
         out = await docs.new_log_doc(test, 'Test', 1, ['Jack','Jill','Jane','Joe'])
-        await ctx.send('Click here to follow: https://docs.google.com/document/d/' + str(out[0]))
+        await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
 
         out = await docs.add_post(out, 'Jack', 'fuck u Jill')
         out = await docs.add_post(out, 'Jill', 'no fuck u')
@@ -103,17 +103,16 @@ class AutoLogs(commands.Cog):
         async with ctx.typing():
             async for message in ctx.history(limit=10000,oldest_first=True,after=date):
                 if len(args) == 3:
-                    async for message in ctx.history(limit=10000, oldest_first=True):
-                        if message.created_at.year == int(args[0]) and message.created_at.month == int(args[1]) and message.created_at.day == int(args[2]):
-                            mark4 = True
-                        if mark4 == True:
-                            if endMarker in message.content and mark5 is True:
-                                mark6 = True
-                            if startMarker in message.content and mark5 is False:
-                                mark5 = True
-                            elif mark5 == True and '%' not in message.content and message.author.display_name is not '[＾_＾]':
-                                if message.author.display_name not in plyrs and message.author.display_name != GM:
-                                    plyrs.append(message.author.display_name)
+                    if message.created_at.year == int(args[0]) and message.created_at.month == int(args[1]) and message.created_at.day == int(args[2]):
+                        mark4 = True
+                    if mark4 == True:
+                        if message.content==endMarker and mark5 is True:
+                            mark6 = True
+                        if message.content==startMarker and mark5 is False:
+                            mark5 = True
+                        elif mark5 == True and '%' not in message.content and message.author.display_name is not '[＾_＾]':
+                            if message.author.display_name not in plyrs and message.author.display_name != GM:
+                                plyrs.append(message.author.display_name)
                 else:
                     await ctx.send("Error with input. Correct command format: %log [year] [month] [day]")
         if mark4 == False:
@@ -136,7 +135,7 @@ class AutoLogs(commands.Cog):
                     if mark2 == True:
                         if endMarker in message.content and mark1 is True:
                             mark1 = False
-                            await ctx.send('Click here to follow: https://docs.google.com/document/d/' + str(out[0]))
+                            await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
                             return
                         if message.content == pause and mark1 is True:
                             if mark7 == False:
@@ -147,6 +146,7 @@ class AutoLogs(commands.Cog):
                             mark1 = True
                             out = await docs.new_log_doc(thing, ctx.channel.name.capitalize(), num, plyrs)
                         elif mark1 == True and mark7 == False and  '%' not in message.content and message.author.display_name is not '[＾_＾]':
+                            await asyncio.sleep(1)
                             if message.author.display_name != authCheck:
                                 authCheck = message.author.display_name
                                 out = await docs.add_post(out, message.author.display_name, message.content)
