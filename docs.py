@@ -176,3 +176,52 @@ async def append(inp, post):
     do = service.documents().batchUpdate(documentId=inp[0], body={'requests': request}).execute()
     inp[1] += len(post)
     return inp
+
+async def add_text(inp, inds, text):
+    request = [
+        {
+            'insertText': {
+                'location': {
+                    'index': inp[1],
+                },
+                'text': text
+            }
+        },
+        {
+            'updateParagraphStyle': {
+                'range': {
+                    'startIndex': inp[1],
+                    'endIndex': inp[1] + len(text)
+                },
+                'paragraphStyle': {
+                    'spaceAbove': {
+                        'magnitude': 0.0,
+                        'unit': 'PT'
+                    },
+                    'spaceBelow': {
+                        'magnitude': 7.0,
+                        'unit': 'PT'
+                    }
+                },
+                'fields': 'spaceAbove,spaceBelow'
+            }
+        }
+    ]
+    for set in inds:
+        insert = {
+            'updateTextStyle': {
+                'range': {
+                    'startIndex': set[0],
+                    'endIndex': set[1]
+                },
+                'textStyle': {
+                    'bold': True
+                },
+                'fields': 'bold'
+            }
+        }
+        request.append(insert)
+
+    do = service.documents().batchUpdate(documentId=inp[0], body={'requests': request}).execute()
+    inp[1] += len(text)
+    return inp
