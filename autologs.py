@@ -92,16 +92,19 @@ class AutoLogs(commands.Cog):
         mark6 = False
         authCheck = ''
         date = datetime.datetime(int(args[0]),int(args[1]),int(args[2]))
+        sets = []
+        text = ''
 
         async with ctx.typing():
             if len(args) == 3:
                 async for message in ctx.history(limit=10000,oldest_first=True,after=date):
                         if endMarker in message.content and mark5 is True:
                             mark6 = True
-                            break
+                            enddate = message.created_at
+                            print('check4')
                         if startMarker in message.content and mark5 is False:
                             mark5 = True
-                        if mark5 == True and '%' not in message.content and message.author.bot == False:
+                        if mark5 == True and mark6 == False and '%' not in message.content and message.author.bot == False:
                             if message.author.display_name not in plyrs and message.author.display_name != GM:
                                 plyrs.append(message.author.display_name)
             else:
@@ -115,20 +118,44 @@ class AutoLogs(commands.Cog):
             await ctx.send("Error: End Marker not found.")
             mark3 = True
 
-        if mark3 == False:
+        # if mark3 == False:
+        #     async with ctx.typing():
+        #         async for message in ctx.history(limit=10000,oldest_first=True,after=date,before=enddate):
+        #             if endMarker in message.content and mark1 is True:
+        #                 mark1 = False
+        #                 await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
+        #                 return
+        #             if startMarker in message.content and mark1 is False:
+        #                 mark1 = True
+        #                 out = await docs.new_log_doc(thing, ctx.channel.name.capitalize(), num, plyrs)
+        #             elif mark1 == True and '%' not in message.content and message.author.bot == False:
+        #                 await asyncio.sleep(1)
+        #                 if message.author.display_name != authCheck:
+        #                     authCheck = message.author.display_name
+        #                     out = await docs.add_post(out, message.author.display_name, message.content.replace('||',''))
+        #                 else:
+        #                     out = await docs.append(out, message.content.replace('||',''))
+
+        if mark3 is False:
             async with ctx.typing():
                 async for message in ctx.history(limit=10000,oldest_first=True,after=date):
                     if endMarker in message.content and mark1 is True:
-                        mark1 = False
+                        print('check2')
+                        await docs.add_text(out, sets, text=text)
                         await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
-                        return
+                        mark1 = False
                     if startMarker in message.content and mark1 is False:
-                        mark1 = True
+                        print('check1')
                         out = await docs.new_log_doc(thing, ctx.channel.name.capitalize(), num, plyrs)
-                    elif mark1 == True and '%' not in message.content and message.author.bot == False:
-                        await asyncio.sleep(1)
+                        mark1 = True
+                    elif mark1 is True and '%' not in message.content and message.author.bot is False:
+                        print('check')
                         if message.author.display_name != authCheck:
                             authCheck = message.author.display_name
-                            out = await docs.add_post(out, message.author.display_name, message.content.replace('||',''))
+                            sets.append([len(text)+out[1] + 77,len(text)+out[1]+len(message.author.display_name) + 77])
+                            text += " ___________________________________________________________________________\n" + \
+                                    message.author.display_name + '\n' + message.content.replace('||','') + '\n'
+
                         else:
-                            out = await docs.append(out, message.content.replace('||',''))
+                            text += message.content.replace('||','') + '\n'
+                        print('check3')
