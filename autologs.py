@@ -160,6 +160,17 @@ class AutoLogs(commands.Cog):
         if allmarksfound is False:
             async with ctx.typing():
                 async for message in ctx.history(limit=10000,oldest_first=True,after=date):
+                    if data[ctx.channel.name]['marks'] is False:
+                        text = text.replace('\n||', '').replace('||', '').replace('\n...\n', '\n')
+                        text = text.replace('\n' + startMarker, '').replace(startMarker, '').replace('\n' + endMarker,'').replace(endMarker, '')
+                    if data[ctx.channel.name]['comments'] is False:
+                        comStart = text.find('((')
+                        while (comStart != -1):
+                            comEnd = text.find('))')
+                            if comEnd != -1:
+                                oldtext = text
+                                text = oldtext[:comStart] + oldtext[comEnd + 3:]
+                            comStart = text.find('((')
                     if endMarker in message.content and loop2startmarkfound is True and loop2endmarkfound is False and '%' not in message.content and message.author.bot is False:
                         if message.author.display_name != authCheck:
                             authCheck = message.author.display_name
@@ -174,7 +185,7 @@ class AutoLogs(commands.Cog):
                         out = await docs.new_log_doc(thing, ctx.channel.name.replace('_',' ').capitalize(), num, plyrs)
                         if message.author.display_name != authCheck:
                             authCheck = message.author.display_name
-                            sets.append([len(text) + out[1] + 77,len(text) + out[1] + len(message.author.display_name) + 77])
+                            sets.append([len(text) + out[1] + 77, len(text) + out[1] + len(message.author.display_name) + 77])
                             text += " ___________________________________________________________________________\n" + \
                                     message.author.display_name + '\n' + \
                                     message.content.replace('\n\n','\n') + '\n'
@@ -189,19 +200,6 @@ class AutoLogs(commands.Cog):
                                     message.author.display_name + '\n' + message.content.replace('\n\n','\n') + '\n'
                         else:
                             text += message.content.replace('\n\n','\n') + '\n'
-
-        if data[ctx.channel.name]['marks'] is False:
-            text = text.replace('\n||','').replace('||','').replace('\n...\n', '\n')
-            text = text.replace('\n' + startMarker,'').replace(startMarker,'').replace('\n' + endMarker,'').replace(endMarker,'')
-
-        if data[ctx.channel.name]['comments'] is False:
-            comStart = text.find('((')
-            while (comStart != -1):
-                comEnd = text.find('))')
-                if comEnd != -1:
-                    oldtext = text
-                    text = oldtext[:comStart] + oldtext[comEnd+3:]
-                comStart = text.find('((')
 
         await docs.add_text(out, sets, text=text)
         await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
