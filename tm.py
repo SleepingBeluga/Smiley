@@ -116,6 +116,8 @@ async def tm_start_fight(fighter, opponent):
 
 async def tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
     '''Decides who wins'''
+    chars = await loadchars()
+    fighter = await Pilot.async_init(fighter.id, dict=chars[fighter.id])
     fattack = max(1,int(fdam * advantage * (random.random() * rr[1] + rr[0])))
     oattack = max(1,int(odam / advantage * (random.random() * rr[1] + rr[0])))
     fhealth -= oattack
