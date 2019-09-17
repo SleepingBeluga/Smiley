@@ -430,6 +430,7 @@ async def duel(ctx, *args):
     key = ';'.join(sorted([f.id,o.id]))
     if key in duels:
         if duels[key]['state'] == 'challenge':
+            await ctx.send('Challenge accepted. The duel has begun!')
             await tm_start_fight(True, f, o)
     else:
         duels[key] = {'state': 'challenge'}
