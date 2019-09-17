@@ -71,10 +71,19 @@ async def time_the_healer():
             pilot.history.append(await get_time_string() + ': Rested and healed.')
             await updatechar(pilot)
 
+async def is_fighting(char):
+    fights = await loadfights()
+    duels = await loadduels()
+    in_duel = False
+    for duelids in duels.keys():
+        if char.id in duelids and duels[duelids]['state'] == 'paused':
+            in_duel = True
+            break
+    return char.id in fights or in_duel
+
 async def tm_event(char):
     '''Chooses what type of event to occur'''
-    fights = await loadfights()
-    if not char.id in fights:
+    if not await is_fighting(char):
         await tm_battle(char)
 
 async def tm_battle(char):
@@ -89,9 +98,9 @@ async def tm_battle(char):
     opponent = random.choice(enemies)
     opponent.stats = [s + hc*10 for s in opponent.stats]
     opponent.stats2 = [s + hc*75 for s in opponent.stats2]
-    await tm_start_fight(fighter, opponent)
+    await tm_start_fight(False, fighter, opponent)
 
-async def tm_start_fight(fighter, opponent):
+async def tm_start_fight(is_duel, fighter, opponent):
     fstat = await fighter.choose_stat(opponent)
     ostat = await opponent.choose_stat(fighter)
     effectiveness = 0
@@ -105,70 +114,122 @@ async def tm_start_fight(fighter, opponent):
         effectiveness = 0.5
     statdiff = fighter.stats[fstat] * effectiveness - opponent.stats[ostat]
     advantage = 2.1/(1 + math.exp(-.07 * statdiff)) + 0.4
-    rr = (0.8,1.2) if fighter.health == 'Healthy' else (0.8,1)
+    rr = (0.8,1.2)
     fdam = fighter.mech.stats[0] / 5
-    odam = opponent.stats2[0] / 5
+    fdam *= 1 if fighter.health == 'Healthy' else 0.8
+    odam = opponent.stats2[0] / 5 if not is_duel else opponent.mech.stats[0] / 5
+    if is_duel:
+        odam *= 1 if opponent.health == 'Healthy' else 0.8
     fhealth = fighter.mech.stats[1]
-    ohealth = opponent.stats2[1]
-    fighter.history.append(await get_time_string() + ': Started a battle vs ' + opponent.name + '.')
+    ohealth = opponent.stats2[1] if not is_duel else opponent.mech.stats[1]
+    if is_duel:
+        fighter.history.append(await get_time_string() + ': Started a duel vs ' + opponent.name + '.')
+        opponent.history.append(await get_time_string() + ': Started a duel vs ' + fighter.name + '.')
+        await updatechar(opponent)
+    else:
+        fighter.history.append(await get_time_string() + ': Started a fight vs ' + opponent.name + '.')
     await updatechar(fighter)
-    await tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
+    await tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
 
-async def tm_continue_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
+async def tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
     '''Decides who wins'''
     chars = await loadchars()
     fighter = await Pilot.async_init(fighter.id, dict=chars[fighter.id])
-    fattack = max(1,int(fdam * advantage * (random.random() * rr[1] + rr[0])))
-    oattack = max(1,int(odam / advantage * (random.random() * rr[1] + rr[0])))
+    if is_duel:
+        opponent = await Pilot.async_init(opponent.id, dict=chars[opponent.id])
+    fattack = max(1,int(fdam * advantage * (random.random() * (rr[1] - rr[0]) + rr[0])))
+    oattack = max(1,int(odam / advantage * (random.random() * (rr[1] - rr[0]) + rr[0])))
     fhealth -= oattack
     ohealth -= fattack
     fighter.history.append(await get_time_string() + ': Hit ' + opponent.name + ' for ' + str(fattack) + ' damage but got hit for ' + str(oattack) + ' in return.')
     await updatechar(fighter)
+    if is_duel:
+        opponent.history.append(await get_time_string() + ': Hit ' + fighter.name + ' for ' + str(oattack) + ' damage but got hit for ' + str(fattack) + ' in return.')
+        await updatechar(opponent)
     if fhealth <= 0 or ohealth <= 0:
-        await tm_finish_fight(fighter, opponent, fhealth - ohealth)
+        await tm_finish_fight(is_duel, fighter, opponent, fhealth - ohealth)
     else:
-        await tm_pause_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
+        await tm_pause_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
 
-async def tm_pause_fight(fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
-    fightdict = {'fighter': await fighter.get_dict_for_json(),
-                 'opponent': await opponent.get_dict_for_json(),
-                 'advantage': advantage,
-                 'fhealth': fhealth, 'ohealth': ohealth,
-                 'fdam': fdam, 'odam': odam, 'rr': rr}
-    fights = await loadfights()
-    fights[str(fighter.id)] = fightdict
-    with open('./tm/fights.json','w+') as fightsfile:
-        json.dump(fights, fightsfile)
+async def tm_pause_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
+    if is_duel:
+        dueldict = {'state': 'paused',
+                    'fighter': await fighter.get_dict_for_json(),
+                    'opponent': await opponent.get_dict_for_json(),
+                    'advantage': advantage,
+                    'fhealth': fhealth, 'ohealth': ohealth,
+                    'fdam': fdam, 'odam': odam, 'rr': rr}
+        duels = await loadduels()
+        key = ';'.join(sorted([fighter.id,opponent.id]))
+        duels[key] = dueldict
+        with open('./tm/duels.json','w+') as duelsfile:
+            json.dump(duels, duelsfile)
+    else:
+        fightdict = {'fighter': await fighter.get_dict_for_json(),
+                     'opponent': await opponent.get_dict_for_json(),
+                     'advantage': advantage,
+                     'fhealth': fhealth, 'ohealth': ohealth,
+                     'fdam': fdam, 'odam': odam, 'rr': rr}
+        fights = await loadfights()
+        fights[fighter.id] = fightdict
+        with open('./tm/fights.json','w+') as fightsfile:
+            json.dump(fights, fightsfile)
 
 async def resume_fights():
     fights = await loadfights()
     open('./tm/fights.json','w').close()
+    duels = await loadduels()
+    open('./tm/duels.json','w').close()
     while len(fights):
         id, fight = fights.popitem()
-        await tm_continue_fight(await Pilot.async_init(id, dict = fight['fighter']),
+        await tm_continue_fight(False,
+                                await Pilot.async_init(id, dict = fight['fighter']),
                                 Enemy(dict = fight['opponent']),
                                 fight['advantage'],
                                 fight['fhealth'], fight['ohealth'],
                                 fight['fdam'], fight['odam'],
                                 fight['rr'])
+    while len(duels):
+        ids, duel = duels.popitem()
+        ids = ids.split(';')
+        if duel['state'] == 'paused':
+            await tm_continue_fight(True,
+                                    await Pilot.async_init(ids[0], dict = duel['fighter']),
+                                    await Pilot.async_init(ids[1], dict = duel['opponent']),
+                                    duel['advantage'],
+                                    duel['fhealth'], duel['ohealth'],
+                                    duel['fdam'], duel['odam'],
+                                    duel['rr'])
 
-async def tm_finish_fight(fighter, opponent, result):
+async def tm_finish_fight(is_duel, fighter, opponent, result):
     chars = await loadchars()
     fighter = await Pilot.async_init(fighter.id, dict=chars[fighter.id])
+    if is_duel:
+        opponent = await Pilot.async_init(opponent.id, dict=chars[opponent.id])
     if result >= 0:
-        topstat = max(fighter.stats)
-        if 200 - topstat * random.randint(1,5) > 0:
-            fighter.stats[random.randint(0,3)] += 1
-        winnings = random.randint(1,50) + random.randint(0,50)
-        winnings = int(winnings * (1.05 ** fighter.record))
-        fighter.record += 1
-        fighter.money += winnings
-        fighter.history.append(await get_time_string() + ': Won the battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!')
+        if is_duel:
+            opponent.history.append(await get_time_string() + ': Lost the duel vs ' + fighter.name + '.')
+            fighter.history.append(await get_time_string() + ': Won the duel vs ' + opponent.name + '!')
+        else:
+            topstat = max(fighter.stats)
+            if 200 - topstat * random.randint(1,5) > 0:
+                fighter.stats[random.randint(0,3)] += 1
+            winnings = random.randint(1,50) + random.randint(0,50)
+            winnings = int(winnings * (1.05 ** fighter.record))
+            fighter.record += 1
+            fighter.money += winnings
+            fighter.history.append(await get_time_string() + ': Won the battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!')
     else:
-        fighter.record -= 1
-        fighter.history.append(await get_time_string() + ': Lost the battle vs ' + opponent.name + '.')
-        fighter.health = 'Wounded'
+        if is_duel:
+            opponent.history.append(await get_time_string() + ': Won the duel vs ' + fighter.name + '!')
+            fighter.history.append(await get_time_string() + ': Lost the duel vs ' + opponent.name + '.')
+        else:
+            fighter.record -= 1
+            fighter.health = 'Wounded'
+            fighter.history.append(await get_time_string() + ': Lost the battle vs ' + opponent.name + '.')
     await updatechar(fighter)
+    if is_duel:
+        await updatechar(opponent)
 
 async def loadchars():
     '''Returns a dictionary of pilots'''
@@ -189,6 +250,16 @@ async def loadfights():
         else:
             fights = {}
     return fights
+
+async def loadduels():
+    '''Returns a dictionary of duels'''
+    with open('./tm/duels.json', 'r+') as duelsfile:
+        if len(duelsfile.read()):
+            duelsfile.seek(0)
+            duels = json.load(duelsfile)
+        else:
+            duels = {}
+    return duels
 
 async def updatechar(char):
     '''Overwrites the old data for a character'''
@@ -322,6 +393,53 @@ async def set_strategy(ctx, *args):
             await ctx.send('Strategy set.')
     else:
         await ctx.send("You don't seem to have a pilot yet.")
+
+async def duel(ctx, *args):
+    '''Challenge someone to a duel, or accept a challenge.'''
+    id = str(ctx.author.id)
+    chars = await loadchars()
+    if args and len(args) > 1:
+        id = args[1]
+    if ctx.message.mentions:
+        opp_id = str(ctx.message.mentions[0].id)
+    elif args:
+        try:
+            _ = int(args[0])
+            opp_id = args[0]
+        except:
+            await ctx.send('Please @ the person you want to duel!')
+            return
+    else:
+        await ctx.send('Please @ the person you want to duel!')
+        return
+    if id == opp_id:
+        await ctx.send("You can't duel yourself!")
+        return
+    if not opp_id in chars:
+        await ctx.send("That person doesn't have a mech!")
+        return
+    f = await Pilot.async_init(id, dict=chars[id])
+    o = await Pilot.async_init(opp_id, dict=chars[opp_id])
+    if await is_fighting(f):
+        await ctx.send("You're already in a fight!")
+        return
+    if await is_fighting(o):
+        await ctx.send("They're already in a fight!")
+        return
+    duels = await loadduels()
+    key = ';'.join(sorted([f.id,o.id]))
+    if key in duels:
+        if duels[key]['state'] == 'challenge':
+            await tm_start_fight(True, f, o)
+    else:
+        duels[key] = {'state': 'challenge'}
+        with open('./tm/duels.json','w+') as duelsfile:
+            json.dump(duels, duelsfile)
+        await ctx.send('Challenge sent!')
+        f.history.append(await get_time_string() + ': Challenged ' + o.name + ' to a duel!')
+        o.history.append(await get_time_string() + ': Got challenged to a duel by ' + f.name + '!')
+        await updatechar(f)
+        await updatechar(o)
 
 async def mechname(ctx, *args):
     '''Generate a random mech name'''
@@ -527,6 +645,8 @@ class TinyMech(commands.Cog):
             await tm_event()
         elif cmd == 'upgrade':
             await upgrade(ctx, *args)
+        elif cmd == 'duel':
+            await duel(ctx, *args)
         elif cmd == 'forcedays':
             try:
                 numdays = int(args[0])
