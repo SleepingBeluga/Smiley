@@ -629,7 +629,7 @@ class TinyMech(commands.Cog):
     @commands.command()
     async def tm(self, ctx, cmd, *args):
         '''Use the tm commands.
-        Options include %tm join, %tm delete, %tm check, %tm history, %tm upgrade, %tm strategy <strategy>'''
+        Options include %tm join, %tm delete, %tm check, %tm history, %tm upgrade, %tm strategy <strategy>, %tm duel @<user>'''
         if cmd == 'join':
             await join(ctx, *args)
         elif cmd == 'check':
