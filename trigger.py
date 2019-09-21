@@ -1,6 +1,22 @@
 from discord.ext import commands
 import discord, sheets, random
 
+async def longsend(ctx, content):
+    if len(content) > 1990:
+        msgs = content.split('\n')
+    else:
+        msgs = [content]
+    found_too_long = True
+    while found_too_long:
+        found_too_long = False
+        for i, msg in enumerate(msgs):
+            if len(msg) > 1990:
+                found_too_long = True
+                msgs[i] = msg[:1990]
+                msgs.insert(i+1,msg[1990:])
+    for msg in msgs:
+        await ctx.send(msg)
+
 class Triggers_And_More(commands.Cog):
 
     @commands.command()
@@ -15,7 +31,7 @@ class Triggers_And_More(commands.Cog):
             t = (await sheets.trigger(0))
 
         if str(t) != "":
-            await ctx.send(t)
+            await longsend(ctx, t)
         else:
             await ctx.send("Could not find a trigger at " + str(index))
 
@@ -31,9 +47,30 @@ class Triggers_And_More(commands.Cog):
             t = (await sheets.used(0))
 
         if str(t) != "":
-            await ctx.send(t)
+            await longsend(ctx, t)
         else:
             await ctx.send("Could not find a used trigger at " + str(index))
+
+    @commands.command()
+    async def claim(self, ctx, *args):
+        astr = ' '.join(args)
+        alist = [s.strip() for s in astr.split(',')]
+        if len(alist) < 4:
+            await ctx.send("Not enough arguments. Format for claim: %claim <number>, <game>, <player>, <short description of power>")
+            await ctx.send("The commas are important!")
+            return
+        if len(alist) > 4:
+            await ctx.send("Too many arguments. Format for claim: %claim <number>, <game>, <player>, <short description of power>")
+            return
+        try:
+            num = int(alist[0])
+        except:
+            await ctx.send("Couldn't parse trigger number. Format for claim: %claim <number>, <game>, <player>, <short description of power>")
+        game = alist[1]
+        player = alist[2]
+        desc = alist[3]
+        res = await sheets.claim(num, game, player, desc)
+        await ctx.send(res)
 
     @commands.command()
     async def luck(self, ctx, *args):

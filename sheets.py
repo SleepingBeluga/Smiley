@@ -304,6 +304,84 @@ async def changeState(name,yesno):
     requests = [{"updateCells": update_cells}]
     batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
 
+async def claim(number, game, player, desc):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TriggerID,
+                                range='Triggers!A1:B100').execute()
+    values = result.get('values', [])
+    num_rows = 0
+    for row in values:
+        if str(row[0]) != "":
+            num_rows += 1
+        else:
+            break
+    index = number
+    if index > num_rows or index < 0:
+        return "Can't find a trigger at index " + str(index)
+
+    if index == 0:
+        index = random.randrange(0, rowNum)
+    else:
+        # Because the user specifies from 1
+        index -= 1
+
+    text = str(values[index][0])
+    author = str(values[index][1])
+    del_req = {
+        "deleteDimension": {
+            "range": {
+                "sheetId": 1146274495, # Triggers
+                "dimension": "ROWS",
+                "startIndex": index,
+                "endIndex": index+1
+            }
+        }
+    }
+
+    result = sheet.values().get(spreadsheetId=TriggerID,
+                                range='Used!A1:B1000').execute()
+    values = result.get('values', [])
+    num_used_rows = 1
+    for row in values[1:]:
+        if str(row[0]) != "" or str(row[1]) != "":
+            num_used_rows += 1
+        else:
+            break
+
+    insert_req = {
+        "insertDimension": {
+            "range": {
+                "sheetId": 239110446,
+                "dimension": "ROWS",
+                "startIndex": num_used_rows,
+                "endIndex": num_used_rows + 1
+            },
+            "inheritFromBefore": True
+        }
+    }
+
+    data_to_paste = '<table><tr><td>' + game + \
+                          '</td><td>' + text + \
+                          '</td><td>' + author + \
+                          '</td><td>' + player + \
+                          '</td><td>' + desc + '</tr></table>'
+
+    paste_req = {
+        "pasteData": {
+            "coordinate": {
+                "sheetId": 239110446,
+                "rowIndex": num_used_rows,
+                "columnIndex": 0
+            },
+            "data": data_to_paste,
+            "type": "PASTE_VALUES",
+            "html": True
+        }
+    }
+    reqs = [del_req, insert_req, paste_req]
+    batch_res = sheet.batchUpdate(spreadsheetId=TriggerID, body={"requests": reqs}).execute()
+    return "Claimed trigger " + str(number) + " at used " + str(num_used_rows) + "!"
+
 async def trigger(index):
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=TriggerID,
@@ -413,7 +491,7 @@ async def skill(ctx, skill, arg):
                     statBreakdown[key] += [str(row[0])]
                 if key == str(row[2]).lower():
                     statBreakdown[key] += [str(row[0])]
-        
+
         if skill in ["brawn", "athletics", "dexterity", "social", "wits", "knowledge", "guts"]:
             string = category + ":\n"
             listing = ""
@@ -473,7 +551,7 @@ async def skill(ctx, skill, arg):
             else:
                 string = "Do not recognise arguement " + str(arg)
             return string
-                    
+
     return "Haven't added this skill yet"
 
 # ...sorry about the mess X|
