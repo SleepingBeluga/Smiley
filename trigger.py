@@ -54,7 +54,8 @@ class Triggers_And_More(commands.Cog):
     @commands.command()
     async def claim(self, ctx, *args):
         '''Maves a power from triggers to used
-        Format for claim: `%claim <number>, <game>, <player>, <short description of power>`'''
+        Format for claim: `%claim <number>, <game>, <player>, <short description of power>`
+        The commas are important!'''
         astr = ' '.join(args)
         alist = [s.strip() for s in astr.split(',')]
         if len(alist) < 4:
