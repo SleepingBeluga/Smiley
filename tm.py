@@ -600,7 +600,7 @@ class Pilot(Fight_Thing):
             if self.bday <= await get_time_days():
                 self.age += 1
                 self.bday += 366
-                await self.add_history('Celebrated ' + await self.pronoun(type='his/her') + ' ' + await ord(self.age) + ' birthday!')
+                await self.add_history('Celebrated ' + await self.pronoun(type='his/her') + ' ' + await ord(self.age) + ' birthday!', True)
         elif owner:
             self.id = id
             self.owner = owner
