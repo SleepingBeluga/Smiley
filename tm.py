@@ -89,7 +89,7 @@ async def time_the_healer():
         pilot = await Pilot.async_init(id, dict = char)
         if pilot.health == 'Wounded' and random.random() < 0.1 and not await is_fighting(pilot):
             pilot.health = 'Healthy'
-            pilot.history.append(await get_time_string() + ': Rested and healed.')
+            await pilot.add_history('Rested and healed.')
             await updatechar(pilot)
 
 async def is_fighting(char):
@@ -144,11 +144,11 @@ async def tm_start_fight(is_duel, fighter, opponent):
     fhealth = fighter.mech.stats[1]
     ohealth = opponent.stats2[1] if not is_duel else opponent.mech.stats[1]
     if is_duel:
-        fighter.history.append(await get_time_string() + ': Started a duel vs ' + opponent.name + '.')
-        opponent.history.append(await get_time_string() + ': Started a duel vs ' + fighter.name + '.')
+        await fighter.add_history('Started a duel vs ' + opponent.name + '.')
+        await opponent.add_history('Started a duel vs ' + fighter.name + '.')
         await updatechar(opponent)
     else:
-        fighter.history.append(await get_time_string() + ': Started a fight vs ' + opponent.name + '.')
+        await fighter.add_history('Started a fight vs ' + opponent.name + '.')
     await updatechar(fighter)
     await tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
 
@@ -162,10 +162,10 @@ async def tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohea
     oattack = max(1,int(odam / advantage * (random.random() * (rr[1] - rr[0]) + rr[0])))
     fhealth -= oattack
     ohealth -= fattack
-    fighter.history.append(await get_time_string() + ': Hit ' + opponent.name + ' for ' + str(fattack) + ' damage but got hit for ' + str(oattack) + ' in return.')
+    await fighter.add_history('Hit ' + opponent.name + ' for ' + str(fattack) + ' damage but got hit for ' + str(oattack) + ' in return.')
     await updatechar(fighter)
     if is_duel:
-        opponent.history.append(await get_time_string() + ': Hit ' + fighter.name + ' for ' + str(oattack) + ' damage but got hit for ' + str(fattack) + ' in return.')
+        await opponent.add_history('Hit ' + fighter.name + ' for ' + str(oattack) + ' damage but got hit for ' + str(fattack) + ' in return.')
         await updatechar(opponent)
     if fhealth <= 0 or ohealth <= 0:
         await tm_finish_fight(is_duel, fighter, opponent, fhealth - ohealth)
@@ -229,8 +229,8 @@ async def tm_finish_fight(is_duel, fighter, opponent, result):
         opponent = await Pilot.async_init(opponent.id, dict=chars[opponent.id])
     if result >= 0:
         if is_duel:
-            opponent.history.append(await get_time_string() + ': Lost the duel vs ' + fighter.name + '.')
-            fighter.history.append(await get_time_string() + ': Won the duel vs ' + opponent.name + '!')
+            await opponent.add_history('Lost the duel vs ' + fighter.name + '.', True)
+            await fighter.add_history('Won the duel vs ' + opponent.name + '!', True)
         else:
             topstat = max(fighter.stats)
             if 200 - topstat * random.randint(1,5) > 0:
@@ -239,15 +239,15 @@ async def tm_finish_fight(is_duel, fighter, opponent, result):
             winnings = int(winnings * (1.05 ** fighter.record))
             fighter.record += 1
             fighter.money += winnings
-            fighter.history.append(await get_time_string() + ': Won the battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!')
+            await fighter.add_history('Won the battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!', True)
     else:
         if is_duel:
-            opponent.history.append(await get_time_string() + ': Won the duel vs ' + fighter.name + '!')
-            fighter.history.append(await get_time_string() + ': Lost the duel vs ' + opponent.name + '.')
+            await opponent.add_history('Won the duel vs ' + fighter.name + '!', True)
+            await fighter.add_history('Lost the duel vs ' + opponent.name + '.', True)
         else:
             fighter.record -= 1
             fighter.health = 'Wounded'
-            fighter.history.append(await get_time_string() + ': Lost the battle vs ' + opponent.name + '.')
+            await fighter.add_history('Lost the battle vs ' + opponent.name + '.', True)
     await updatechar(fighter)
     if is_duel:
         await updatechar(opponent)
@@ -322,7 +322,7 @@ async def join(ctx, *args):
         return
     owner = ctx.author.display_name
     new_pilot = await Pilot.async_init(id, owner)
-    new_pilot.history.append(await get_time_string() + ': Pilot hired.')
+    await new_pilot.add_history('Pilot hired.', True)
     char = await new_pilot.get_dict_for_json()
     chars[id] = char
     with open('./tm/chars.json', 'w+') as charsfile:
@@ -360,7 +360,7 @@ async def check(ctx, *args):
         await ctx.send("You don't seem to have a pilot yet.")
 
 async def history(ctx, *args):
-    '''Displays the five most recent events involving your pilot'''
+    '''Displays the eight most recent events involving your pilot'''
     if args:
         id = args[0]
     else:
@@ -369,6 +369,19 @@ async def history(ctx, *args):
     if id in chars:
         char = await Pilot.async_init(id, dict = chars[id])
         await ctx.send('```' + await char.get_history() + '```')
+    else:
+        await ctx.send("You don't seem to have a pilot yet.")
+
+async def importanthistory(ctx, *args):
+    '''Displays the eight most recent important events involving your pilot'''
+    if args:
+        id = args[0]
+    else:
+        id = str(ctx.author.id)
+    chars = await loadchars()
+    if id in chars:
+        char = await Pilot.async_init(id, dict = chars[id])
+        await ctx.send('```' + await char.get_history(True) + '```')
     else:
         await ctx.send("You don't seem to have a pilot yet.")
 
@@ -387,7 +400,7 @@ async def upgrade(ctx, *args):
             char.money -= cost
             stat = random.randint(0,1)
             char.mech.stats[stat] += random.randint(100,200)
-            char.history.append(await get_time_string() + ': Upgraded mech for ' + str(cost) + ' credits.')
+            await char.add_history('Upgraded mech for ' + str(cost) + ' credits.', True)
             await updatechar(char)
             await ctx.send('Upgrade purchased!```' + await char.mech.summary() + '```')
         else:
@@ -409,7 +422,7 @@ async def buypet(ctx, *args):
         if char.money >= cost:
             char.money -= cost
             char.pet = Pet(await parse_gen('$Animals'), names.get_first_name())
-            char.history.append(await get_time_string() + ': Bought a pet for ' + str(cost) + ' credits.')
+            await char.add_history('Bought a pet for ' + str(cost) + ' credits.', True)
             await updatechar(char)
             await ctx.send('Companion purchased!```' + await char.summary() + '```')
         else:
@@ -450,9 +463,10 @@ async def setpetname(ctx, *args):
     chars = await loadchars()
     if id in chars:
         char = await Pilot.async_init(id, dict = chars[id])
-        pet = char.pet
-        if pet.type != None:
-            pet.name = name
+        if char.pet.type != None:
+            char.pet.name = name
+            await updatechar(char)
+            await ctx.send("Pet renamed!")
         else:
             await ctx.send("You don't seem to have a pet. Buy one with `%tm buypet`")
     else:
@@ -501,8 +515,8 @@ async def duel(ctx, *args):
         with open('./tm/duels.json','w+') as duelsfile:
             json.dump(duels, duelsfile)
         await ctx.send('Challenge sent!')
-        f.history.append(await get_time_string() + ': Challenged ' + o.name + ' to a duel!')
-        o.history.append(await get_time_string() + ': Got challenged to a duel by ' + f.name + '!')
+        await f.add_history('Challenged ' + o.name + ' to a duel!')
+        await o.add_history('Got challenged to a duel by ' + f.name + '!')
         await updatechar(f)
         await updatechar(o)
 
@@ -565,7 +579,7 @@ class Pilot(Fight_Thing):
             self.stats = dict['stats']
             self.mech = await Mech.async_init(dict = dict['mech'])
             self.health = dict['health']
-            self.history = dict['history'][-50:]
+            self.history = dict['history'][-100:]
             self.record = dict['record']
             if 'money' in dict:
                 self.money = dict['money']
@@ -579,10 +593,14 @@ class Pilot(Fight_Thing):
                 self.bday = dict['bday']
             else:
                 self.bday = await get_time_days() + random.randint(0,366)
+            if 'importanthistory' in dict:
+                self.importanthistory = dict['importanthistory'][-100:]
+            else:
+                self.importanthistory = []
             if self.bday <= await get_time_days():
                 self.age += 1
                 self.bday += 366
-                self.history.append(await get_time_string() + ': Celebrated ' + await self.pronoun(type='his/her') + ' ' + await ord(self.age) + ' birthday!')
+                await self.add_history('Celebrated ' + await self.pronoun(type='his/her') + ' ' + await ord(self.age) + ' birthday!')
         elif owner:
             self.id = id
             self.owner = owner
@@ -612,9 +630,11 @@ class Pilot(Fight_Thing):
             self.mech = await Mech.async_init()
             self.health = 'Healthy'
             self.history = []
+            self.importanthistory = []
             self.record = 0
             self.money = 0
             self.pet = Pet(None)
+            self.bday = await get_time_days() + random.randint(0,366)
         else:
             raise ArgumentError('To create a Pilot either an owner name or a dictionary must be passed')
         return self
@@ -630,7 +650,7 @@ class Pilot(Fight_Thing):
                 'health': self.health, 'history': self.history,
                 'record': self.record, 'money': self.money,
                 'pet': await self.pet.get_dict_for_json(),
-                'bday': self.bday}
+                'bday': self.bday, 'importanthistory': self.importanthistory}
 
     async def summary(self):
         return 'Pilot:\n' + self.name + ', piloting the ' + self.mech.name + '\n' + \
@@ -679,11 +699,22 @@ class Pilot(Fight_Thing):
         else:
             return ''
 
-    async def get_history(self):
-        to_ret = 'Recent history for ' + self.name + \
-                 ' as of ' + (await get_time_string()).lower() + ':'
-        for event in self.history[-8:]:
-            to_ret += '\n' + event
+    async def add_history(self, text, is_important=False):
+        if is_important:
+            self.importanthistory.append(await get_time_string() + ': ' + text)
+        self.history.append(await get_time_string() + ': ' + text)
+
+    async def get_history(self, is_important=False):
+        if is_important:
+            to_ret = 'Recent important history for ' + self.name + \
+                     ' as of ' + (await get_time_string()).lower() + ':'
+            for event in self.importanthistory[-8:]:
+                to_ret += '\n' + event
+        else:
+            to_ret = 'Recent history for ' + self.name + \
+                     ' as of ' + (await get_time_string()).lower() + ':'
+            for event in self.history[-8:]:
+                to_ret += '\n' + event
         return to_ret
 
 class Mech():
@@ -764,6 +795,8 @@ class TinyMech(commands.Cog):
             await delete(ctx, *args)
         elif cmd == 'history':
             await history(ctx, *args)
+        elif cmd == 'ihistory':
+            await importanthistory(ctx, *args)
         elif cmd == 'strategy':
             await set_strategy(ctx, *args)
         elif cmd == 'getmechname':
@@ -787,3 +820,9 @@ class TinyMech(commands.Cog):
                 numdays = 1
             for day in range(numdays):
                 await tm_day()
+        elif cmd == 'settime':
+            try:
+                t = int(args[0])
+                await set_time(t)
+            except:
+                return
