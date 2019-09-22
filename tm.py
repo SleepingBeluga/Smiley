@@ -18,11 +18,15 @@ async def get_time():
         await set_time(0)
         return 0
 
+async def get_time_days():
+    time = await get_time()
+    return int(time / 24)
+
 async def get_time_string():
     time = await get_time()
     day_part = int(time / 24)
     hour_part = time % 24
-    ampm = 'AM' if hour_part > 11 else 'PM'
+    ampm = 'AM' if hour_part < 11 else 'PM'
     hour_str = hour_part + 12
     if hour_str > 12:
         hour_str -= 12
@@ -30,15 +34,31 @@ async def get_time_string():
         hour_str -= 12
     return 'Day ' + str(day_part) + ', ' + str(hour_str) + ' ' + ampm
 
+async def a_(string):
+    if string[0] in 'aeiou':
+        return 'an ' + string
+    else:
+        return 'a ' + string
+
+async def ord(num):
+    o = str(num)
+    if o[-1] == '1':
+        return o + 'st'
+    elif o[-1] == '2':
+        return o + 'nd'
+    elif o[-1] == '3':
+        return o + 'rd'
+    else:
+        return o + 'th'
+
 async def set_time(time):
     '''Writes the parameter 'time' to the time file'''
     with open('./tm/time', 'w+') as timefile:
         timefile.write(str(time))
 
 async def time_forward():
-    '''Increases the time file by one and heals'''
+    '''Increases the time file by one'''
     await set_time(await get_time() + 1)
-    await time_the_healer()
 
 async def tm_loop(b):
     '''The main loop function for tiny mechs
@@ -53,6 +73,7 @@ async def tm_loop(b):
 async def tm_day():
     '''Forwards time and triggers events'''
     await time_forward()
+    await time_the_healer()
     await resume_fights()
     charlist = (await loadchars()).items()
     if len(charlist):
@@ -66,7 +87,7 @@ async def time_the_healer():
     chars = await loadchars()
     for id, char in chars.items():
         pilot = await Pilot.async_init(id, dict = char)
-        if pilot.health == 'Wounded' and random.random() < 0.1:
+        if pilot.health == 'Wounded' and random.random() < 0.1 and not await is_fighting(pilot):
             pilot.health = 'Healthy'
             pilot.history.append(await get_time_string() + ': Rested and healed.')
             await updatechar(pilot)
@@ -362,7 +383,7 @@ async def upgrade(ctx, *args):
         char = await Pilot.async_init(id, dict = chars[id])
         topstat = max(char.mech.stats)
         cost = int((topstat*(1.5**(topstat/1000)))/100)*(10)
-        if char.money > cost:
+        if char.money >= cost:
             char.money -= cost
             stat = random.randint(0,1)
             char.mech.stats[stat] += random.randint(100,200)
@@ -371,6 +392,28 @@ async def upgrade(ctx, *args):
             await ctx.send('Upgrade purchased!```' + await char.mech.summary() + '```')
         else:
             await ctx.send('Your next upgrade costs ' + str(cost) + ' but you only have ' + str(char.money) + ' credits.')
+    else:
+        await ctx.send("You don't seem to have a pilot yet.")
+
+async def buypet(ctx, *args):
+    '''Try to purchase a pet. Your current pet will go live on a farm if successful'''
+    if args:
+        id = args[0]
+    else:
+        id = str(ctx.author.id)
+    chars = await loadchars()
+    if id in chars:
+        char = await Pilot.async_init(id, dict = chars[id])
+        topstat = max(char.mech.stats)
+        cost = int((topstat*(1.5**(topstat/1000)))/100)*(5)
+        if char.money >= cost:
+            char.money -= cost
+            char.pet = Pet(await parse_gen('$Animals'), names.get_first_name())
+            char.history.append(await get_time_string() + ': Bought a pet for ' + str(cost) + ' credits.')
+            await updatechar(char)
+            await ctx.send('Companion purchased!```' + await char.summary() + '```')
+        else:
+            await ctx.send('Buying a pet costs ' + str(cost) + ' right now but you only have ' + str(char.money) + ' credits.')
     else:
         await ctx.send("You don't seem to have a pilot yet.")
 
@@ -391,6 +434,27 @@ async def set_strategy(ctx, *args):
             char.strategy = strat
             await updatechar(char)
             await ctx.send('Strategy set.')
+    else:
+        await ctx.send("You don't seem to have a pilot yet.")
+
+async def setpetname(ctx, *args):
+    '''Give your companion a name'''
+    id = str(ctx.author.id)
+    if args:
+        name = args[0]
+    else:
+        await ctx.send('No name provided!')
+        return
+    if args and len(args) > 1:
+        id = args[1]
+    chars = await loadchars()
+    if id in chars:
+        char = await Pilot.async_init(id, dict = chars[id])
+        pet = char.pet
+        if pet.type != None:
+            pet.name = name
+        else:
+            await ctx.send("You don't seem to have a pet. Buy one with `%tm buypet`")
     else:
         await ctx.send("You don't seem to have a pilot yet.")
 
@@ -507,6 +571,18 @@ class Pilot(Fight_Thing):
                 self.money = dict['money']
             else:
                 self.money = 0
+            if 'pet' in dict:
+                self.pet = Pet(dict['pet']['type'], dict['pet']['name'])
+            else:
+                self.pet = Pet(None)
+            if 'bday' in dict:
+                self.bday = dict['bday']
+            else:
+                self.bday = await get_time_days() + random.randint(0,366)
+            if self.bday <= await get_time_days():
+                self.age += 1
+                self.bday += 366
+                self.history.append(await get_time_string() + ': Celebrated ' + await self.pronoun(type='his/her') + ' ' + await ord(self.age) + ' birthday!')
         elif owner:
             self.id = id
             self.owner = owner
@@ -538,6 +614,7 @@ class Pilot(Fight_Thing):
             self.history = []
             self.record = 0
             self.money = 0
+            self.pet = Pet(None)
         else:
             raise ArgumentError('To create a Pilot either an owner name or a dictionary must be passed')
         return self
@@ -551,21 +628,56 @@ class Pilot(Fight_Thing):
                 'gender': self.gender, 'stats': self.stats,
                 'mech': await self.mech.get_dict_for_json(),
                 'health': self.health, 'history': self.history,
-                'record': self.record, 'money': self.money}
+                'record': self.record, 'money': self.money,
+                'pet': await self.pet.get_dict_for_json(),
+                'bday': self.bday}
 
     async def summary(self):
         return 'Pilot:\n' + self.name + ', piloting the ' + self.mech.name + '\n' + \
-               'Player: '   + self.owner       + '\n' + \
-               'Age: '      + str(self.age)    + '\n' + \
-               'Gender: '   + self.gender      + '\n' + \
-               'Strategy: ' + self.strategy    + '\n' + \
-               'Health: '   + self.health      + '\n' + \
-               'Money: '    + str(self.money) + '\n' + \
-               'Stats: '                       + '\n' + \
-               '   Head: '     + str(self.stats[0]) + '\n' + \
-               '   Heart: '    + str(self.stats[1]) + '\n' + \
-               '   Strength: ' + str(self.stats[2]) + '\n' + \
+               'Player: '    + self.owner             + '\n' + \
+               'Age: '       + str(self.age)          + '\n' + \
+               'Gender: '    + self.gender            + '\n' + \
+               'Strategy: '  + self.strategy          + '\n' + \
+               'Health: '    + self.health            + '\n' + \
+               'Money: '     + str(self.money)        + '\n' + \
+               'Companion: ' + await self.pet.print() + '\n' + \
+               'Stats: '                              + '\n' + \
+               '   Head: '     + str(self.stats[0])   + '\n' + \
+               '   Heart: '    + str(self.stats[1])   + '\n' + \
+               '   Strength: ' + str(self.stats[2])   + '\n' + \
                '   Speed: '    + str(self.stats[3])
+
+    async def pronoun(self, type):
+        if type == 'he/she':
+            if self.gender == 'Male':
+                return 'he'
+            elif self.gender == 'Female':
+                return 'she'
+            else:
+                return 'they'
+        elif type == 'him/her':
+            if self.gender == 'Male':
+                return 'him'
+            elif self.gender == 'Female':
+                return 'her'
+            else:
+                return 'them'
+        elif type == 'his/her':
+            if self.gender == 'Male':
+                return 'his'
+            elif self.gender == 'Female':
+                return 'her'
+            else:
+                return 'their'
+        elif type == 'his/hers':
+            if self.gender == 'Male':
+                return 'his'
+            elif self.gender == 'Female':
+                return 'hers'
+            else:
+                return 'theirs'
+        else:
+            return ''
 
     async def get_history(self):
         to_ret = 'Recent history for ' + self.name + \
@@ -620,7 +732,21 @@ class Mech():
     async def get_dict_for_json(self):
         return {'name': self.name, 'stats': self.stats}
 
+class Pet():
+    def __init__(self, type=None, name=None):
+        self.type = type
+        self.name = name
 
+    async def print(self):
+        if self.type == None:
+            return 'None'
+        elif self.name == None:
+            return a_(self.type).capitalize()
+        else:
+            return self.name + ' the ' + self.type
+
+    async def get_dict_for_json(self):
+        return {'name': self.name, 'type': self.type}
 
 class TinyMech(commands.Cog):
     def __init__ (self):
@@ -629,7 +755,7 @@ class TinyMech(commands.Cog):
     @commands.command()
     async def tm(self, ctx, cmd, *args):
         '''Use the tm commands.
-        Options include %tm join, %tm delete, %tm check, %tm history, %tm upgrade, %tm strategy <strategy>, %tm duel @<user>'''
+        Options include %tm join, %tm delete, %tm check, %tm history, %tm upgrade, %tm strategy <strategy>, %tm duel @<user>, %tm buypet'''
         if cmd == 'join':
             await join(ctx, *args)
         elif cmd == 'check':
@@ -640,7 +766,7 @@ class TinyMech(commands.Cog):
             await history(ctx, *args)
         elif cmd == 'strategy':
             await set_strategy(ctx, *args)
-        elif cmd == 'mechname':
+        elif cmd == 'getmechname':
             await mechname(ctx, *args)
         elif cmd == 'forceevent':
             await tm_event()
@@ -648,6 +774,12 @@ class TinyMech(commands.Cog):
             await upgrade(ctx, *args)
         elif cmd == 'duel':
             await duel(ctx, *args)
+        elif cmd == 'buypet':
+            await buypet(ctx, *args)
+        elif cmd == 'petname':
+            await setpetname(ctx, *args)
+        elif cmd == 'time':
+            await ctx.send(await get_time_string())
         elif cmd == 'forcedays':
             try:
                 numdays = int(args[0])
