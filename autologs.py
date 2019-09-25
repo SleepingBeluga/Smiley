@@ -5,6 +5,7 @@ class AutoLogs(commands.Cog):
 
     @commands.command()
     async def logtest(self,ctx,*args):
+        '''Make a test log doc'''
         test = {}
         out = await docs.new_log_doc(test, 'Test', 1, ['Jack','Jill','Jane','Joe'])
         await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
@@ -16,6 +17,8 @@ class AutoLogs(commands.Cog):
 
     @commands.command()
     async def set(self,ctx,*args):
+        '''Set options for autologging
+        More help to come.'''
         data = {}
         with open('logchansets.json', 'r+') as filechan:
             if len(filechan.read()):
@@ -87,6 +90,8 @@ class AutoLogs(commands.Cog):
 
     @commands.command()
     async def log(self, ctx, *args):
+        '''Create a log with the current options.
+        More help to come.'''
         data = {}
         with open('logchansets.json', 'r+') as filechan:
             if len(filechan.read()):
