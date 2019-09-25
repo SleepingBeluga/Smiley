@@ -148,6 +148,7 @@ class Rolls(commands.Cog):
 
     @commands.command()
     async def card(self,ctx):
+        '''Draw a random card from a standard deck'''
         suit = random.choice(('Hearts','Spades','Clubs','Diamonds'))
         value = random.choice(('Ace','Two','Three','Four','Five','Six',
                               'Seven','Eight','Nine','Ten','Jack','Queen','King'))
@@ -155,6 +156,8 @@ class Rolls(commands.Cog):
 
     @commands.command()
     async def tarot(self,ctx,type = 'any'):
+        '''Draw a tarot card
+        Can use `%tarot major` or `%tarot minor` to specify minor or major arcana'''
         type = type.lower()
         if not type in ('major','minor','any'):
             await ctx.send('The type of the card must be major, minor, or any.')

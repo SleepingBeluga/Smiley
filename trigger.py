@@ -18,7 +18,6 @@ async def longsend(ctx, content):
         await ctx.send(msg)
 
 class Triggers_And_More(commands.Cog):
-
     @commands.command()
     async def trigger(self, ctx, *args):
         '''Get a trigger for a character. Can specify index starting from 1.
