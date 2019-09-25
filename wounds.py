@@ -241,29 +241,39 @@ class Wounds(commands.Cog):
     '''
     @commands.command()
     async def lesser(self, ctx, wtype, part=None):
+        '''Roll a lesser wound. Must specify type.'''
         await roll_wound(ctx, 'lesser', wtype, part)
     @commands.command()
     async def moderate(self, ctx, wtype, part=None):
+        '''Roll a moderate wound. Must specify type.'''
+
         await roll_wound(ctx, 'moderate', wtype, part)
     @commands.command()
     async def critical(self, ctx, wtype, part=None):
+        '''Roll a critical wound. Must specify type.'''
         await roll_wound(ctx, 'critical', wtype, part)
 
     @commands.command()
     async def cut(self, ctx, sev, part=None):
+        '''Roll a cut. Must specify severity'''
         await roll_wound(ctx, sev, 'cut', part)
     @commands.command()
     async def pierce(self, ctx, sev, part=None):
+        '''Roll a pierce. Must specify severity'''
         await roll_wound(ctx, sev, 'pierce', part)
     @commands.command()
     async def bash(self, ctx, sev, part=None):
+        '''Roll a bash. Must specify severity'''
         await roll_wound(ctx, sev, 'bash', part)
     @commands.command()
     async def burn(self, ctx, sev, part=None):
+        '''Roll a burn. Must specify severity'''
         await roll_wound(ctx, sev, 'burn', part)
     @commands.command()
     async def shock(self, ctx, sev, part=None):
+        '''Roll a shock. Must specify severity'''
         await roll_wound(ctx, sev, 'shock', part)
     @commands.command()
     async def rend(self, ctx, sev, part=None):
+        '''Roll a rend. Must specify severity'''
         await roll_wound(ctx, sev, 'rend', part)
