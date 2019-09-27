@@ -111,14 +111,19 @@ async def tm_battle(char):
     '''Battles char vs a random enemy and saves the result'''
     fighter = char
     hc = fighter.record
-    enemies = [Enemy('Monster','Aggressive',[50,20,100,75],[1000,1000]),
+    exp_stats = [5,50,100,150]
+    random.shuffle(exp_stats)
+    enemies = [Enemy('Enemy Drone','Aggressive',[50,20,100,75],[1000,1000]),
                Enemy('Rogue Mech Pilot','Defensive',[80,75,75,75],[750,1250]),
                Enemy('Enemy Soldier','Aggressive',[90,15,80,60],[1250,700]),
-               Enemy('Carnivorous Plant','Lucky',[20,90,90,20],[500,2000]),
-               Enemy('Pirate','Lucky',[40,40,75,100],[1500,500])]
+               Enemy('Berzerk Mech','Lucky',[20,90,90,20],[500,2000]),
+               Enemy('Pirate','Lucky',[40,40,75,100],[1500,500]),
+               Enemy('Enplacement','Defensive',[75,10,75,10],[1500,1700]),
+               Enemy('Broken Experiment','Lucky',exp_stats,[1500,1700])
+               ]
     opponent = random.choice(enemies)
-    opponent.stats = [s + hc*10 for s in opponent.stats]
-    opponent.stats2 = [s + hc*75 for s in opponent.stats2]
+    opponent.stats = [s + hc*1 for s in opponent.stats]
+    opponent.stats2 = [s + hc*10 for s in opponent.stats2]
     await tm_start_fight(False, fighter, opponent)
 
 async def tm_start_fight(is_duel, fighter, opponent):
@@ -296,7 +301,6 @@ async def deletefight(id):
     with open('./tm/fights.json', 'w+') as fightsfile:
         json.dump(fights, fightsfile)
 
-
 async def parse_gen(pattern):
     '''Recursively randomly fills out a pattern template'''
     pwords = pattern.split(' ')
@@ -340,6 +344,7 @@ async def delete(ctx, *args):
     if not id in chars:
         await ctx.send('You don\'t have a pilot!')
         return
+    await deletefight(id)
     del chars[id]
     with open('./tm/chars.json', 'w+') as charsfile:
         json.dump(chars, charsfile)
@@ -356,6 +361,19 @@ async def check(ctx, *args):
         char = await Pilot.async_init(id, dict = chars[id])
         await ctx.send('```' + await char.summary() + \
                        '``````' + await char.mech.summary() + '```')
+    else:
+        await ctx.send("You don't seem to have a pilot yet.")
+
+async def get_record(ctx, *args):
+    '''Displays current net wins of your pilot'''
+    if args:
+        id = args[0]
+    else:
+        id = str(ctx.author.id)
+    chars = await loadchars()
+    if id in chars:
+        char = await Pilot.async_init(id, dict = chars[id])
+        await ctx.send(char.name + ' has ' + str(char.record) + ' net wins.')
     else:
         await ctx.send("You don't seem to have a pilot yet.")
 
@@ -597,10 +615,19 @@ class Pilot(Fight_Thing):
                 self.importanthistory = dict['importanthistory'][-100:]
             else:
                 self.importanthistory = []
+            if 'rank' in dict:
+                self.rank = dict['rank']
+            else:
+                self.rank = 0
             if self.bday <= await get_time_days():
                 self.age += 1
                 self.bday += 366
                 await self.add_history('Celebrated ' + await self.pronoun(type='his/her') + ' ' + await ord(self.age) + ' birthday!', True)
+                await updatechar(self)
+            if self.record >= 6*(self.rank + 1):
+                await self.promote()
+                await self.add_history('Pilot promoted!', True)
+                await updatechar(self)
         elif owner:
             self.id = id
             self.owner = owner
@@ -635,6 +662,7 @@ class Pilot(Fight_Thing):
             self.money = 0
             self.pet = Pet(None)
             self.bday = await get_time_days() + random.randint(0,366)
+            self.rank = 0
         else:
             raise ArgumentError('To create a Pilot either an owner name or a dictionary must be passed')
         return self
@@ -650,13 +678,27 @@ class Pilot(Fight_Thing):
                 'health': self.health, 'history': self.history,
                 'record': self.record, 'money': self.money,
                 'pet': await self.pet.get_dict_for_json(),
-                'bday': self.bday, 'importanthistory': self.importanthistory}
+                'bday': self.bday, 'rank': self.rank,
+                'importanthistory': self.importanthistory}
 
     async def summary(self):
+        ranks = ['Recruit','Pilot','Pilot First Class',
+                 'Senior Pilot','Petty Sergeant','Sergeant',
+                 'Master Sergeant', 'Master Sergeant First Class',
+                 'Ensign', 'Lieutenant', 'Captain', 'Major',
+                 'Lieutenant Colonel', 'Colonel', 'Lieutenant Commander',
+                 'Commander', 'Brigadier General', 'Major General',
+                 'Lieutenant General', 'General, 1 Star']
+        if self.rank < len(ranks):
+            rank = ranks[self.rank]
+        else:
+            stars = self.rank - len(ranks) + 1
+            rank = 'General, ' + str(stars) + ' Stars'
         return 'Pilot:\n' + self.name + ', piloting the ' + self.mech.name + '\n' + \
                'Player: '    + self.owner             + '\n' + \
                'Age: '       + str(self.age)          + '\n' + \
                'Gender: '    + self.gender            + '\n' + \
+               'Rank: '      + rank                   + '\n' + \
                'Strategy: '  + self.strategy          + '\n' + \
                'Health: '    + self.health            + '\n' + \
                'Money: '     + str(self.money)        + '\n' + \
@@ -716,6 +758,13 @@ class Pilot(Fight_Thing):
             for event in self.history[-8:]:
                 to_ret += '\n' + event
         return to_ret
+
+    async def promote(self):
+        prom_stats = random.choices(range(4), k=3)
+        for i, s in enumerate(prom_stats):
+            self.stats[s] += 10*(i+1)
+        self.rank += 1
+
 
 class Mech():
     @classmethod
@@ -813,6 +862,8 @@ class TinyMech(commands.Cog):
             await setpetname(ctx, *args)
         elif cmd == 'time':
             await ctx.send(await get_time_string())
+        elif cmd == 'record':
+            await get_record(ctx, *args)
         elif cmd == 'forcedays':
             try:
                 numdays = int(args[0])
