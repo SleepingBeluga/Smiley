@@ -257,11 +257,6 @@ async def tm_finish_fight(is_duel, fighter, opponent, result):
     if is_duel:
         await updatechar(opponent)
 
-async def promote(char):
-    prom_stats = random.choices(range(4), k=3)
-    for i, s in enumerate(prom_stats):
-        char.stats[s] += 10*(i+1)
-
 async def loadchars():
     '''Returns a dictionary of pilots'''
     with open('./tm/chars.json', 'r+') as charsfile:
@@ -349,7 +344,7 @@ async def delete(ctx, *args):
     if not id in chars:
         await ctx.send('You don\'t have a pilot!')
         return
-    await deletefight(char.id)
+    await deletefight(id)
     del chars[id]
     with open('./tm/chars.json', 'w+') as charsfile:
         json.dump(chars, charsfile)
@@ -620,10 +615,19 @@ class Pilot(Fight_Thing):
                 self.importanthistory = dict['importanthistory'][-100:]
             else:
                 self.importanthistory = []
+            if 'rank' in dict:
+                self.rank = dict['rank']
+            else:
+                self.rank = 0
             if self.bday <= await get_time_days():
                 self.age += 1
                 self.bday += 366
                 await self.add_history('Celebrated ' + await self.pronoun(type='his/her') + ' ' + await ord(self.age) + ' birthday!', True)
+                await updatechar(self)
+            if self.record >= 6*(self.rank + 1):
+                await self.promote()
+                await self.add_history('Pilot promoted!', True)
+                await updatechar(self)
         elif owner:
             self.id = id
             self.owner = owner
@@ -658,6 +662,7 @@ class Pilot(Fight_Thing):
             self.money = 0
             self.pet = Pet(None)
             self.bday = await get_time_days() + random.randint(0,366)
+            self.rank = 0
         else:
             raise ArgumentError('To create a Pilot either an owner name or a dictionary must be passed')
         return self
@@ -673,13 +678,27 @@ class Pilot(Fight_Thing):
                 'health': self.health, 'history': self.history,
                 'record': self.record, 'money': self.money,
                 'pet': await self.pet.get_dict_for_json(),
-                'bday': self.bday, 'importanthistory': self.importanthistory}
+                'bday': self.bday, 'rank': self.rank,
+                'importanthistory': self.importanthistory}
 
     async def summary(self):
+        ranks = ['Recruit','Pilot','Pilot First Class',
+                 'Senior Pilot','Petty Sergeant','Sergeant',
+                 'Master Sergeant', 'Master Sergeant First Class',
+                 'Ensign', 'Lieutenant', 'Captain', 'Major',
+                 'Lieutenant Colonel', 'Colonel', 'Lieutenant Commander',
+                 'Commander', 'Brigadier General', 'Major General',
+                 'Lieutenant General', 'General, 1 Star']
+        if self.rank < len(ranks):
+            rank = ranks[self.rank]
+        else:
+            stars = self.rank - len(ranks) + 1
+            rank = 'General, ' + str(stars) + ' Stars'
         return 'Pilot:\n' + self.name + ', piloting the ' + self.mech.name + '\n' + \
                'Player: '    + self.owner             + '\n' + \
                'Age: '       + str(self.age)          + '\n' + \
                'Gender: '    + self.gender            + '\n' + \
+               'Rank: '      + rank                   + '\n' + \
                'Strategy: '  + self.strategy          + '\n' + \
                'Health: '    + self.health            + '\n' + \
                'Money: '     + str(self.money)        + '\n' + \
@@ -739,6 +758,13 @@ class Pilot(Fight_Thing):
             for event in self.history[-8:]:
                 to_ret += '\n' + event
         return to_ret
+
+    async def promote(self):
+        prom_stats = random.choices(range(4), k=3)
+        for i, s in enumerate(prom_stats):
+            self.stats[s] += 10*(i+1)
+        self.rank += 1
+
 
 class Mech():
     @classmethod
