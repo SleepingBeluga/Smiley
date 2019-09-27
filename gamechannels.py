@@ -72,8 +72,9 @@ class Game_Channels(commands.Cog):
     @commands.command()
     async def enter(self, ctx, *args):
         '''Join a game channel. Do not need to specify whether a wd or pd game.
-
-        Special argument includes wdall, pdall, allactive, allarchive, all
+        Usage: %enter <channel>
+               %enter <group>
+        Group arguments include wdall, pdall, allactive, allarchive, all
         '''
         gameName = ''
         game = None
