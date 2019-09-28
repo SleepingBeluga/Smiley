@@ -421,7 +421,10 @@ async def buypet(ctx, *args):
         cost = int((topstat*(1.5**(topstat/1000)))/100)*(5)
         if char.money >= cost:
             char.money -= cost
-            char.pet = Pet(await parse_gen('$Animals'), names.get_first_name())
+            rarity = min(random.choices(range(5), k = 3)) + 1
+            if char.pet.rarity == rarity:
+                rarity += 1
+            char.pet = Pet(await parse_gen('$Animals'), names.get_first_name(), rarity)
             await char.add_history('Bought a pet for ' + str(cost) + ' credits.', True)
             await updatechar(char)
             await ctx.send('Companion purchased!```' + await char.summary() + '```')
@@ -586,7 +589,9 @@ class Pilot(Fight_Thing):
             else:
                 self.money = 0
             if 'pet' in dict:
-                self.pet = Pet(dict['pet']['type'], dict['pet']['name'])
+                self.pet = Pet(dict['pet']['type'],
+                               dict['pet']['name'],
+                               dict['pet']['rarity'])
             else:
                 self.pet = Pet(None)
             if 'bday' in dict:
@@ -764,20 +769,23 @@ class Mech():
         return {'name': self.name, 'stats': self.stats}
 
 class Pet():
-    def __init__(self, type=None, name=None):
+    def __init__(self, type=None, name=None, rarity = 0):
         self.type = type
         self.name = name
+        self.rarity = rarity
 
     async def print(self):
+        rarestr = ' ' + ('★' * self.rarity)
         if self.type == None:
             return 'None'
         elif self.name == None:
-            return a_(self.type).capitalize()
+            return a_(self.type).capitalize() + rarestr
         else:
-            return self.name + ' the ' + self.type
+            return self.name + ' the ' + self.type + rarestr
 
     async def get_dict_for_json(self):
-        return {'name': self.name, 'type': self.type}
+        return {'name': self.name, 'type': self.type,
+                'rarity': self.rarity}
 
 class TinyMech(commands.Cog):
     def __init__ (self):
