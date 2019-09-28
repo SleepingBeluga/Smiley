@@ -607,9 +607,14 @@ class Pilot(Fight_Thing):
             else:
                 self.money = 0
             if 'pet' in dict:
-                self.pet = Pet(dict['pet']['type'],
-                               dict['pet']['name'],
-                               dict['pet']['rarity'])
+                try:
+                    self.pet = Pet(dict['pet']['type'],
+                                   dict['pet']['name'],
+                                   dict['pet']['rarity'])
+                except:
+                    self.pet = Pet(dict['pet']['type'],
+                                   dict['pet']['name'],
+                                   1)
             else:
                 self.pet = Pet(None)
             if 'bday' in dict:
