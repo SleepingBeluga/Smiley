@@ -436,7 +436,7 @@ async def buypet(ctx, *args):
     if id in chars:
         char = await Pilot.async_init(id, dict = chars[id])
         topstat = max(char.mech.stats)
-        cost = int((topstat*(1.5**(topstat/1000)))/100)*(5)
+        cost = int((topstat*(1.4**(topstat/1000)))/300)*(5)
         if char.money >= cost:
             char.money -= cost
             char.pet = Pet(await parse_gen('$Animals'), names.get_first_name())
