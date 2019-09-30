@@ -52,7 +52,7 @@ class Triggers_And_More(commands.Cog):
 
     @commands.command()
     async def claim(self, ctx, *args):
-        '''Moves a power from triggers to used
+        '''Moves a trigger from unrolled triggers to used triggers
         Format for claim: `%claim <number>, <game>, <player>, <short description of power>`
         The commas are important!'''
         astr = ' '.join(args)
@@ -62,7 +62,7 @@ class Triggers_And_More(commands.Cog):
             await ctx.send("The commas are important!")
             return
         if len(alist) > 4:
-            await ctx.send("Too many arguments. Format for claim: %claim <number>, <game>, <player>, <short description of power>")
+            await ctx.send("Too many arguments. You might have commas in the description. Format for claim: %claim <number>, <game>, <player>, <short description of power>")
             return
         try:
             num = int(alist[0])
