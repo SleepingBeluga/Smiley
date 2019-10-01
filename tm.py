@@ -18,6 +18,20 @@ async def get_time():
         await set_time(0)
         return 0
 
+async def get_time_hours(type='ampm'):
+    time = await(get_time)
+    hour_part = time % 24
+    if type == 'ampm':
+        ampm = 'AM' if hour_part < 11 else 'PM'
+        hour_part = hour_part + 12
+        if hour_part > 12:
+            hour_part -= 12
+        if hour_part > 12:
+            hour_part -= 12
+        return hour_part, ampm
+    else:
+        return hour_part
+
 async def get_time_days():
     time = await get_time()
     return int(time / 24)
@@ -78,7 +92,11 @@ async def tm_day():
     charlist = (await loadchars()).items()
     if len(charlist):
         for chartup in charlist:
-            if random.random() < 0.1:
+            if await get_time_hours('24') > 6 and await get_time_hours('24') < 22:
+                chance = 0.2
+            else:
+                chance = 0.04
+            if random.random() < chance:
                 char = await Pilot.async_init(chartup[0], dict = chartup[1])
                 if not await is_fighting(char):
                     await tm_event(char)
