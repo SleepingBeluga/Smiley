@@ -78,9 +78,10 @@ async def tm_day():
     charlist = (await loadchars()).items()
     if len(charlist):
         for chartup in charlist:
-            if random.random() < 0.05:
+            if random.random() < 0.1:
                 char = await Pilot.async_init(chartup[0], dict = chartup[1])
-                await tm_event(char)
+                if not await is_fighting(char):
+                    await tm_event(char)
 
 async def time_the_healer():
     '''Has a chance to heal all pilots'''
@@ -104,8 +105,41 @@ async def is_fighting(char):
 
 async def tm_event(char):
     '''Chooses what type of event to occur'''
-    if not await is_fighting(char):
-        await tm_battle(char)
+    event = random.choice((tm_battle, tm_find, tm_chat, tm_tinker))
+    await event(char)
+
+async def tm_find(char):
+    loot = int((random.randint(20,30) + random.randint(5,40)) * (1.05 ** char.record))
+    char.money += loot
+    await char.add_history('Found some salvage worth ' + str(loot) + ' credits!', True)
+    await updatechar(char)
+
+async def tm_chat(char):
+    charlist = list((await loadchars()).items())
+    if len(charlist) > 1:
+        ochartup = random.choice(charlist)
+        partner = await Pilot.async_init(ochartup[0], dict = ochartup[1])
+        while await is_fighting(partner) or partner.id == char.id:
+            ochartup = random.choice(charlist)
+            partner = await Pilot.async_init(ochartup[0], dict = ochartup[1])
+    else:
+        return
+    await partner.add_history('Chatted with ' + char.name + ' for a while. Learned something!', True)
+    await char.add_history('Chatted with ' + partner.name + ' for a while. Learned something!', True)
+    for c in (char, partner):
+        learned = random.randint(0,3)
+        c.stats[learned] += random.randint(1,2)
+        await updatechar(c)
+
+async def tm_tinker(char):
+    improvement = random.randint(10,25)
+    stat = random.randint(0,1)
+    char.mech.stats[stat] += improvement
+    if stat == 0:
+        await char.add_history('Tinkered on ' + await char.pronoun(type='his/her') + ' mech, improved Spark!', True)
+    else:
+        await char.add_history('Tinkered on ' + await char.pronoun(type='his/her') + ' mech, improved Steel!', True)
+    await updatechar(char)
 
 async def tm_battle(char):
     '''Battles char vs a random enemy and saves the result'''
@@ -417,7 +451,7 @@ async def upgrade(ctx, *args):
         if char.money >= cost:
             char.money -= cost
             stat = random.randint(0,1)
-            char.mech.stats[stat] += random.randint(100,200)
+            char.mech.stats[stat] += random.randint(150,175)
             await char.add_history('Upgraded mech for ' + str(cost) + ' credits.', True)
             await updatechar(char)
             await ctx.send('Upgrade purchased!```' + await char.mech.summary() + '```')
