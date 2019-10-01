@@ -105,7 +105,7 @@ async def is_fighting(char):
 
 async def tm_event(char):
     '''Chooses what type of event to occur'''
-    event = random.choice((tm_battle, tm_find, tm_chat, tm_tinker))
+    event = random.choices((tm_battle, tm_find, tm_chat, tm_tinker),weights=(0.4,0.2,0.2,0.2))[0]
     await event(char)
 
 async def tm_find(char):
@@ -127,7 +127,7 @@ async def tm_chat(char):
     await partner.add_history('Chatted with ' + char.name + ' for a while. Learned something!', True)
     await char.add_history('Chatted with ' + partner.name + ' for a while. Learned something!', True)
     for c in (char, partner):
-        learned = random.randint(0,3)
+        learned = random.randint(1,2)
         c.stats[learned] += random.randint(1,2)
         await updatechar(c)
 
@@ -183,11 +183,11 @@ async def tm_start_fight(is_duel, fighter, opponent):
     fhealth = fighter.mech.stats[1]
     ohealth = opponent.stats2[1] if not is_duel else opponent.mech.stats[1]
     if is_duel:
-        await fighter.add_history('Started a duel vs ' + opponent.name + '.')
-        await opponent.add_history('Started a duel vs ' + fighter.name + '.')
+        await fighter.add_history('Started a duel vs ' + opponent.name + '. ' + await Pilot.statname(fstat) + ' vs. ' + await Pilot.statname(ostat))
+        await opponent.add_history('Started a duel vs ' + fighter.name + '. ' + await Pilot.statname(ostat) + ' vs. ' + await Pilot.statname(fstat))
         await updatechar(opponent)
     else:
-        await fighter.add_history('Started a fight vs ' + opponent.name + '.')
+        await fighter.add_history('Started a fight vs ' + opponent.name + '. ' + await Pilot.statname(fstat) + ' vs. ' + await Pilot.statname(ostat))
     await updatechar(fighter)
     await tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
 
@@ -713,6 +713,13 @@ class Pilot(Fight_Thing):
 
     def __init__(self):
         pass
+
+    @classmethod
+    async def statname(cls, stat):
+        return {0: 'Head',
+                1: 'Heart',
+                2: 'Strength',
+                3: 'Speed'}[stat]
 
     async def get_dict_for_json(self):
         return {'owner': self.owner, 'name': self.name,
