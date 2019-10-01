@@ -19,7 +19,7 @@ async def get_time():
         return 0
 
 async def get_time_hours(type='ampm'):
-    time = await(get_time)
+    time = await get_time()
     hour_part = time % 24
     if type == 'ampm':
         ampm = 'AM' if hour_part < 11 else 'PM'
