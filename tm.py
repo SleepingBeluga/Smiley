@@ -95,7 +95,7 @@ async def tm_day():
             if await get_time_hours('24') > 6 and await get_time_hours('24') < 22:
                 chance = 0.2
             else:
-                chance = 0.04
+                chance = 0.05
             if random.random() < chance:
                 char = await Pilot.async_init(chartup[0], dict = chartup[1])
                 if not await is_fighting(char):
