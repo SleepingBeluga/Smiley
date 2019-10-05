@@ -13,6 +13,7 @@ class Game_Channels(commands.Cog):
     @commands.command()
     async def addgame(self, ctx, *args):
         '''Create a WD or PD game with you as the GM
+        Usage: %addgame <pd/wd> <game name>
         '''
         gameType = args[0].lower()
         if (gameType != 'wd' and gameType != 'pd'):
@@ -152,6 +153,9 @@ class Game_Channels(commands.Cog):
     @commands.command()
     async def exit(self, ctx, *args):
         '''Leave a game channel
+        Usage: %exit <channel>
+               %exit <group>
+        Group arguments include wdall, pdall, allactive, allarchive, all
         '''
         to_leave = ''
         game = None
@@ -311,7 +315,9 @@ class Game_Channels(commands.Cog):
 
     @commands.command()
     async def link(self, ctx, *args):
-        '''Sets the doc link on the spreadsheet for your game
+        '''Sets the channel topic and the link on the spreadsheet for your game
+        Usage: %link <game name> <link for topic>
+        Note that you have to be the GM of the channel.
         '''
         link = ''
 
@@ -332,6 +338,7 @@ class Game_Channels(commands.Cog):
     @commands.command()
     async def owner(self, ctx, *args):
         '''Checks the owner of a given campaign
+        Usage: %owner <game name> 
         '''
         gameName = ''
         game = None
