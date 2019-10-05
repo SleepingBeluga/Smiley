@@ -53,6 +53,7 @@ b.loop.create_task(tm.tm_loop(b))
 # Start running Tiny Mechs in the background.
 
 b.loop.create_task(ac.ac_loop(b))
+# Run the autocape loop too!
 
 with open('secret') as s:
     token = s.read()[:-1]
