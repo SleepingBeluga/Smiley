@@ -310,7 +310,7 @@ async def tm_finish_fight(is_duel, fighter, opponent, result):
         await updatechar(opponent)
 
 async def loadchars():
-    '''Returns a dictionary of pilots'''
+    '''Returns a dictionary of pilots as dicts'''
     with open('./tm/chars.json', 'r+') as charsfile:
         if len(charsfile.read()):
             charsfile.seek(0)
@@ -320,7 +320,7 @@ async def loadchars():
     return chars
 
 async def loadfights():
-    '''Returns a dictionary of fights'''
+    '''Returns a dictionary of fights as dicts'''
     with open('./tm/fights.json', 'r+') as fightsfile:
         if len(fightsfile.read()):
             fightsfile.seek(0)
@@ -330,7 +330,7 @@ async def loadfights():
     return fights
 
 async def loadduels():
-    '''Returns a dictionary of duels'''
+    '''Returns a dictionary of duels as dicts'''
     with open('./tm/duels.json', 'r+') as duelsfile:
         if len(duelsfile.read()):
             duelsfile.seek(0)
@@ -597,6 +597,15 @@ async def mechname(ctx, *args):
     '''Generate a random mech name'''
     await ctx.send('The ' + await parse_gen('$TopLevelPatterns'))
 
+class Fight():
+    pass
+
+class Duel(Fight):
+    pass
+
+class Raid(Fight):
+    pass
+
 class Fight_Thing():
     def __init__(self, name='', strategy='', stats=[], stats2=[], dict = None):
         if dict:
@@ -833,7 +842,6 @@ class Pilot(Fight_Thing):
         for i, s in enumerate(prom_stats):
             self.stats[s] += 10*(i+1)
         self.rank += 1
-
 
 class Mech():
     @classmethod
