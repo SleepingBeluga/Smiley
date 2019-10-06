@@ -578,7 +578,8 @@ async def duel(ctx, *args):
         await ctx.send("They're already in a fight!")
         return
     duels = await loadduels()
-    key = ';'.join(sorted([f.id,o.id]))
+    f, o = sorted([f, o], key = lambda p: p.id)
+    key = ';'.join([f.id,o.id])
     if key in duels:
         if duels[key]['state'] == 'challenge':
             await ctx.send('Challenge accepted. The duel has begun!')
