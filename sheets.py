@@ -469,7 +469,7 @@ async def skill(ctx, skill, arg):
     sheet = service.spreadsheets()
     index = None
     result = sheet.values().get(spreadsheetId=SuggestionID,
-                                range='Skills!A2:R34').execute()
+                                range='Skills!A2:R100').execute()
     values = result.get('values', [])
     category = skill
     skill = skill.lower()
