@@ -170,7 +170,7 @@ async def tm_battle(char):
                Enemy('Enemy Soldier','Aggressive',[90,15,80,60],[1250,700]),
                Enemy('Berzerk Mech','Lucky',[20,90,90,20],[500,2000]),
                Enemy('Pirate','Lucky',[40,40,75,100],[1500,500]),
-               Enemy('Enplacement','Defensive',[75,10,75,10],[1500,1700]),
+               Enemy('Emplacement','Defensive',[75,10,75,10],[1500,1700]),
                Enemy('Broken Experiment','Lucky',exp_stats,[1500,1700])
                ]
     opponent = random.choice(enemies)
