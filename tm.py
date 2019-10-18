@@ -662,7 +662,7 @@ class Fight_Thing():
             if opponent.strategy == 'Clever':
                 return random.randint(0,3)
             else:
-                return opponent.choose_stat(self)
+                return await opponent.choose_stat(self)
         return 2
 
 class Enemy(Fight_Thing):
