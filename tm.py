@@ -65,6 +65,9 @@ async def ord(num):
     else:
         return o + 'th'
 
+async def argmax(l, key = lambda x: x):
+    return max(range(len(l)), key = lambda i: key(l[i]))
+
 async def set_time(time):
     '''Writes the parameter 'time' to the time file'''
     with open('./tm/time', 'w+') as timefile:
@@ -508,7 +511,7 @@ async def set_strategy(ctx, *args):
     id = str(ctx.author.id)
     chars = await loadchars()
     if id in chars:
-        validstrats = ('Aggressive','Defensive','Lucky')
+        validstrats = ('Aggressive','Defensive','Lucky','Cautious','Confident','Clever')
         char = await Pilot.async_init(id, dict = chars[id])
         if args:
             strat = args[0].capitalize()
@@ -626,23 +629,37 @@ class Fight_Thing():
 
     async def choose_stat(self, opponent):
         if self.strategy == 'Aggressive':
-            max = 0
-            maxind = None
-            for ind, stat in enumerate(self.stats):
-                if stat > max:
-                    max = stat
-                    maxind = ind
-            return maxind
+            return await argmax(self.stats)
         elif self.strategy == 'Defensive':
-            max = 0
-            maxind = None
-            for ind, stat in enumerate(opponent.stats):
-                if stat > max:
-                    max = stat
-                    maxind = ind
-            return (maxind - 1) % 4
+            return (await argmax(opponent.stats) - 1) % 4
         elif self.strategy == 'Lucky':
             return random.randint(0,3)
+        elif self.strategy == 'Cautious':
+            max = 0
+            max2 = 0
+            for i, stat in enumerate(opponent.stats):
+                if stat > max:
+                    max2 = max
+                    max2ind = i
+                    max = stat
+                elif stat > max2:
+                    max2 = stat
+                    max2ind = i
+            return (max2ind - 1) % 4
+        elif self.strategy == 'Confident':
+            max = 0
+            max2 = 0
+            for i, stat in enumerate(self.stats):
+                if stat > max:
+                    max2 = max
+                    max2ind = i
+                    max = stat
+                elif stat > max2:
+                    max2 = stat
+                    max2ind = i
+            return max2ind
+        elif self.strategy == 'Clever':
+            return opponent.choose_stat(self)
         return 2
 
 class Enemy(Fight_Thing):
