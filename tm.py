@@ -102,10 +102,12 @@ async def tm_day():
             if random.random() < chance:
                 char = await Pilot.async_init(chartup[0], dict = chartup[1])
                 if not await is_fighting(char):
+                    print('try to event')
                     await tm_event(char)
+                    print('evented')
 
 async def time_the_healer():
-    '''Has a chance to heal all pilots'''
+    '''Has a chance to heal each pilot'''
     chars = await loadchars()
     for id, char in chars.items():
         pilot = await Pilot.async_init(id, dict = char)
@@ -127,6 +129,7 @@ async def is_fighting(char):
 async def tm_event(char):
     '''Chooses what type of event to occur'''
     event = random.choices((tm_battle, tm_find, tm_chat, tm_tinker),weights=(0.4,0.2,0.2,0.2))[0]
+    print(event.__name__)
     await event(char)
 
 async def tm_find(char):
@@ -140,7 +143,11 @@ async def tm_chat(char):
     if len(charlist) > 1:
         ochartup = random.choice(charlist)
         partner = await Pilot.async_init(ochartup[0], dict = ochartup[1])
+        tries = 0
         while await is_fighting(partner) or partner.id == char.id:
+            tries += 1
+            if tries > len(charlist):
+                return
             ochartup = random.choice(charlist)
             partner = await Pilot.async_init(ochartup[0], dict = ochartup[1])
     else:
@@ -296,7 +303,7 @@ async def tm_finish_fight(is_duel, fighter, opponent, result):
             if 200 - topstat * random.randint(1,5) > 0:
                 fighter.stats[random.randint(0,3)] += 1
             winnings = random.randint(10,50) + random.randint(5,50)
-            winnings = int(winnings * (1.07 ** fighter.record))
+            winnings = int(winnings * (1.07 ** min(fighter.record, 0)))
             fighter.record += 1
             fighter.money += winnings
             await fighter.add_history('Won the battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!', True)
