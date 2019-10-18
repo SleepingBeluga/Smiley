@@ -292,8 +292,8 @@ async def tm_finish_fight(is_duel, fighter, opponent, result):
             topstat = max(fighter.stats)
             if 200 - topstat * random.randint(1,5) > 0:
                 fighter.stats[random.randint(0,3)] += 1
-            winnings = random.randint(1,50) + random.randint(0,50)
-            winnings = int(winnings * (1.05 ** fighter.record))
+            winnings = random.randint(10,50) + random.randint(5,50)
+            winnings = int(winnings * (1.07 ** fighter.record))
             fighter.record += 1
             fighter.money += winnings
             await fighter.add_history('Won the battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!', True)
