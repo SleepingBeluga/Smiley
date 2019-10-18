@@ -171,10 +171,10 @@ async def tm_battle(char):
     exp_stats = [5,50,100,150]
     random.shuffle(exp_stats)
     enemies = [Enemy('Enemy Drone','Aggressive',[50,20,100,75],[1000,1000]),
-               Enemy('Rogue Mech Pilot','Defensive',[80,75,75,75],[750,1250]),
-               Enemy('Enemy Soldier','Aggressive',[90,15,80,60],[1250,700]),
+               Enemy('Rogue Mech Pilot','Cautious',[80,75,75,75],[750,1250]),
+               Enemy('Enemy Soldier','Confident',[90,15,80,60],[1250,700]),
                Enemy('Berzerk Mech','Lucky',[20,90,90,20],[500,2000]),
-               Enemy('Pirate','Lucky',[40,40,75,100],[1500,500]),
+               Enemy('Pirate','Clever',[40,40,75,100],[1500,500]),
                Enemy('Emplacement','Defensive',[75,10,75,10],[1500,1700]),
                Enemy('Broken Experiment','Lucky',exp_stats,[1500,1700])
                ]
