@@ -148,8 +148,8 @@ async def tm_chat(char):
     await partner.add_history('Chatted with ' + char.name + ' for a while. Learned something!', True)
     await char.add_history('Chatted with ' + partner.name + ' for a while. Learned something!', True)
     for c in (char, partner):
-        learned = random.randint(1,2)
-        c.stats[learned] += random.randint(1,2)
+        learned = random.randint(0,3)
+        c.stats[learned] += 1
         await updatechar(c)
 
 async def tm_tinker(char):
@@ -659,7 +659,10 @@ class Fight_Thing():
                     max2ind = i
             return max2ind
         elif self.strategy == 'Clever':
-            return opponent.choose_stat(self)
+            if opponent.strategy == 'Clever':
+                return random.randint(0,3)
+            else:
+                return opponent.choose_stat(self)
         return 2
 
 class Enemy(Fight_Thing):
