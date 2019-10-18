@@ -22,12 +22,11 @@ async def get_time_hours(type='ampm'):
     time = await get_time()
     hour_part = time % 24
     if type == 'ampm':
-        ampm = 'AM' if hour_part < 11 else 'PM'
-        hour_part = hour_part + 12
+        ampm = 'AM' if hour_part < 12 else 'PM'
         if hour_part > 12:
             hour_part -= 12
-        if hour_part > 12:
-            hour_part -= 12
+        if hour_part == 0:
+            hour_part = 12
         return hour_part, ampm
     else:
         return hour_part
@@ -40,13 +39,12 @@ async def get_time_string():
     time = await get_time()
     day_part = int(time / 24)
     hour_part = time % 24
-    ampm = 'AM' if hour_part < 11 else 'PM'
-    hour_str = hour_part + 12
-    if hour_str > 12:
-        hour_str -= 12
-    if hour_str > 12:
-        hour_str -= 12
-    return 'Day ' + str(day_part) + ', ' + str(hour_str) + ' ' + ampm
+    ampm = 'AM' if hour_part < 12 else 'PM'
+    if hour_part > 12:
+        hour_part -= 12
+    if hour_part == 0:
+        hour_part = 12
+    return 'Day ' + str(day_part) + ', ' + str(hour_part) + ' ' + ampm
 
 async def a_(string):
     if string[0] in 'aeiou':
@@ -102,9 +100,7 @@ async def tm_day():
             if random.random() < chance:
                 char = await Pilot.async_init(chartup[0], dict = chartup[1])
                 if not await is_fighting(char):
-                    print('try to event')
                     await tm_event(char)
-                    print('evented')
 
 async def time_the_healer():
     '''Has a chance to heal each pilot'''
@@ -129,7 +125,6 @@ async def is_fighting(char):
 async def tm_event(char):
     '''Chooses what type of event to occur'''
     event = random.choices((tm_battle, tm_find, tm_chat, tm_tinker),weights=(0.4,0.2,0.2,0.2))[0]
-    print(event.__name__)
     await event(char)
 
 async def tm_find(char):
@@ -424,7 +419,7 @@ async def check(ctx, *args):
         await ctx.send('```' + await char.summary() + \
                        '``````' + await char.mech.summary() + '```')
     else:
-        await ctx.send("You don't seem to have a pilot yet.")
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
 async def get_record(ctx, *args):
     '''Displays current net wins of your pilot'''
@@ -437,7 +432,7 @@ async def get_record(ctx, *args):
         char = await Pilot.async_init(id, dict = chars[id])
         await ctx.send(char.name + ' has ' + str(char.record) + ' net wins.')
     else:
-        await ctx.send("You don't seem to have a pilot yet.")
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
 async def history(ctx, *args):
     '''Displays the eight most recent events involving your pilot'''
@@ -450,7 +445,7 @@ async def history(ctx, *args):
         char = await Pilot.async_init(id, dict = chars[id])
         await ctx.send('```' + await char.get_history() + '```')
     else:
-        await ctx.send("You don't seem to have a pilot yet.")
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
 async def importanthistory(ctx, *args):
     '''Displays the eight most recent important events involving your pilot'''
@@ -463,7 +458,7 @@ async def importanthistory(ctx, *args):
         char = await Pilot.async_init(id, dict = chars[id])
         await ctx.send('```' + await char.get_history(True) + '```')
     else:
-        await ctx.send("You don't seem to have a pilot yet.")
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
 async def upgrade(ctx, *args):
     '''Try to purchase a mech upgrade'''
@@ -486,7 +481,7 @@ async def upgrade(ctx, *args):
         else:
             await ctx.send('Your next upgrade costs ' + str(cost) + ' but you only have ' + str(char.money) + ' credits.')
     else:
-        await ctx.send("You don't seem to have a pilot yet.")
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
 async def buypet(ctx, *args):
     '''Try to purchase a pet. Your current pet will go live on a farm if successful'''
@@ -511,7 +506,7 @@ async def buypet(ctx, *args):
         else:
             await ctx.send('Buying a pet costs ' + str(cost) + ' right now but you only have ' + str(char.money) + ' credits.')
     else:
-        await ctx.send("You don't seem to have a pilot yet.")
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
 async def set_strategy(ctx, *args):
     '''Set a strategy for your pilot to use in battle'''
@@ -531,7 +526,7 @@ async def set_strategy(ctx, *args):
             await updatechar(char)
             await ctx.send('Strategy set.')
     else:
-        await ctx.send("You don't seem to have a pilot yet.")
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
 async def setpetname(ctx, *args):
     '''Give your companion a name'''
@@ -553,7 +548,7 @@ async def setpetname(ctx, *args):
         else:
             await ctx.send("You don't seem to have a pet. Buy one with `%tm buypet`")
     else:
-        await ctx.send("You don't seem to have a pilot yet.")
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
 async def duel(ctx, *args):
     '''Challenge someone to a duel, or accept a challenge.'''
@@ -958,8 +953,6 @@ class TinyMech(commands.Cog):
             await set_strategy(ctx, *args)
         elif cmd == 'getmechname':
             await mechname(ctx, *args)
-        elif cmd == 'forceevent':
-            await tm_event()
         elif cmd == 'upgrade':
             await upgrade(ctx, *args)
         elif cmd == 'duel':
@@ -972,16 +965,19 @@ class TinyMech(commands.Cog):
             await ctx.send(await get_time_string())
         elif cmd == 'record':
             await get_record(ctx, *args)
-        elif cmd == 'forcedays':
-            try:
-                numdays = int(args[0])
-            except:
-                numdays = 1
-            for day in range(numdays):
-                await tm_day()
-        elif cmd == 'settime':
-            try:
-                t = int(args[0])
-                await set_time(t)
-            except:
-                return
+        if ctx.author.id == 200669454848360448:
+            if cmd == 'forcedays':
+                try:
+                    numdays = int(args[0])
+                except:
+                    numdays = 1
+                for day in range(numdays):
+                    await tm_day()
+            elif cmd == 'forceevent':
+                await tm_event()
+            elif cmd == 'settime':
+                try:
+                    t = int(args[0])
+                    await set_time(t)
+                except:
+                    return
