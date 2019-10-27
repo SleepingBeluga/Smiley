@@ -1,6 +1,6 @@
 from discord.ext import commands
 from shutil import copyfile
-import random, time, discord, json, asyncio, names, math
+import random, time, discord, json, asyncio, names, math, scipy.stats
 
 TIME_LENGTH = 900
 # Fifteen minutes
@@ -112,15 +112,21 @@ async def time_the_healer():
             await pilot.add_history('Rested and healed.')
             await updatechar(pilot)
 
-async def is_fighting(char):
+async def is_fighting(char=None,id=None):
+    if char:
+        id = char.id
     fights = await loadfights()
     duels = await loadduels()
+    raid = await loadraid()
     in_duel = False
     for duelids in duels.keys():
-        if char.id in duelids and duels[duelids]['state'] == 'paused':
+        if id in duelids and duels[duelids]['state'] == 'paused':
             in_duel = True
             break
-    return char.id in fights or in_duel
+    in_raid = False
+    if len(raid):
+        in_raid = id in raid['members']
+    return id in fights or in_duel or in_raid
 
 async def tm_event(char):
     '''Chooses what type of event to occur'''
@@ -156,7 +162,8 @@ async def tm_chat(char):
 
 async def tm_tinker(char):
     improvement = random.randint(10,25)
-    stat = random.randint(0,1)
+    min_stat = 0 if char.mech.stats[0] < char.mech.stats[1] else 1
+    stat = random.choices((0, 1, min_stat),weights=(0.2,0.2,0.6))[0]
     char.mech.stats[stat] += improvement
     if stat == 0:
         await char.add_history('Tinkered on ' + await char.pronoun(type='his/her') + ' mech, improved Spark!', True)
@@ -176,6 +183,7 @@ async def tm_battle(char):
                Enemy('Berzerk Mech','Lucky',[20,90,90,20],[500,2000]),
                Enemy('Pirate','Clever',[40,40,75,100],[1500,500]),
                Enemy('Emplacement','Defensive',[75,10,75,10],[1500,1700]),
+               Enemy('Belligerents','Aggressive',[50,100,75,50],[1000,800]),
                Enemy('Broken Experiment','Lucky',exp_stats,[1500,1700])
                ]
     opponent = random.choice(enemies)
@@ -186,7 +194,7 @@ async def tm_battle(char):
 async def tm_start_fight(is_duel, fighter, opponent):
     fstat = await fighter.choose_stat(opponent)
     ostat = await opponent.choose_stat(fighter)
-    effectiveness = 0
+    effectiveness = 1
     if not type(fstat) == int:
         fstat = 2
     if not type(ostat) == int:
@@ -214,6 +222,16 @@ async def tm_start_fight(is_duel, fighter, opponent):
     await updatechar(fighter)
     await tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
 
+async def tm_start_raid(boss_d, member_ids):
+    chars = await loadchars()
+    members = [await Pilot.async_init(id, dict=chars[id]) for id in member_ids]
+    boss = RaidBoss(dict = boss_d)
+    member_stats = [await m.choose_stat(boss) for m in members]
+    memberhealths = [m.mech.stats[1] for m in members]
+    boss_stat = (int(scipy.stats.mode(member_stats)[0][0]) - 1) % 4
+    boss.health *= len(members) ** 0.75
+    await tm_continue_raid(boss, boss_stat, members, member_stats, memberhealths)
+
 async def tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
     '''Decides who wins'''
     chars = await loadchars()
@@ -233,6 +251,35 @@ async def tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohea
         await tm_finish_fight(is_duel, fighter, opponent, fhealth - ohealth)
     else:
         await tm_pause_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
+
+async def tm_continue_raid(boss, boss_stat, members, member_stats, memberhealths):
+    for i, m in enumerate(members):
+        if memberhealths[i] > 0:
+            if boss_stat == member_stats[i] + 1:
+                effectiveness = 2
+            elif boss_stat == member_stats[i] - 1:
+                effectiveness = 0.5
+            else:
+                effectiveness = 1
+            statdiff = m.stats[member_stats[i]] * effectiveness - boss.stats[boss_stat]
+            advantage = 2.1/(1 + math.exp(-.07 * statdiff)) + 0.4
+            mdam = max(1,int((m.mech.stats[0] / 5) * advantage * (random.random() * (1.2 - 0.8) + 0.8)))
+            bdam = max(1,int((boss.stats2[0] / 5) / advantage * (random.random() * (1.2 - 0.8) + 0.8)))
+            boss.health -= mdam
+            memberhealths[i] -= bdam
+            await m.add_history('Hit ' + boss.name + ' for ' + str(mdam) + ' damage but got hit for ' + str(bdam) + ' in return.')
+            await updatechar(m)
+            if boss.health <= 0:
+                await tm_raid_victory(boss, members)
+                return
+            elif memberhealths[i] <= 0:
+                await m.add_history('Was forced to retreat from the raid!')
+                await updatechar(m)
+    live_members = list(filter(lambda i: memberhealths[i] > 0, range(len(members))))
+    if len(live_members) == 0:
+        await tm_raid_loss(boss, members)
+        return
+    await tm_pause_raid(boss, boss_stat, members, member_stats, memberhealths)
 
 async def tm_pause_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
     if is_duel:
@@ -258,31 +305,58 @@ async def tm_pause_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth
         with open('./tm/fights.json','w+') as fightsfile:
             json.dump(fights, fightsfile)
 
+async def tm_pause_raid(boss, boss_stat, members, member_stats, memberhealths):
+    members_ids = [m.id for m in members]
+    boss_d = await boss.get_dict_for_json()
+    raiddict = {'boss': boss_d, 'boss_stat': boss_stat,
+                'members': members_ids, 'member_stats': member_stats,
+                'memberhealths': memberhealths, 'state': 'paused'}
+    with open('./tm/raid.json','w+') as raidfile:
+        json.dump(raiddict, raidfile)
+
 async def resume_fights():
     fights = await loadfights()
     open('./tm/fights.json','w').close()
     duels = await loadduels()
     open('./tm/duels.json','w').close()
+    raid = await loadraid()
+    open('./tm/raid.json','w').close()
     while len(fights):
         id, fight = fights.popitem()
-        await tm_continue_fight(False,
-                                await Pilot.async_init(id, dict = fight['fighter']),
-                                Enemy(dict = fight['opponent']),
-                                fight['advantage'],
-                                fight['fhealth'], fight['ohealth'],
-                                fight['fdam'], fight['odam'],
-                                fight['rr'])
+        try:
+            await tm_continue_fight(False,
+                                    await Pilot.async_init(id, dict = fight['fighter']),
+                                    Enemy(dict = fight['opponent']),
+                                    fight['advantage'],
+                                    fight['fhealth'], fight['ohealth'],
+                                    fight['fdam'], fight['odam'],
+                                    fight['rr'])
+        except:
+            print('Unknown pilot ID')
     while len(duels):
         ids, duel = duels.popitem()
         ids = ids.split(';')
         if duel['state'] == 'paused':
-            await tm_continue_fight(True,
-                                    await Pilot.async_init(ids[0], dict = duel['fighter']),
-                                    await Pilot.async_init(ids[1], dict = duel['opponent']),
-                                    duel['advantage'],
-                                    duel['fhealth'], duel['ohealth'],
-                                    duel['fdam'], duel['odam'],
-                                    duel['rr'])
+            try:
+                await tm_continue_fight(True,
+                                        await Pilot.async_init(ids[0], dict = duel['fighter']),
+                                        await Pilot.async_init(ids[1], dict = duel['opponent']),
+                                        duel['advantage'],
+                                        duel['fhealth'], duel['ohealth'],
+                                        duel['fdam'], duel['odam'],
+                                        duel['rr'])
+            except:
+                print('Unknown pilot ID')
+    if len(raid) and raid['state'] == 'paused':
+        chars = await loadchars()
+        members = []
+        for id in raid['members']:
+            try:
+                members.append(await Pilot.async_init(id, dict=chars[id]))
+            except:
+                print('Unknown pilot ID')
+        await tm_continue_raid(RaidBoss(dict=raid['boss']), raid['boss_stat'], members,
+                               raid['member_stats'], raid['memberhealths'])
 
 async def tm_finish_fight(is_duel, fighter, opponent, result):
     chars = await loadchars()
@@ -314,6 +388,21 @@ async def tm_finish_fight(is_duel, fighter, opponent, result):
     if is_duel:
         await updatechar(opponent)
 
+async def tm_raid_loss(boss, members):
+    for m in members:
+        await m.add_history('The raid vs. ' + boss.name + ' was unsuccessful.', True)
+        await updatechar(m)
+        m.record -= 1
+
+async def tm_raid_victory(boss, members):
+    for m in members:
+        winnings = random.randint(100,500) + random.randint(5,500)
+        winnings = int(winnings * (1.07 ** min(m.record, 0)))
+        m.record += 1
+        m.money += winnings
+        await m.add_history('The raid vs. ' + boss.name + ' was successful! Got ' + str(winnings) + ' credits for participating!', True)
+        await updatechar(m)
+
 async def loadchars():
     '''Returns a dictionary of pilots as dicts'''
     with open('./tm/chars.json', 'r+') as charsfile:
@@ -343,6 +432,15 @@ async def loadduels():
         else:
             duels = {}
     return duels
+
+async def loadraid():
+    with open('./tm/raid.json', 'r+') as raidfile:
+        if len(raidfile.read()):
+            raidfile.seek(0)
+            raid = json.load(raidfile)
+        else:
+            raid = {}
+    return raid
 
 async def updatechar(char):
     '''Overwrites the old data for a character'''
@@ -483,6 +581,25 @@ async def upgrade(ctx, *args):
     else:
         await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
+async def disengage(ctx, *args):
+    '''Try to purchase a mech upgrade'''
+    if args:
+        id = args[0]
+    else:
+        id = str(ctx.author.id)
+    chars = await loadchars()
+    if id in chars:
+        char = await Pilot.async_init(id, dict = chars[id])
+        if await is_fighting(char):
+            await deletefight(char.id)
+            await char.add_history('Disengaged from the fight.')
+            await updatechar(char)
+            await ctx.send('Disengaged successfully!')
+        else:
+            await ctx.send('You can\'t disengage either since you\'re not in a fight or since you\'re dueling.')
+    else:
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
+
 async def buypet(ctx, *args):
     '''Try to purchase a pet. Your current pet will go live on a farm if successful'''
     if args:
@@ -577,7 +694,7 @@ async def duel(ctx, *args):
     f = await Pilot.async_init(id, dict=chars[id])
     o = await Pilot.async_init(opp_id, dict=chars[opp_id])
     if await is_fighting(f):
-        await ctx.send("You're already in a fight!")
+        await ctx.send("You're already in a fight! You can use `%tm disengage` to leave the fight, unless it's a duel or a raid.")
         return
     if await is_fighting(o):
         await ctx.send("They're already in a fight!")
@@ -602,6 +719,51 @@ async def duel(ctx, *args):
 async def mechname(ctx, *args):
     '''Generate a random mech name'''
     await ctx.send('The ' + await parse_gen('$TopLevelPatterns'))
+
+async def openraid(ctx, *args):
+    raid = await loadraid()
+    if len(raid):
+        await ctx.send("There's already a raid!")
+    else:
+        boss = RaidBoss('Amalgam','Aggressive',[200,10,10,10],[2000,2000], 2000)
+        raid = {'state': 'open',
+                'members': [],
+                'boss': await boss.get_dict_for_json()}
+        with open('./tm/raid.json','w+') as raidfile:
+            json.dump(raid, raidfile)
+        await ctx.send('RAID OPEN! Use `%tm joinraid` to participate!')
+
+async def joinraid(ctx, *args):
+    raid = await loadraid()
+    if len(raid):
+        if raid['state'] == 'open':
+            if not await is_fighting(id=str(ctx.author.id)):
+                raid['members'].append(str(ctx.author.id))
+                with open('./tm/raid.json','w+') as raidfile:
+                    json.dump(raid, raidfile)
+                await ctx.send("Joined the raid!")
+            else:
+                await ctx.send("You're already in a fight! You can use `%tm disengage` to leave the fight, unless it's a duel or a raid.")
+        else:
+            await ctx.send("The raid already started.")
+    else:
+        await ctx.send("There's no raid to join.")
+
+async def startraid(ctx, *args):
+    raid = await loadraid()
+    if len(raid):
+        if raid['state'] == 'open':
+            await tm_start_raid(raid['boss'],raid['members'])
+
+async def checkraid(ctx, *args):
+    raid = await loadraid()
+    chars = await loadchars()
+    if len(raid):
+        to_send = '```State: ' + raid['state'] + '\nMembers:\n'
+        for id in raid['members']:
+            to_send += '   ' + chars[id]['name'] + '\n'
+        to_send += '```'
+    await ctx.send(to_send)
 
 class Fight():
     pass
@@ -669,6 +831,26 @@ class Fight_Thing():
 
 class Enemy(Fight_Thing):
     pass
+
+class RaidBoss(Fight_Thing):
+    def __init__(self, name='', strategy='', stats=[], stats2=[], health=0, dict = None):
+        if dict:
+            self.name = dict['name']
+            self.strategy = dict['strategy']
+            self.stats = dict['stats']
+            self.stats2 = dict['stats2']
+            self.health = dict['health']
+        else:
+            self.name = name
+            self.strategy = strategy
+            self.stats = stats
+            self.stats2 = stats2
+            self.health = health
+
+    async def get_dict_for_json(self):
+        return {'name': self.name, 'strategy': self.strategy,
+                'stats': self.stats, 'stats2': self.stats2,
+                'health': self.health}
 
 class Pilot(Fight_Thing):
     @classmethod
@@ -965,7 +1147,13 @@ class TinyMech(commands.Cog):
             await ctx.send(await get_time_string())
         elif cmd == 'record':
             await get_record(ctx, *args)
-        if ctx.author.id == 200669454848360448:
+        elif cmd == 'disengage':
+            await disengage(ctx, *args)
+        elif cmd == 'joinraid':
+            await joinraid(ctx, *args)
+        elif cmd == 'checkraid':
+            await checkraid(ctx, *args)
+        elif ctx.author.id == 200669454848360448:
             if cmd == 'forcedays':
                 try:
                     numdays = int(args[0])
@@ -975,6 +1163,10 @@ class TinyMech(commands.Cog):
                     await tm_day()
             elif cmd == 'forceevent':
                 await tm_event()
+            elif cmd == 'openraid':
+                await openraid(ctx, *args)
+            elif cmd == 'startraid':
+                await startraid(ctx, *args)
             elif cmd == 'settime':
                 try:
                     t = int(args[0])
