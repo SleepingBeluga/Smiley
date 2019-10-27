@@ -156,7 +156,8 @@ async def tm_chat(char):
 
 async def tm_tinker(char):
     improvement = random.randint(10,25)
-    stat = random.randint(0,1)
+    min_stat = 0 if char.mech.stats[0] < char.mech.stats[1] else 1
+    stat = random.choices((0, 1, min_stat),weights=(0.2,0.2,0.6))
     char.mech.stats[stat] += improvement
     if stat == 0:
         await char.add_history('Tinkered on ' + await char.pronoun(type='his/her') + ' mech, improved Spark!', True)
@@ -176,6 +177,7 @@ async def tm_battle(char):
                Enemy('Berzerk Mech','Lucky',[20,90,90,20],[500,2000]),
                Enemy('Pirate','Clever',[40,40,75,100],[1500,500]),
                Enemy('Emplacement','Defensive',[75,10,75,10],[1500,1700]),
+               Enemy('Belligerents','Aggressive',[50,100,75,50],[1000,800]),
                Enemy('Broken Experiment','Lucky',exp_stats,[1500,1700])
                ]
     opponent = random.choice(enemies)
