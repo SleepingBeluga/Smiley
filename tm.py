@@ -706,7 +706,7 @@ async def mechname(ctx, *args):
     await ctx.send('The ' + await parse_gen('$TopLevelPatterns'))
 
 async def openraid():
-    
+    pass
 
 class Fight():
     pass
