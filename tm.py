@@ -496,7 +496,8 @@ async def disengage(ctx, *args):
         char = await Pilot.async_init(id, dict = chars[id])
         if await is_fighting(char):
             await deletefight(char.id)
-            char.add_history('Disengaged from the fight.')
+            await char.add_history('Disengaged from the fight.')
+            await updatechar(char)
             await ctx.send('Disengaged successfully!')
         else:
             await ctx.send('You can\'t disengage either since you\'re not in a fight or since you\'re dueling.')
