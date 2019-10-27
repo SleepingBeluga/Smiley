@@ -157,7 +157,7 @@ async def tm_chat(char):
 async def tm_tinker(char):
     improvement = random.randint(10,25)
     min_stat = 0 if char.mech.stats[0] < char.mech.stats[1] else 1
-    stat = random.choices((0, 1, min_stat),weights=(0.2,0.2,0.6))
+    stat = random.choices((0, 1, min_stat),weights=(0.2,0.2,0.6))[0]
     char.mech.stats[stat] += improvement
     if stat == 0:
         await char.add_history('Tinkered on ' + await char.pronoun(type='his/her') + ' mech, improved Spark!', True)
@@ -985,6 +985,8 @@ class TinyMech(commands.Cog):
             await ctx.send(await get_time_string())
         elif cmd == 'record':
             await get_record(ctx, *args)
+        elif cmd == 'disengage':
+            await disengage(ctx, *args)
         if ctx.author.id == 200669454848360448:
             if cmd == 'forcedays':
                 try:
