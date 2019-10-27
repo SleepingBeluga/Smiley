@@ -1,6 +1,6 @@
 from discord.ext import commands
 from shutil import copyfile
-import random, time, discord, json, asyncio, names, math
+import random, time, discord, json, asyncio, names, math, scipy.stats
 
 TIME_LENGTH = 900
 # Fifteen minutes
@@ -188,7 +188,7 @@ async def tm_battle(char):
 async def tm_start_fight(is_duel, fighter, opponent):
     fstat = await fighter.choose_stat(opponent)
     ostat = await opponent.choose_stat(fighter)
-    effectiveness = 0
+    effectiveness = 1
     if not type(fstat) == int:
         fstat = 2
     if not type(ostat) == int:
@@ -216,6 +216,13 @@ async def tm_start_fight(is_duel, fighter, opponent):
     await updatechar(fighter)
     await tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
 
+async def tm_start_raid(boss, members):
+    member_stats = [m.choose_stat(boss) for m in members]
+    memberhealths = [m.mech.stats[1] for m in members]
+    boss_stat = (scipy.stats.mode(member_stats)[0][0] - 1) % 4
+    boss.health *= len(members) ** 0.75
+    await tm_continue_raid(boss, boss_stat, members, member_stats, memberhealths)
+
 async def tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
     '''Decides who wins'''
     chars = await loadchars()
@@ -235,6 +242,35 @@ async def tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohea
         await tm_finish_fight(is_duel, fighter, opponent, fhealth - ohealth)
     else:
         await tm_pause_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
+
+async def tm_continue_raid(boss, boss_stat, members, member_stats, memberhealths):
+    bdam_base = boss.stats2[0] / 5
+    new_m = []
+    for id, md in members.items():
+        new_m.append(Pilot.async_init(id, dict = md))
+    members = new_m
+    for i, m in enumerate(members):
+        if memberhealths[i] > 0:
+            if boss_stat == member_stats[i] + 1:
+                effectiveness = 2
+            elif boss_stat == member_stats[i] - 1:
+                effectiveness = 0.5
+            else:
+                effectiveness = 1
+            statdiff = m.stats[member_stats[i]] * effectiveness - boss.stats[boss_stat]
+            advantage = 2.1/(1 + math.exp(-.07 * statdiff)) + 0.4
+            boss.health -= max(1,int((m.mech.stats[0] / 5) * advantage * (random.random() * (1.2 - 0.8) + 0.8)))
+            memberhealths[i] -= max(1,int((boss.stats2[0] / 5) / advantage * (random.random() * (1.2 - 0.8) + 0.8)))
+            if boss.health <= 0:
+                await tm_raid_victory(boss, members)
+                return
+            elif memberhealths[i] <= 0:
+                await m.add_history('Was forced to retreat from the raid!')
+                await update_char(m)
+    live_members = filter(range(len(members)), lambda i: memberhealths[i] > 0)
+    if len(live_members) == 0:
+        await tm_raid_loss(boss, members)
+    await tm_pause_raid(boss, boss_stat, members, member_stats, memberhealths)
 
 async def tm_pause_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr):
     if is_duel:
@@ -260,11 +296,21 @@ async def tm_pause_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth
         with open('./tm/fights.json','w+') as fightsfile:
             json.dump(fights, fightsfile)
 
+async def tm_pause_raid(boss, boss_stat, members, member_stats, memberhealths):
+    members_ds = [m.get_dict_for_json() for m in members]
+    raiddict = {'boss': boss, 'boss_stat': boss_stat,
+                'members': members_ds, 'member_stats': member_stats,
+                'memberhealths': memberhealths}
+    with open('./tm/raid.json','w+') as raidfile:
+        json.dump(raiddict, raidfile)
+
 async def resume_fights():
     fights = await loadfights()
     open('./tm/fights.json','w').close()
     duels = await loadduels()
     open('./tm/duels.json','w').close()
+    raid = await loadraid()
+    open('./tm/raid.json','w').close()
     while len(fights):
         id, fight = fights.popitem()
         await tm_continue_fight(False,
@@ -285,6 +331,10 @@ async def resume_fights():
                                     duel['fhealth'], duel['ohealth'],
                                     duel['fdam'], duel['odam'],
                                     duel['rr'])
+    if len(raid):
+        await tm_continue_raid(raid['boss'], raid['boss_stat'],
+                               raid['members'], raid['member_stats'],
+                               raid['memberhealths'])
 
 async def tm_finish_fight(is_duel, fighter, opponent, result):
     chars = await loadchars()
@@ -345,6 +395,15 @@ async def loadduels():
         else:
             duels = {}
     return duels
+
+async def loadraid():
+    with open('./tm/raid.json', 'r+') as raidfile:
+        if len(raidfile.read()):
+            raidfile.seek(0)
+            raid = json.load(raidfile)
+        else:
+            raid = {}
+    return raid
 
 async def updatechar(char):
     '''Overwrites the old data for a character'''
