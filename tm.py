@@ -216,7 +216,9 @@ async def tm_start_fight(is_duel, fighter, opponent):
     await updatechar(fighter)
     await tm_continue_fight(is_duel, fighter, opponent, advantage, fhealth, ohealth, fdam, odam, rr)
 
-async def tm_start_raid(boss, members):
+async def tm_start_raid(boss, member_ids):
+    chars = await loadchars()
+    members = [await Pilot.async_init(id, chars[id]) for id in member_ids]
     member_stats = [m.choose_stat(boss) for m in members]
     memberhealths = [m.mech.stats[1] for m in members]
     boss_stat = (scipy.stats.mode(member_stats)[0][0] - 1) % 4
@@ -295,7 +297,7 @@ async def tm_pause_raid(boss, boss_stat, members, member_stats, memberhealths):
     members_ids = [m.id for m in members]
     raiddict = {'boss': boss, 'boss_stat': boss_stat,
                 'members': members_ids, 'member_stats': member_stats,
-                'memberhealths': memberhealths}
+                'memberhealths': memberhealths, 'state': 'paused'}
     with open('./tm/raid.json','w+') as raidfile:
         json.dump(raiddict, raidfile)
 
@@ -332,7 +334,7 @@ async def resume_fights():
                                         duel['rr'])
             except:
                 print('Unknown pilot ID')
-    if len(raid):
+    if len(raid) and raid['state'] == 'paused':
         chars = await loadchars()
         members = []
         for id in raid['members']:
@@ -705,8 +707,35 @@ async def mechname(ctx, *args):
     '''Generate a random mech name'''
     await ctx.send('The ' + await parse_gen('$TopLevelPatterns'))
 
-async def openraid():
-    pass
+async def openraid(ctx, *args):
+    raid = await loadraid()
+    if len(raid):
+        await ctx.send("There's already a raid!")
+    else:
+        boss = RaidBoss('Amalgam','Aggressive',[200,10,10,10],[2000,2000])
+        boss.health = 2000
+        raid = {'state': 'open',
+                'members': [],
+                'boss': boss}
+        with open('./tm/raid.json','w+') as raidfile:
+            json.dump(raid, raidfile)
+        await ctx.send('RAID OPEN! Use `%tm joinraid` to participate!')
+
+async def joinraid(ctx, *args):
+    raid = await loadraid()
+    if len(raid):
+        if raid['state'] == 'open':
+            raid['members'].append(ctx.author.id)
+            await ctx.send("Joined the raid!")
+        else:
+            await ctx.send("The raid already started.")
+    else:
+        await ctx.send("There's no raid to join.")
+
+async def startraid(ctx, *args):
+    if len(raid):
+        if raid['state'] == 'open':
+            await tm_start_raid(raid['boss'],raid['members'])
 
 class Fight():
     pass
@@ -773,6 +802,9 @@ class Fight_Thing():
         return 2
 
 class Enemy(Fight_Thing):
+    pass
+
+class RaidBoss(Fight_Thing):
     pass
 
 class Pilot(Fight_Thing):
@@ -1072,7 +1104,9 @@ class TinyMech(commands.Cog):
             await get_record(ctx, *args)
         elif cmd == 'disengage':
             await disengage(ctx, *args)
-        if ctx.author.id == 200669454848360448:
+        elif cmd == 'joinraid':
+            await joinraid(ctx, *args)
+        elif ctx.author.id == 200669454848360448:
             if cmd == 'forcedays':
                 try:
                     numdays = int(args[0])
@@ -1084,6 +1118,8 @@ class TinyMech(commands.Cog):
                 await tm_event()
             elif cmd == 'openraid':
                 await openraid()
+            elif cmd == 'startraid':
+                await startraid()
             elif cmd == 'settime':
                 try:
                     t = int(args[0])
