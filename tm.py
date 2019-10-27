@@ -485,6 +485,24 @@ async def upgrade(ctx, *args):
     else:
         await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
+async def disengage(ctx, *args):
+    '''Try to purchase a mech upgrade'''
+    if args:
+        id = args[0]
+    else:
+        id = str(ctx.author.id)
+    chars = await loadchars()
+    if id in chars:
+        char = await Pilot.async_init(id, dict = chars[id])
+        if await is_fighting(char):
+            await deletefight(char.id)
+            char.add_history('Disengaged from the fight.')
+            await ctx.send('Disengaged successfully!')
+        else:
+            await ctx.send('You can\'t disengage either since you\'re not in a fight or since you\'re dueling.')
+    else:
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
+
 async def buypet(ctx, *args):
     '''Try to purchase a pet. Your current pet will go live on a farm if successful'''
     if args:
@@ -579,7 +597,7 @@ async def duel(ctx, *args):
     f = await Pilot.async_init(id, dict=chars[id])
     o = await Pilot.async_init(opp_id, dict=chars[opp_id])
     if await is_fighting(f):
-        await ctx.send("You're already in a fight!")
+        await ctx.send("You're already in a fight! You can use `%tm disengage` to leave the fight, unless it's a duel.")
         return
     if await is_fighting(o):
         await ctx.send("They're already in a fight!")
