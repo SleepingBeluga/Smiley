@@ -567,8 +567,8 @@ async def upgrade(ctx, *args):
     chars = await loadchars()
     if id in chars:
         char = await Pilot.async_init(id, dict = chars[id])
-        topstat = max(char.mech.stats)
-        cost = int((topstat*(1.5**(topstat/1000)))/100)*(10)
+        avgstat = (char.mech.stats[0] * char.mech.stats[0])**0.5
+        cost = int((avgstat*(1.5**(avgstat/1000)))/100)*(10)
         if char.money >= cost:
             char.money -= cost
             stat = random.randint(0,1)
@@ -609,8 +609,8 @@ async def buypet(ctx, *args):
     chars = await loadchars()
     if id in chars:
         char = await Pilot.async_init(id, dict = chars[id])
-        topstat = max(char.mech.stats)
-        cost = int((topstat*(1.4**(topstat/1000)))/300)*(5)
+        avgstat = (char.mech.stats[0] * char.mech.stats[1])**0.5
+        cost = int((avgstat*(1.4**(avgstat/1000)))/300)*(5)
         if char.money >= cost:
             char.money -= cost
             rarity = min(random.choices(range(5), k = 3)) + 1
