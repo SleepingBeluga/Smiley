@@ -900,7 +900,7 @@ class Pilot(Fight_Thing):
                 self.bday += 366
                 await self.add_history('Celebrated ' + await self.pronoun(type='his/her') + ' ' + await ord(self.age) + ' birthday!', True)
                 await updatechar(self)
-            if self.record >= 6*(self.rank + 1):
+            if self.record >= 6*(self.rank + 1)*(1.02**self.rank):
                 await self.promote()
                 await self.add_history('Pilot promoted!', True)
                 await updatechar(self)
