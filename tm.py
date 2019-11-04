@@ -134,7 +134,7 @@ async def tm_event(char):
     await event(char)
 
 async def tm_find(char):
-    loot = int((random.randint(20,30) + random.randint(5,40)) * (1.05 ** char.record))
+    loot = int((random.randint(20,30) + random.randint(5,40)) * (1.02 ** char.record))
     char.money += loot
     await char.add_history('Found some salvage worth ' + str(loot) + ' credits!', True)
     await updatechar(char)
@@ -372,7 +372,7 @@ async def tm_finish_fight(is_duel, fighter, opponent, result):
             if 200 - topstat * random.randint(1,5) > 0:
                 fighter.stats[random.randint(0,3)] += 1
             winnings = random.randint(10,50) + random.randint(5,50)
-            winnings = int(winnings * (1.07 ** min(fighter.record, 0)))
+            winnings = int(winnings * (1.04 ** max(fighter.record, 0)))
             fighter.record += 1
             fighter.money += winnings
             await fighter.add_history('Won the battle vs ' + opponent.name + ', got ' + str(winnings) + ' credits!', True)
