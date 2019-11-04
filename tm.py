@@ -180,10 +180,18 @@ async def tm_battle(char):
     enemies = [Enemy('Enemy Drone','Aggressive',[50,20,100,75],[1000,1000]),
                Enemy('Rogue Mech Pilot','Cautious',[80,75,75,75],[750,1250]),
                Enemy('Enemy Soldier','Confident',[90,15,80,60],[1250,700]),
+               Enemy('Enemy Soldier','Aggressive',[100,50,80,40],[750,1250]),
                Enemy('Berzerk Mech','Lucky',[20,90,90,20],[500,2000]),
                Enemy('Pirate','Clever',[40,40,75,100],[1500,500]),
+               Enemy('Bandit','Lucky',[40,30,85,100],[1500,500]),
                Enemy('Emplacement','Defensive',[75,10,75,10],[1500,1700]),
                Enemy('Belligerents','Aggressive',[50,100,75,50],[1000,800]),
+               Enemy('Pack of Wild Animals','Aggressive',[10,20,80,70],[800,1900]),
+               Enemy('Air Combatant','Confident',[50,80,60,95],[1000,1100]),
+               Enemy('Enemy General','Clever',[110,80,80,75],[1400,1400]),
+               Enemy('Deserter','Defensive',[65,100,80,90],[800,1400]),
+               Enemy('Prototype Drone','Lucky',[55,15,105,70],[1200,1000]),
+               Enemy('Cyborg','Defensive',[70,20,80,70],[1000,1000]),
                Enemy('Broken Experiment','Lucky',exp_stats,[1500,1700])
                ]
     opponent = random.choice(enemies)
