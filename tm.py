@@ -186,6 +186,7 @@ async def tm_battle(char):
                Enemy('Bandit','Lucky',[40,30,85,100],[1500,500]),
                Enemy('Emplacement','Defensive',[75,10,75,10],[1500,1700]),
                Enemy('Belligerents','Aggressive',[50,100,75,50],[1000,800]),
+               Enemy('Guerilla Fighters','Clever',[55,90,75,60],[900,1000]),
                Enemy('Pack of Wild Animals','Aggressive',[10,20,80,70],[800,1900]),
                Enemy('Air Combatant','Confident',[50,80,60,95],[1000,1100]),
                Enemy('Enemy General','Clever',[110,80,80,75],[1400,1400]),
