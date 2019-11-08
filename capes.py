@@ -4,6 +4,10 @@ import discord, sheets
 class Capes(commands.Cog):
     @commands.command()
     async def cape(self, ctx, *args):
+        '''Provide information on Weaverdice capes in the database. 
+
+        Can access the google sheets at https://docs.google.com/spreadsheets/d/1_syrsmptzWG0u3xdY3qzutYToY1t3I8s6yaryIpfckU/edit#gid=1668315016
+        '''
         # Search for the cape name
         name = ""
         for arg in args:
