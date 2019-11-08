@@ -465,7 +465,7 @@ async def luck(column, beta = False, search = None):
     if index:
         return str(relevantLuck[index])
 
-async def skill(ctx, skill, arg):
+async def skill(skill, arg):
     sheet = service.spreadsheets()
     index = None
     result = sheet.values().get(spreadsheetId=SuggestionID,

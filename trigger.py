@@ -303,9 +303,9 @@ class Triggers_And_More(commands.Cog):
             return
         output = ""
         if len(args) == 1:
-            output = (await sheets.skill(ctx,str(args[0]), "basic"))
+            output = (await sheets.skill(str(args[0]), "basic"))
         else:
-            output = (await sheets.skill(ctx,str(args[0]), str(args[1])))
+            output = (await sheets.skill(str(args[0]), str(args[1])))
 
         await ctx.send("```{}```".format(str(output)))
 
