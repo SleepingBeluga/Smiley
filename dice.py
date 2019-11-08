@@ -186,3 +186,17 @@ class Rolls(commands.Cog):
             await ctx.send(major)
         else:
             await ctx.send(value + ' of '+ suit)
+
+    @commands.command()
+    async def shuffle(self, ctx, *args):
+        '''Shuffles space seperated arguments'''
+        shuffled = []
+        for arg in args:
+            shuffled += [str(arg)]
+        random.shuffle(shuffled)
+        result = '[ '
+        for i in shuffled:
+            result += i + ', '
+
+        result = result[:-2] + ' ]'
+        await ctx.send(result)
