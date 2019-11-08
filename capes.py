@@ -10,35 +10,33 @@ class Capes(commands.Cog):
             name += arg + " "
 
         name = name[:-1]
-        await ctx.send("Getting info")
         info = (await sheets.cape(name))
-        await ctx.send("Info collected, parsing...")
         if info:
             output = "**" + info[0] + "**"
-            if not info[5] == "":
+            if len(info) > 5 and not info[5] == "":
                 output += " (" + info[5] + ")"
             output += "\n"
-            if not info[9] == "":
+            if len(info) > 9 and not info[9] == "":
                 output += "> Status: **" + info[9] + "**\n"
-            if not info[1] == "":
+            if len(info) > 1 and not info[1] == "":
                 output += "> Civilian identity: ||" + info[1] + "||\n"
-            if not info[3] == "" or not info[4] == "":
+            if (len(info) > 3 and not info[3] == "") or (len(info) > 4 and not info[4] == ""):
                 output += "> Affiliation: " + info[3]
-                if not info[3] == "" and not info[4] == "":
+                if len(info) > 4 and (not info[3] == "" and not info[4] == ""):
                     output += ", "
                 output += info[4] + "\n"
-            if not info[2] == "":
+            if len(info) > 2 and not info[2] == "":
                 output += "> Power: " + info[2] + "\n"
-            if not info[7] == "":
-                output += "> Campaign: " + info[7] + "\n"
-            if not info[8] == "":
-                output += "> Owner: " + info[8]
-                if not info[6] == "":
+            if len(info) > 7 and not info[7] == "":
+                output += "> Campaign: **" + info[7] + "**\n"
+            if len(info) > 8 and not info[8] == "":
+                output += "> Owner: **" + info[8] + "**"
+                if len(info) > 6 and not info[6] == "":
                     output += ", " + info[6]
                 output += "\n"
-            elif not info[6] == "":
+            elif len(info) > 6 and not info[6] == "":
                 output += "> Unowned, **" + info[6] + "**\n"
-            if not info[10] == "":
+            if len(info) > 10 and not info[10] == "":
                 output += "> Additional notes: " + info[10]
             await ctx.send(output)
             #await ctx.send(str(info))
