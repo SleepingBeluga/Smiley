@@ -161,6 +161,7 @@ ID1 = '1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY'
 TriggerID = '1bWigKxmpEObOWTP0uRA_xwmMnF3Lpk9ZQer5msl6WnA'
 DetailID = '1aHyZ7c7TIgt903mPinOakrgli2WZu5IRtiGYPCnCqDE'
 SuggestionID = '1kWxWhvKzAYl98nuvgCQOchw7mgH7aecyB82hSwMtatQ'
+CapesDatabaseID = '1_syrsmptzWG0u3xdY3qzutYToY1t3I8s6yaryIpfckU'
 
 async def newgame(name, GM, type):
 
@@ -553,5 +554,21 @@ async def skill(skill, arg):
             return string
 
     return "Haven't added this skill yet"
+
+async def cape(name):
+    sheet = service.spreadsheets()
+    index = None
+    result = sheet.values().get(spreadsheetId=CapesDatabaseID,
+                                range='Non-Canon!A2:K1833').execute()
+    values = result.get('values', [])
+
+    for row in values:
+        try:
+            if not str(row[0]) == "" and str(row[0]) == name:
+                return row
+        except:
+            pass
+    
+    return None
 
 # ...sorry about the mess X|
