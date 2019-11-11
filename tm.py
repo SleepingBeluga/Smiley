@@ -567,6 +567,21 @@ async def importanthistory(ctx, *args):
     else:
         await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
+async def do_upgrade(char):
+    avgstat = (char.mech.stats[0] * char.mech.stats[0])**0.5
+    cost = int((avgstat*(1.5**(avgstat/1000)))/100)*(10)
+    if char.money >= cost:
+        char.money -= cost
+        stat = random.randint(0,1)
+        char.mech.stats[stat] += random.randint(150,175)
+        await char.add_history('Upgraded mech for ' + str(cost) + ' credits.', True)
+        await updatechar(char)
+        avgstat = (char.mech.stats[0] * char.mech.stats[0])**0.5
+        cost = int((avgstat*(1.5**(avgstat/1000)))/100)*(10)
+        return True, cost
+    else:
+        return False, cost
+
 async def upgrade(ctx, *args):
     '''Try to purchase a mech upgrade'''
     if args:
@@ -576,17 +591,29 @@ async def upgrade(ctx, *args):
     chars = await loadchars()
     if id in chars:
         char = await Pilot.async_init(id, dict = chars[id])
-        avgstat = (char.mech.stats[0] * char.mech.stats[0])**0.5
-        cost = int((avgstat*(1.5**(avgstat/1000)))/100)*(10)
-        if char.money >= cost:
-            char.money -= cost
-            stat = random.randint(0,1)
-            char.mech.stats[stat] += random.randint(150,175)
-            await char.add_history('Upgraded mech for ' + str(cost) + ' credits.', True)
-            await updatechar(char)
+        res, cost = await do_upgrade(char)
+        if res:
             await ctx.send('Upgrade purchased!```' + await char.mech.summary() + '```')
         else:
             await ctx.send('Your next upgrade costs ' + str(cost) + ' but you only have ' + str(char.money) + ' credits.')
+    else:
+        await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
+
+async def full_upgrade(ctx, *args):
+    '''Try to purchase a mech upgrade'''
+    if args:
+        id = args[0]
+    else:
+        id = str(ctx.author.id)
+    chars = await loadchars()
+    if id in chars:
+        char = await Pilot.async_init(id, dict = chars[id])
+        res = True
+        while res:
+            res, cost = await do_upgrade(char)
+        await ctx.send('Fully upgraded! Your next upgrade costs ' + str(cost) + \
+                       '.```' + await char.summary() + '``````' + \
+                       await char.mech.summary() + '```')
     else:
         await ctx.send("You don't seem to have a pilot yet. Use `%tm join` to hire one!")
 
@@ -1146,6 +1173,8 @@ class TinyMech(commands.Cog):
             await mechname(ctx, *args)
         elif cmd == 'upgrade':
             await upgrade(ctx, *args)
+        elif cmd == 'fupgrade':
+            await full_upgrade(ctx, *args)
         elif cmd == 'duel':
             await duel(ctx, *args)
         elif cmd == 'buypet':
