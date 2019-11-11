@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 import time, random, asyncio
 import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm
-import ac, autologs
+import ac, autologs, capes
 from wounds import WoundOption, Wound
 
 '''My (Smiley's) Main Script
@@ -33,6 +33,7 @@ async def reset(ctx, *args):
         await ctx.send('OK, I\'ve reset.')
         await draft.setup()
 
+b.add_cog(capes.Capes())
 b.add_cog(draft.Draft())
 b.add_cog(gamechannels.Game_Channels())
 b.add_cog(dice.Rolls())
