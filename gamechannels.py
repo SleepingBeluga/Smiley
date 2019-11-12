@@ -82,9 +82,6 @@ class Game_Channels(commands.Cog):
         check = False
         debugging = False
 
-        if args[0].lower() == "wd" or args[0].lower() == "pd":
-            args[0] = ""
-
         for arg in args:
             if arg.lower() == "-d":
                 debugging = True
@@ -126,10 +123,13 @@ class Game_Channels(commands.Cog):
                 joining += channel.name + ", "
                 channelsJoined += 1
                 await channel.set_permissions(ctx.author, read_messages=True)
-            if channel.name == gameName:
+            elif channel.name == gameName or \
+              'wd' + channel.name == gameName or \
+              'pd' + channel.name == gameName:
                 game = channel
                 joining += game.name
                 check = (catName in ['PactDice Games', 'WeaverDice Games', 'Archives'])
+                break
 
         # Let's do some debugging
         if debugging:
@@ -338,7 +338,7 @@ class Game_Channels(commands.Cog):
     @commands.command()
     async def owner(self, ctx, *args):
         '''Checks the owner of a given campaign
-        Usage: %owner <game name> 
+        Usage: %owner <game name>
         '''
         gameName = ''
         game = None
