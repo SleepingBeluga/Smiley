@@ -561,14 +561,21 @@ async def cape(name):
     result = sheet.values().get(spreadsheetId=CapesDatabaseID,
                                 range='Non-Canon!A2:K1833').execute()
     values = result.get('values', [])
+    count = 0
 
     for row in values:
         try:
-            if not str(row[0]) == "" and str(row[0]) == name:
-                return row
+            if not str(row[0]) == "":
+                if str(row[0]) == name:
+                    return row
+                count += 1
         except:
             pass
     
+    if name == "":
+        num = random.randrange(0,count)
+        return values[num]
+
     return None
 
 # ...sorry about the mess X|
