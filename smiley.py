@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import os
+path_here = os.path.dirname(os.path.realpath(__file__))
+os.chdir(path_here)
+# Lets us not care where smiley runs from
 import discord
 from discord.ext import commands
 import time, random, asyncio
