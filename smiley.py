@@ -40,8 +40,9 @@ async def reset(ctx, *args):
 async def updatebot(ctx, *args):
     '''Updates the bot. Mods only.'''
     if 'Mod Team' in (str(role) for role in ctx.author.roles):
-        repo = git.Repo('https://gitlab.com/NickReu/Smiley')
+        repo = git.Repo('.')
         repo.remotes.origin.pull()
+        await ctx.bot.logout()
         sys.exit()
 
 b.add_cog(capes.Capes())
