@@ -44,7 +44,7 @@ async def updatebot(ctx, *args):
         repo.remotes.origin.pull()
         await ctx.send('Restarting!')
         await ctx.bot.logout()
-        sys.exit()
+        sys.exit(1)
 
 b.add_cog(capes.Capes())
 b.add_cog(draft.Draft())
