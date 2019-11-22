@@ -42,7 +42,7 @@ async def updatebot(ctx, *args):
     if 'Mod Team' in (str(role) for role in ctx.author.roles):
         repo = git.Repo('.')
         repo.remotes.origin.pull()
-        await ctx.send('Restarting!')
+        await ctx.send('Pulled repo, restarting!')
         await ctx.bot.logout()
         sys.exit(1)
 
