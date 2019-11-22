@@ -39,6 +39,7 @@ async def reset(ctx, *args):
 @b.command()
 async def updatebot(ctx, *args):
     '''Updates the bot. Mods only.'''
+    await ctx.send('gonna check if you are a mod!')
     if 'Mod Team' in (str(role) for role in ctx.author.roles):
         repo = git.Repo('.')
         repo.remotes.origin.pull()
