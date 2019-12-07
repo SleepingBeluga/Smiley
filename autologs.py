@@ -139,8 +139,8 @@ class AutoLogs(commands.Cog):
         strikeInds = []
         priorPoster = ''
 
-        date1 = datetime.datetime.strptime(args[0],'%y-%m-%d-%H-%M') + datetime.timedelta(hours=(data[ctx.channel.name]['timezone']))
-        date2 = datetime.datetime.strptime(args[1],'%y-%m-%d-%H-%M') + datetime.timedelta(seconds=59) + datetime.timedelta(hours=(data[ctx.channel.name]['timezone']))
+        date1 = datetime.datetime.strptime(args[0],'%y-%m-%d-%H-%M') - datetime.timedelta(hours=(data[ctx.channel.name]['timezone']))
+        date2 = datetime.datetime.strptime(args[1],'%y-%m-%d-%H-%M') + datetime.timedelta(seconds=59) - datetime.timedelta(hours=(data[ctx.channel.name]['timezone']))
 
 
         async with ctx.typing():
