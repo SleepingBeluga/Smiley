@@ -178,7 +178,7 @@ class AutoLogs(commands.Cog):
                 if data[ctx.channel.name]['rolls']:
                     rollStart = text.find('\n%')
                     if rollStart != -1:
-                        rollEnd = text.find('[^_^]')
+                        rollEnd = text.find('[＾_＾]')
                         if rollEnd == -1:
                             priorPoster = message.author.display_name
                             postCount -= 1
