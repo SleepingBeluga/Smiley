@@ -157,6 +157,7 @@ class AutoLogs(commands.Cog):
         async with ctx.typing():
             async for message in ctx.history(limit=10000,oldest_first=True,after=date1,before=date2):
                 msg = ''
+                author = message.author.display_name
                 if data[ctx.channel.name]['nomarks']:
                     msg = message.content.replace('|', '').replace('...', '')
                 if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
@@ -166,7 +167,8 @@ class AutoLogs(commands.Cog):
                         msg = ''
                     if message.author == ctx.me:
                         msg = "**    ROLL: " + message.content + "**"
-                if message.author.display_name != authCheck and message.author != ctx.me and msg != '':
+                        author = authCheck
+                if author != authCheck and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
                     postStarts.append(len(text) + out[1])
@@ -271,6 +273,7 @@ class AutoLogs(commands.Cog):
         async with ctx.typing():
             async for message in ctx.history(limit=10000, oldest_first=True, after=date1, before=date2):
                 msg = ''
+                author = message.author.display_name
                 if data[ctx.channel.name]['nomarks']:
                     msg = message.content.replace('|', '').replace('...', '')
                 if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
@@ -280,7 +283,8 @@ class AutoLogs(commands.Cog):
                         msg = ''
                     if message.author == ctx.me:
                         msg = "**    ROLL: " + message.content + "**"
-                if message.author.display_name != authCheck and message.author != ctx.me and msg != '':
+                        author = authCheck
+                if author != authCheck and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
                     postStarts.append(len(text) + out[1])
