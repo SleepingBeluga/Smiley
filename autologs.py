@@ -118,7 +118,7 @@ class AutoLogs(commands.Cog):
                 data = json.load(filechan)
         if ctx.channel.name not in data:
             data[ctx.channel.name] = {
-                'timezone': 5,
+                'timezone': 0,
                 'nocomments': True,
                 'nomarks': True,
                 'rolls': True,
@@ -178,7 +178,7 @@ class AutoLogs(commands.Cog):
                 if data[ctx.channel.name]['rolls']:
                     rollStart = text.find('\n%')
                     if rollStart != -1:
-                        rollEnd = text.find('[＾_＾]')
+                        rollEnd = text.find(ctx.me.display_name)
                         if rollEnd == -1:
                             priorPoster = message.author.display_name
                             postCount -= 1
@@ -227,8 +227,140 @@ class AutoLogs(commands.Cog):
 
         inds = [rollInds,boldInds,italicInds,underInds,strikeInds]
         postStarts.append(len(text))
-        await docs.add_text(out, postStarts, nameEnds, text=text, ind=inds)
-        await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
+        if text == '':
+            await ctx.send('No logs found.')
+        else:
+            await docs.add_text(out, postStarts, nameEnds, text=text, ind=inds)
+            await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
 
         with open('logchansets.json', 'w+') as filechan:
             json.dump(data, filechan)
+
+
+    @commands.command()
+    async def qlog(self, ctx, *args):
+        '''Create a log of the past x hours. Format: %qlog [x]. Defaults to 24.'''
+        data = {}
+        with open('logchansets.json', 'r+') as filechan:
+            if len(filechan.read()):
+                filechan.seek(0)
+                data = json.load(filechan)
+        if ctx.channel.name not in data:
+            data[ctx.channel.name] = {
+                'timezone': 0,
+                'nocomments': True,
+                'nomarks': True,
+                'rolls': True,
+                'discord': True
+            }
+
+        thing = {}
+        plyrs = []
+        authCheck = ''
+        postStarts = []
+        nameEnds = []
+        text = ''
+        postCount = 0
+        rollInds = []
+        boldInds = []
+        italicInds = []
+        underInds = []
+        strikeInds = []
+        priorPoster = ''
+
+        date2 = datetime.datetime.utcnow() - datetime.timedelta(seconds=2)
+        if len(args) == 1:
+            date1 = datetime.datetime.utcnow() - datetime.timedelta(hours=int(args[0]))
+        else:
+            date1 = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+
+
+        async with ctx.typing():
+            async for message in ctx.history(limit=10000, oldest_first=True, after=date1, before=date2):
+                if message.author.display_name not in plyrs:
+                    plyrs.append(message.author.display_name)
+
+        out = await docs.new_log_doc(thing, ctx.channel.name, plyrs)
+
+        async with ctx.typing():
+            async for message in ctx.history(limit=10000, oldest_first=True, after=date1, before=date2):
+                if message.author.display_name != authCheck:
+                    postCount += 1
+                    authCheck = message.author.display_name
+                    postStarts.append(len(text) + out[1])
+                    nameEnds.append(len(text) + out[1] + len(message.author.display_name))
+                    text += message.author.display_name + '\n' + \
+                            message.content.replace('\n\n', '\n') + '\n'
+                else:
+                    text += message.content.replace('\n\n', '\n') + '\n'
+                if data[ctx.channel.name]['nomarks']:
+                    text = text.replace('\n|', '').replace('|', '').replace('\n...\n', '\n')
+                if data[ctx.channel.name]['nocomments']:
+                    comStart = text.find('((')
+                    while (comStart != -1):
+                        comEnd = text.find('))')
+                        if comEnd != -1:
+                            oldtext = text
+                            text = oldtext[:comStart] + oldtext[comEnd + 3:]
+                        comStart = text.find('((')
+                if data[ctx.channel.name]['rolls']:
+                    rollStart = text.find('\n%')
+                    if rollStart != -1:
+                        rollEnd = text.find(ctx.me.display_name)
+                        if rollEnd == -1:
+                            priorPoster = message.author.display_name
+                            postCount -= 1
+                        else:
+                            authCheck = priorPoster
+                            rollInds.append([rollStart, postCount, rollStart + len(message.content) + 11])
+                            oldtext = text
+                            text = oldtext[:rollStart] + "\n    ROLL: " + oldtext[rollEnd + 6:]
+                            postStarts.pop(len(postStarts) - 1)
+                            nameEnds.pop(len(nameEnds) - 1)
+                if data[ctx.channel.name]['discord']:
+                    starStart = text.find('*')
+                    dashStart = text.find('__')
+                    squigStart = text.find('~~')
+                    while (starStart != -1) or (dashStart != -1) or (squigStart != -1):
+                        if starStart < 0:
+                            starStart += 2000000000
+                        if dashStart < 0:
+                            dashStart += 2000000000
+                        if squigStart < 0:
+                            squigStart += 2000000000
+                        if (0 < starStart < squigStart) and (0 < starStart < dashStart):
+                            if text[starStart + 1] == '*':
+                                starEnd = text.find('**', starStart + 3)
+                                if starEnd != -1:
+                                    boldInds.append([starStart - 1, postCount, starEnd - 3])
+                                text = text.replace('**', '', 2)
+                            else:
+                                starEnd = text.find('*', starStart + 2)
+                                if starEnd != -1:
+                                    italicInds.append([starStart - 1, postCount, starEnd - 2])
+                                text = text.replace('*', '', 2)
+                        elif (0 < dashStart < squigStart) and (0 < dashStart < starStart):
+                            dashEnd = text.find('__', dashStart + 3)
+                            if dashEnd != -1:
+                                underInds.append([dashStart - 1, postCount, dashEnd - 3])
+                            text = text.replace('__', '', 2)
+                        elif (0 < squigStart < starStart) and (0 < squigStart < dashStart):
+                            squigEnd = text.find('~~', squigStart + 3)
+                            if squigEnd != -1:
+                                strikeInds.append([squigStart - 1, postCount, squigEnd - 3])
+                            text = text.replace('~~', '', 2)
+                        starStart = text.find('*')
+                        dashStart = text.find('__')
+                        squigStart = text.find('~~')
+
+        inds = [rollInds, boldInds, italicInds, underInds, strikeInds]
+        postStarts.append(len(text))
+        if text == '':
+            await ctx.send('No logs found.')
+        else:
+            await docs.add_text(out, postStarts, nameEnds, text=text, ind=inds)
+            await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
+
+        with open('logchansets.json', 'w+') as filechan:
+            json.dump(data, filechan)
+
