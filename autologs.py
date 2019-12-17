@@ -161,7 +161,12 @@ class AutoLogs(commands.Cog):
                     msg = message.content.replace('|', '').replace('...', '')
                 if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
                     msg = ''
-                if message.author.display_name != authCheck and msg != '':
+                if data[ctx.channel.name]['rolls']:
+                    if message.content[0] == '%':
+                        msg = ''
+                    if message.author == ctx.me:
+                        msg = "**    ROLL: " + message.content + "**"
+                if message.author.display_name != authCheck and message.author != ctx.me and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
                     postStarts.append(len(text) + out[1])
@@ -170,20 +175,6 @@ class AutoLogs(commands.Cog):
                             msg.replace('\n\n', '\n') + '\n'
                 elif msg != '':
                     text += msg.replace('\n\n','\n') + '\n'
-                if data[ctx.channel.name]['rolls']:
-                    rollStart = text.find('\n%')
-                    if rollStart != -1:
-                        rollEnd = text.find(ctx.me.display_name)
-                        if rollEnd == -1:
-                            priorPoster = message.author.display_name
-                            postCount -= 1
-                        else:
-                            authCheck = priorPoster
-                            rollInds.append([rollStart, postCount, rollStart + len(message.content) + 11])
-                            oldtext = text
-                            text = oldtext[:rollStart] + "\n    ROLL: " + oldtext[rollEnd + 6:]
-                            postStarts.pop(len(postStarts)-1)
-                            nameEnds.pop(len(nameEnds)-1)
                 if data[ctx.channel.name]['discord']:
                     starStart = text.find('*')
                     dashStart = text.find('__')
@@ -284,7 +275,12 @@ class AutoLogs(commands.Cog):
                     msg = message.content.replace('|', '').replace('...', '')
                 if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
                     msg = ''
-                if message.author.display_name != authCheck and msg != '':
+                if data[ctx.channel.name]['rolls']:
+                    if message.content[0] == '%':
+                        msg = ''
+                    if message.author == ctx.me:
+                        msg = "**    ROLL: " + message.content + "**"
+                if message.author.display_name != authCheck and message.author != ctx.me and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
                     postStarts.append(len(text) + out[1])
@@ -293,20 +289,6 @@ class AutoLogs(commands.Cog):
                             msg.replace('\n\n', '\n') + '\n'
                 elif msg != '':
                     text += msg.replace('\n\n', '\n') + '\n'
-                if data[ctx.channel.name]['rolls']:
-                    rollStart = text.find('\n%')
-                    if rollStart != -1:
-                        rollEnd = text.find(ctx.me.display_name)
-                        if rollEnd == -1:
-                            priorPoster = message.author.display_name
-                            postCount -= 1
-                        else:
-                            authCheck = priorPoster
-                            rollInds.append([rollStart, postCount, rollStart + len(message.content) + 11])
-                            oldtext = text
-                            text = oldtext[:rollStart] + "\n    ROLL: " + oldtext[rollEnd + 6:]
-                            postStarts.pop(len(postStarts) - 1)
-                            nameEnds.pop(len(nameEnds) - 1)
                 if data[ctx.channel.name]['discord']:
                     starStart = text.find('*')
                     dashStart = text.find('__')
