@@ -156,25 +156,20 @@ class AutoLogs(commands.Cog):
 
         async with ctx.typing():
             async for message in ctx.history(limit=10000,oldest_first=True,after=date1,before=date2):
-                if message.author.display_name != authCheck:
+                msg = ''
+                if data[ctx.channel.name]['nomarks']:
+                    msg = message.content.replace('|', '').replace('...', '')
+                if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
+                    msg = ''
+                if message.author.display_name != authCheck and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
                     postStarts.append(len(text) + out[1])
                     nameEnds.append(len(text) + out[1] + len(message.author.display_name))
                     text += message.author.display_name + '\n' + \
-                            message.content.replace('\n\n', '\n') + '\n'
-                else:
-                    text += message.content.replace('\n\n','\n') + '\n'
-                if data[ctx.channel.name]['nomarks']:
-                    text = text.replace('\n|', '').replace('|', '').replace('\n...\n', '\n')
-                if data[ctx.channel.name]['nocomments']:
-                    comStart = text.find('((')
-                    while (comStart != -1):
-                        comEnd = text.find('))')
-                        if comEnd != -1:
-                            oldtext = text
-                            text = oldtext[:comStart] + oldtext[comEnd + 3:]
-                        comStart = text.find('((')
+                            msg.replace('\n\n', '\n') + '\n'
+                elif msg != '':
+                    text += msg.replace('\n\n','\n') + '\n'
                 if data[ctx.channel.name]['rolls']:
                     rollStart = text.find('\n%')
                     if rollStart != -1:
@@ -284,25 +279,20 @@ class AutoLogs(commands.Cog):
 
         async with ctx.typing():
             async for message in ctx.history(limit=10000, oldest_first=True, after=date1, before=date2):
-                if message.author.display_name != authCheck:
+                msg = ''
+                if data[ctx.channel.name]['nomarks']:
+                    msg = message.content.replace('|', '').replace('...', '')
+                if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
+                    msg = ''
+                if message.author.display_name != authCheck and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
                     postStarts.append(len(text) + out[1])
                     nameEnds.append(len(text) + out[1] + len(message.author.display_name))
                     text += message.author.display_name + '\n' + \
-                            message.content.replace('\n\n', '\n') + '\n'
-                else:
-                    text += message.content.replace('\n\n', '\n') + '\n'
-                if data[ctx.channel.name]['nomarks']:
-                    text = text.replace('\n|', '').replace('|', '').replace('\n...\n', '\n')
-                if data[ctx.channel.name]['nocomments']:
-                    comStart = text.find('((')
-                    while (comStart != -1):
-                        comEnd = text.find('))')
-                        if comEnd != -1:
-                            oldtext = text
-                            text = oldtext[:comStart] + oldtext[comEnd + 3:]
-                        comStart = text.find('((')
+                            msg.replace('\n\n', '\n') + '\n'
+                elif msg != '':
+                    text += msg.replace('\n\n', '\n') + '\n'
                 if data[ctx.channel.name]['rolls']:
                     rollStart = text.find('\n%')
                     if rollStart != -1:
