@@ -1,5 +1,5 @@
 from discord.ext import commands
-import datetime
+import datetime, re
 
 class Session():
 
@@ -11,14 +11,14 @@ class Session():
         self.summary = summary
 
     def __str__(self):
-        string = "Session in #" + self.channel
-        string = "\nGM: <@" + gm + ">"
-        if len(players) > 0:
-            string += "\n layers: <@" + players[0] + ">"
-            for i in players[1:]:
-                string += ", <@" + i + ">"
-        string += "\nTime: " + time.__str__() + " UTC"
-        string += "\nSummary: " + summary
+        string = "Session in " + self.channel.mention
+        string += "\nGM: <@!" + self.gm + ">"
+        if len(self.players) > 0:
+            string += "\nPlayers: <@!" + self.players[0] + ">"
+            for i in self.players[1:]:
+                string += ", <@!" + i + ">"
+        string += "\nTime: " + self.time.__str__() + " UTC"
+        string += "\nSummary: " + self.summary
         return string
 
 
@@ -27,15 +27,10 @@ class Scheduling(commands.Cog):
     def __init__(self):
         self.sched = []
 
-    def isPlayer(self, name):
-        match = re.match(r"\<\@[0-9]+\>", name)
-        if match:
-            return True
-        else:
-            return False
-
     @commands.command()
-    async def showShed(self, ctx, *args):
+    async def showSched(self, ctx, *args):
+        '''Shows the full schedule
+        '''
         if len(self.sched) == 0:
             await ctx.send("There are no sessions scheduled")
         else:
@@ -72,23 +67,25 @@ class Scheduling(commands.Cog):
         gm = str(ctx.message.author.id)
 
         players = []
-        while isPlayer(args[index]):
-            players += [ args[index][2:-1] ]
+        while re.match(r"\<\@\![0-9]+\>", args[index]):
+            players += [ args[index][3:-1] ]
             index += 1
 
         year, month, day = args[index].split("/")
         index += 1
-        hour, minute = args[index].split("/")
+        hour, minute = args[index].split(":")
         index += 1
 
         utcOffset = int(args[index][3:])
         index += 1
+        time = datetime.datetime(int(year),int(month),int(day),int(hour)+utcOffset,int(minute))
+
         summary = ""
         for i in args[index:]:
             summary += i + " "
-
-        time = datetime.datetime(int(year),int(month),int(day),int(hour)+utcOffset,int(minute))
+        
         session = Session(found, gm, players, time, summary)
 
         self.sched += [ session ]
+        await ctx.send("Added session to schedule")
 
