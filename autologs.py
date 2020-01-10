@@ -156,10 +156,12 @@ class AutoLogs(commands.Cog):
 
         async with ctx.typing():
             async for message in ctx.history(limit=10000,oldest_first=True,after=date1,before=date2):
-                msg = ''
+                msg = message.content
                 author = message.author.display_name
                 if data[ctx.channel.name]['nomarks']:
-                    msg = message.content.replace('|', '').replace('...', '')
+                    msg = message.content.replace('|', '')
+                    if msg == '...':
+                        msg = ''
                 if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
                     msg = ''
                 if data[ctx.channel.name]['rolls']:
@@ -272,10 +274,12 @@ class AutoLogs(commands.Cog):
 
         async with ctx.typing():
             async for message in ctx.history(limit=10000, oldest_first=True, after=date1, before=date2):
-                msg = ''
+                msg = message.content
                 author = message.author.display_name
                 if data[ctx.channel.name]['nomarks']:
-                    msg = message.content.replace('|', '').replace('...', '')
+                    msg = message.content.replace('|', '')
+                    if msg == '...':
+                        msg = ''
                 if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
                     msg = ''
                 if data[ctx.channel.name]['rolls']:
