@@ -308,7 +308,7 @@ class AutoLogs(commands.Cog):
                             dashStart += 2000000000
                         if squigStart < 0:
                             squigStart += 2000000000
-                        if (0 < starStart < squigStart) and (0 < starStart < dashStart):
+                        if (-1 < starStart < squigStart) and (-1 < starStart < dashStart):
                             if text[starStart + 1] == '*':
                                 starEnd = text.find('**', starStart + 3)
                                 if starEnd != -1:
@@ -319,12 +319,12 @@ class AutoLogs(commands.Cog):
                                 if starEnd != -1:
                                     italicInds.append([starStart - 1, postCount, starEnd - 2])
                                 text = text.replace('*', '', 2)
-                        elif (0 < dashStart < squigStart) and (0 < dashStart < starStart):
+                        elif (-1 < dashStart < squigStart) and (-1 < dashStart < starStart):
                             dashEnd = text.find('__', dashStart + 3)
                             if dashEnd != -1:
                                 underInds.append([dashStart - 1, postCount, dashEnd - 3])
                             text = text.replace('__', '', 2)
-                        elif (0 < squigStart < starStart) and (0 < squigStart < dashStart):
+                        elif (-1 < squigStart < starStart) and (-1 < squigStart < dashStart):
                             squigEnd = text.find('~~', squigStart + 3)
                             if squigEnd != -1:
                                 strikeInds.append([squigStart - 1, postCount, squigEnd - 3])
