@@ -20,33 +20,33 @@ class Snacks(commands.Cog):
         ]
         self.offers = {}
 
-    def total_snacks(self):
+    async def total_snacks(self):
         count = 0
         for i in self.snacks:
             count += self.snacks[i]
         return count
 
-    def output_consumption(self, ctx, snack, snacker):
-        await ctx.send("{} {} {}".format(author.name, random.choice(self.eatings), snack))
+    async def output_consumption(self, ctx, snack, snacker):
+        await ctx.send("{} {} {}".format(ctx.author.name, random.choice(self.eatings), snack))
 
-    def consume(self, ctx, snack, snacker):
+    async def consume(self, ctx, snack, snacker):
         if snack not in self.snacks:
             return False
         else:
             if self.snacks[snack] == 1:
                 del self.snacks[snack]
             else:
-                self.snacks -= 1
+                self.snacks[snack] -= 1
             if snacker not in self.snackers:
                 self.snackers[snacker] = {}
             if snack not in self.snackers[snacker]:
                 self.snackers[snacker][snack] = 0
             
             self.snackers[snacker][snack] += 1
-            self.output_consumption(ctx,snack,snacker)
+            await self.output_consumption(ctx,snack,snacker)
             return True
 
-    def add(self, snack, contributor, count=1):
+    async def add(self, snack, contributor, count=1):
         if snack not in self.snacks:
             self.snacks[snack] = 0
         self.snacks[snack] += count
@@ -71,11 +71,11 @@ class Snacks(commands.Cog):
         '''
         if len(args) == 0 or (len(args) == 1 and args[0] == "eat"):
             # Eat a snack!
-            if len(snacks) == 0:
+            if len(self.snacks) == 0:
                 await ctx.send("Sorry all the snacks are gone!")
             else:
                 snack = random.choice(list(self.snacks.keys()))
-                self.consume(ctx, snack, ctx.author)
+                await self.consume(ctx, snack, ctx.author)
         elif args[0] == "add":
             if len(args) == 1:
                 await ctx.send("Please specify a snack to add to the pile")
@@ -88,7 +88,7 @@ class Snacks(commands.Cog):
                     count = int(count.strip())
                 else:
                     count = 1
-                self.add(snack, ctx.author, count)
+                await self.add(snack, ctx.author, count)
         elif args[0] == "search":
             await ctx.send("Not yet implemented")
         elif args[0] == "offer":
@@ -101,4 +101,3 @@ class Snacks(commands.Cog):
             await ctx.send("Not yet implemented")
         else:
             await ctx.send("Need to finish this command")
-            
