@@ -1,192 +1,59 @@
-import pickle, os.path, datetime, random, difflib
+import os.path, datetime
 from googleapiclient.discovery import build
 from google.oauth2 import service_account as s_a
 
 SECRET = os.path.join(os.getcwd(), "gsecret.json")
-SCOPES = ['https://www.googleapis.com/auth/drive']
+SCOPES = ['https://www.googleapis.com/auth/drive','https://www.googleapis.com/auth/documents']
 
 c = s_a.Credentials.from_service_account_file(SECRET, scopes=SCOPES)
 
 service = build('docs', 'v1', credentials=c)
 drive_service = build('drive', 'v3', credentials=c)
 
-async def new_log_doc(memory, name, num, players):
-    # Call the Sheets API
+async def new_log_doc(memory, name, players):
+    # Call the Docs API
     memory['docs'] = service.documents()
 
-    # Create a spreadsheet
-    title = name + " " + str(num)
-    playBill = "Players: "
-    for player in players:
-        playBill += player + ", "
-    playBill = playBill[:-2]
+    # Create a doc
+    title = name + "-" + datetime.datetime.now().isoformat()
     doc = {
-        'title': title
+        'name': title
     }
-    doc = memory['docs'].create(body=doc).execute()
+    drive_response = drive_service.files().copy(fileId='1c_6Y-9hREBtbhradT4gKSIQMRKCE9ZjlVU1O0jfPeFA', body=doc).execute()
 
-    # Get the ID
-    ID = doc.get("documentId")
+    # Retrieve doc's ID
+    ID = drive_response.get('id')
 
     # Give public permissions
     view = {"type":"anyone","role":"reader"}
     perm_result = drive_service.permissions().create(fileId=ID,body=view).execute()
 
-    # Create the template
-    template = [
-        {
-            'insertText': {
-                'location': {
-                    'index': 1,
-                },
-                'text': title + '\n' + playBill + '\n\n\"...\"\n\n'
-            }
-        },
-        {
-            'updateTextStyle': {
-                'range': {
-                    'startIndex': 1,
-                    'endIndex': len(title)+1
-                },
-                'textStyle':{
-                    'bold': True,
-                    'fontSize':{
-                        'magnitude': 18,
-                        'unit': 'PT'
-                    }
-                },
-                'fields': 'bold, fontSize'
-            }
-        },
-        {
-            'updateTextStyle': {
-                'range': {
-                    'startIndex': len(title) + len(playBill)+2,
-                    'endIndex': len(title) + len(playBill)+11
-                },
-                'textStyle':{
-                    'italic': True
-                },
-                'fields': 'italic'
-            }
-        },
-        {
-            'updateParagraphStyle': {
-                'range': {
-                    'startIndex': 1,
-                    'endIndex': len(title) + len(playBill)+11
-                },
-                'paragraphStyle': {
-                    'alignment': 'CENTER',
-                },
-                'fields': 'alignment'
-            }
-        }
-    ]
-    do = memory['docs'].batchUpdate(documentId=ID, body={'requests': template}).execute()
-
+    #Provide output: the doc ID and the last index number
     out = []
     out.append(ID)
-    out.append(len(title) + len(playBill) + 11)
+    out.append(1)
 
     return out
 
-async def add_post(inp, poster, post):
-
-    post=" ___________________________________________________________________________\n" + poster + "\n" + post + '\n'
-
-    request = [
-        {
+# Takes the recorded string of text and inserts it into the Doc, formatting along the way
+async def add_text(inp, postStart, nameEnd, text, ind):
+    request = []
+    lineDelay = 0
+    for index in range(len(postStart)-1):
+        txt = {
             'insertText': {
                 'location': {
-                    'index': inp[1],
+                    'index': postStart[index] + lineDelay
                 },
-                'text': post
+                'text': text[postStart[index] - 1:postStart[index + 1] - 1]
             }
-        },
-        {
-            'updateTextStyle': {
-                'range': {
-                    'startIndex': inp[1]+77,
-                    'endIndex': inp[1]+len(poster)+78
-                },
-                'textStyle': {
-                    'bold': True
-                },
-                'fields': 'bold'
-            }
-        },
-        {
-            'updateParagraphStyle': {
-                'range': {
-                    'startIndex': inp[1],
-                    'endIndex': inp[1]+len(poster)+len(post)-6
-                },
-                'paragraphStyle': {
-                    'spaceAbove': {
-                        'magnitude': 0.0,
-                        'unit': 'PT'
-                    },
-                    'spaceBelow': {
-                        'magnitude': 7.0,
-                        'unit': 'PT'
-                    }
-                },
-                'fields': 'spaceAbove,spaceBelow'
-            }
-        },
-    ]
-    do = service.documents().batchUpdate(documentId=inp[0], body={'requests': request}).execute()
-    inp[1] += len(post)
-    return inp
+        }
+        postStart[index] = postStart[index] + lineDelay
+        nameEnd[index] = nameEnd[index] + lineDelay
+        request.append(txt)
+        lineDelay += 2
 
-async def append(inp, post):
-
-    post=post + '\n'
-
-    request = [
-        {
-            'insertText': {
-                'location': {
-                    'index': inp[1],
-                },
-                'text': post
-            }
-        },
-        {
-            'updateParagraphStyle': {
-                'range': {
-                    'startIndex': inp[1],
-                    'endIndex': inp[1]+len(post)-3
-                },
-                'paragraphStyle': {
-                    'spaceAbove': {
-                        'magnitude': 0.0,
-                        'unit': 'PT'
-                    },
-                    'spaceBelow': {
-                        'magnitude': 7.0,
-                        'unit': 'PT'
-                    }
-                },
-                'fields': 'spaceAbove,spaceBelow'
-            }
-        },
-    ]
-    do = service.documents().batchUpdate(documentId=inp[0], body={'requests': request}).execute()
-    inp[1] += len(post)
-    return inp
-
-async def add_text(inp, inds, text):
-    request = [
-        {
-            'insertText': {
-                'location': {
-                    'index': inp[1],
-                },
-                'text': text
-            }
-        },
+    request += [
         {
             'updateParagraphStyle': {
                 'range': {
@@ -207,12 +74,13 @@ async def add_text(inp, inds, text):
             }
         }
     ]
-    for set in inds:
+
+    for x in range(len(postStart)-1):
         insert = {
             'updateTextStyle': {
                 'range': {
-                    'startIndex': set[0],
-                    'endIndex': set[1]
+                    'startIndex': postStart[x],
+                    'endIndex': nameEnd[x]
                 },
                 'textStyle': {
                     'bold': True
@@ -220,8 +88,119 @@ async def add_text(inp, inds, text):
                 'fields': 'bold'
             }
         }
+        insert2 = {
+            'updateParagraphStyle': {
+                'range': {
+                    'startIndex': postStart[x],
+                    'endIndex': nameEnd[x]
+                },
+                'paragraphStyle': {
+                    'spaceAbove': {
+                        'magnitude': 7.0,
+                        'unit': 'PT'
+                    },
+                    'spaceBelow': {
+                        'magnitude': 7.0,
+                        'unit': 'PT'
+                    }
+                },
+                'fields': 'spaceAbove,spaceBelow'
+            }
+        }
         request.append(insert)
+        request.append(insert2)
+
+    if ind[0] != []:
+        for cell in ind[0]:
+            insert = {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': cell[0] + 2*cell[1],
+                        'endIndex': cell[2] + 2*cell[1]
+                    },
+                    'textStyle': {
+                        'bold': True
+                    },
+                    'fields': 'bold'
+                }
+            }
+            request.append(insert)
+
+    if ind[1] != []:
+        for cell in ind[1]:
+            insert = {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': cell[0] + 2*cell[1],
+                        'endIndex': cell[2] + 2*cell[1]
+                    },
+                    'textStyle': {
+                        'bold': True
+                    },
+                    'fields': 'bold'
+                }
+            }
+            request.append(insert)
+
+    if ind[2] != []:
+        for cell in ind[2]:
+            insert = {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': cell[0] + 2 * cell[1],
+                        'endIndex': cell[2] + 2 * cell[1]
+                    },
+                    'textStyle': {
+                        'italic': True
+                    },
+                    'fields': 'italic'
+                }
+            }
+            request.append(insert)
+
+    if ind[3] != []:
+        for cell in ind[3]:
+            insert = {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': cell[0] + 2 * cell[1],
+                        'endIndex': cell[2] + 2 * cell[1]
+                    },
+                    'textStyle': {
+                        'underline': True
+                    },
+                    'fields': 'underline'
+                }
+            }
+            request.append(insert)
+
+    if ind[4] != []:
+        for cell in ind[4]:
+            insert = {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': cell[0] + 2 * cell[1],
+                        'endIndex': cell[2] + 2 * cell[1]
+                    },
+                    'textStyle': {
+                        'strikethrough': True
+                    },
+                    'fields': 'strikethrough'
+                }
+            }
+            request.append(insert)
+
+    cutoff = {
+        'deleteContentRange': {
+            'range': {
+                'startIndex': postStart[len(postStart) - 1] + lineDelay - 2,
+                'endIndex': 2151 + len(text) - 2
+            }
+        }
+    }
+    request.append(cutoff)
 
     do = service.documents().batchUpdate(documentId=inp[0], body={'requests': request}).execute()
     inp[1] += len(text)
+
     return inp

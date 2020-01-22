@@ -646,7 +646,7 @@ async def buypet(ctx, *args):
     if id in chars:
         char = await Pilot.async_init(id, dict = chars[id])
         avgstat = (char.mech.stats[0] * char.mech.stats[1])**0.5
-        cost = int((avgstat*(1.4**(avgstat/1000)))/300)*(5)
+        cost = int((avgstat*(1.4**(avgstat/1000)))/300)*(20)
         if char.money >= cost:
             char.money -= cost
             rarity = min(random.choices(range(5), k = 3)) + 1
@@ -936,7 +936,7 @@ class Pilot(Fight_Thing):
                 self.bday += 366
                 await self.add_history('Celebrated ' + await self.pronoun(type='his/her') + ' ' + await ord(self.age) + ' birthday!', True)
                 await updatechar(self)
-            if self.record >= 6*(self.rank + 1)*(1.15**self.rank):
+            if self.record >= 6*(self.rank + 1)*(1.11**self.rank):
                 await self.promote()
                 await self.add_history('Pilot promoted!', True)
                 await updatechar(self)

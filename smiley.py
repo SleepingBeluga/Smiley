@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-import discord
+import os
+path_here = os.path.dirname(os.path.realpath(__file__))
+os.chdir(path_here)
+# Lets us not care where smiley runs from
+import discord, git
 from discord.ext import commands
-import time, random, asyncio
+import time, random, asyncio, sys
 import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm
-import ac, autologs, capes, snack
+import ac, autologs, capes, schedule, snack
 from wounds import WoundOption, Wound
 
 '''My (Smiley's) Main Script
@@ -33,6 +36,16 @@ async def reset(ctx, *args):
         await ctx.send('OK, I\'ve reset.')
         await draft.setup()
 
+@b.command()
+async def updatebot(ctx, *args):
+    '''Updates the bot. Mods only.'''
+    if 'Mod Team' in (str(role) for role in ctx.author.roles):
+        repo = git.Repo('.')
+        repo.remotes.origin.pull()
+        await ctx.send('Pulled repo, restarting!')
+        await ctx.bot.logout()
+        sys.exit(1)
+
 b.add_cog(capes.Capes())
 b.add_cog(draft.Draft())
 b.add_cog(gamechannels.Game_Channels())
@@ -44,6 +57,8 @@ b.add_cog(ac.Autocape())
 b.add_cog(tm.TinyMech())
 b.add_cog(autologs.AutoLogs())
 b.add_cog(snack.Snacks())
+b.add_cog(schedule.Scheduling())
+# Add all the command cogs
 
 b.loop.create_task(draft.setup())
 # Run the draft setup function before doing anything!
@@ -62,4 +77,4 @@ with open('secret') as s:
 # Read the Discord bot token from a soup or secret file
 
 b.run(token)
-# Start the bot
+# Start the bot, finally!
