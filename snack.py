@@ -31,7 +31,7 @@ class Snacks(commands.Cog):
 
     async def consume(self, ctx, snack, snacker):
         if snack not in self.snacks:
-            return False
+            await ctx.send("There are no {} in the pile".format(snack))
         else:
             if self.snacks[snack] == 1:
                 del self.snacks[snack]
@@ -44,7 +44,6 @@ class Snacks(commands.Cog):
             
             self.snackers[snacker][snack] += 1
             await self.output_consumption(ctx,snack,snacker)
-            return True
 
     async def add(self, snack, contributor, count=1):
         if snack not in self.snacks:
@@ -55,6 +54,16 @@ class Snacks(commands.Cog):
         if snack not in self.contributors[contributor]:
             self.contributors[contributor][snack] = 0
         self.contributors[contributor][snack] += count
+
+    async def list_snacks(self, ctx):
+        if len(self.snacks) == 0:
+            await ctx.send("There are no snacks in the pile!")
+            return
+        snacks = ""
+        for i in self.snacks:
+            snacks += "{} {}, ".format(self.snacks[i], i)
+        snacks = snacks[:-2]
+        await ctx.send("In the pile there is\n```{}```".format(snacks))
 
     @commands.command()
     async def snack(self, ctx, *args):
@@ -67,7 +76,7 @@ class Snacks(commands.Cog):
                 %snack offer @<player> [snack name]         - Offer someone some snacks (reserves the snack)
                 %snack accept [snack name]                  - Accept a specific snack, takes first offer
                 %snack reject [snack name]                  - Reject a specific snack, rejects first offer
-                %snack offers                               - Produces a list of offers and reserved snacks
+                %snack offers [mine/all]                    - Produces a list of offers and reserved snacks
         '''
         if len(args) == 0 or (len(args) == 1 and args[0] == "eat"):
             # Eat a snack!
@@ -90,7 +99,7 @@ class Snacks(commands.Cog):
                     count = 1
                 await self.add(snack, ctx.author, count)
         elif args[0] == "search":
-            await ctx.send("Not yet implemented")
+            await self.list_snacks(ctx)
         elif args[0] == "offer":
             await ctx.send("Not yet implemented")
         elif args[0] == "accept":
@@ -100,4 +109,10 @@ class Snacks(commands.Cog):
         elif args[0] == "offers":
             await ctx.send("Not yet implemented")
         else:
-            await ctx.send("Need to finish this command")
+            index = 0
+            if args[index] == "eat":
+                index += 1
+            snack = args[index]
+            for i in args[index+1:]:
+                snack += " " + i
+            await self.consume(ctx, snack, ctx.author)
