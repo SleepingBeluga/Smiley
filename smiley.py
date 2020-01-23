@@ -8,7 +8,7 @@ import discord, git
 from discord.ext import commands
 import time, random, asyncio, sys
 import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm
-import ac, autologs, capes, schedule
+import ac, autologs, capes, schedule, snack
 from wounds import WoundOption, Wound
 
 '''My (Smiley's) Main Script
@@ -56,6 +56,7 @@ b.add_cog(srpg.SRPG())
 b.add_cog(ac.Autocape())
 b.add_cog(tm.TinyMech())
 b.add_cog(autologs.AutoLogs())
+b.add_cog(snack.Snacks())
 b.add_cog(schedule.Scheduling())
 # Add all the command cogs
 
