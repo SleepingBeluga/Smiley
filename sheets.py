@@ -309,16 +309,16 @@ async def increment(category, value):
     result = sheet.values().get(spreadsheetId=TriggerID,
                                 range='Count & Frontpage!A7:B18').execute()
     values = result.get('values', [])
-    index = 7
+    index = 6
 
     for row in values:
         if str(row[0]).lower() == category:
             current = float(row[1])
             new = current + value
-            celldata = {"userEnteredValue": {"stringValue": str(new)}}
+            celldata = {"userEnteredValue": {"numberValue": new}}
             update_cells = {"rows": [{"values": [celldata]}],
                             "fields": "userEnteredValue",
-                            "start": {"sheetId": 0, "rowIndex": index, "columnIndex": 2}}
+                            "start": {"sheetId": 0, "rowIndex": index, "columnIndex": 1}}
             requests = [{"updateCells": update_cells}]
             batch_res = sheet.batchUpdate(spreadsheetId=TriggerID, body={"requests": requests}).execute()
             return True
