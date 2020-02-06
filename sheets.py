@@ -156,8 +156,7 @@ async def execute_updates(memory, reqs):
 # - - - - More weird channel stuff below. Should hopefully still work when copy-pasted
 
 ID1 = '1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY'
-# Note: this is a temporary sheet to use so that the actual trigger doc
-# is not interfered with
+# This is now the permanent trigger doc
 TriggerID = '1bWigKxmpEObOWTP0uRA_xwmMnF3Lpk9ZQer5msl6WnA'
 DetailID = '1aHyZ7c7TIgt903mPinOakrgli2WZu5IRtiGYPCnCqDE'
 SuggestionID = '1kWxWhvKzAYl98nuvgCQOchw7mgH7aecyB82hSwMtatQ'
@@ -304,6 +303,29 @@ async def changeState(name,yesno):
                     "start": {"sheetId": 0, "rowIndex": cell[0], "columnIndex": cell[1]}}
     requests = [{"updateCells": update_cells}]
     batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": requests}).execute()
+
+async def increment(category, value):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TriggerID,
+                                range='Count & Frontpage!A7:B18').execute()
+    values = result.get('values', [])
+    index = 7
+
+    for row in values:
+        if str(row[0]).lower() == category:
+            current = float(row[1])
+            new = current + value
+            celldata = {"userEnteredValue": {"stringValue": str(new)}}
+            update_cells = {"rows": [{"values": [celldata]}],
+                            "fields": "userEnteredValue",
+                            "start": {"sheetId": 0, "rowIndex": index, "columnIndex": 2}}
+            requests = [{"updateCells": update_cells}]
+            batch_res = sheet.batchUpdate(spreadsheetId=TriggerID, body={"requests": requests}).execute()
+            return True
+        else:
+            index += 1
+
+    return False
 
 async def claim(number, game, player, desc):
     sheet = service.spreadsheets()

@@ -75,6 +75,49 @@ class Triggers_And_More(commands.Cog):
         await ctx.send(res)
 
     @commands.command()
+    async def increment(self, ctx, *args):
+        '''Increments a category amount on the trigger sheet.
+        Can do decimal values, if, for example, your newly genned cape is part blaster part mover
+        %increment mover 0.3
+        %increment blaster 0.7
+        Single cape's categories should sum to 1
+        '''
+        if len(args) != 2:
+            await ctx.send("Please increment using the category of power and amount (ie `%increment trump 0.7`)")
+            return
+        
+        category = args[0].lower()
+        categories = [
+            'mover',
+            'shaker',
+            'brute',
+            'breaker',
+            'master',
+            'tinker',
+            'blaster',
+            'thinker',
+            'striker',
+            'changer',
+            'trump',
+            'stranger'
+        ]
+        if category not in categories:
+            await ctx.send("Category {} is not recognised".format(args[0]))
+            return
+
+        try:
+            value = float(args[1])
+        except:
+            await ctx.send("Could not cast {} to a number".format(args[1]))
+            return
+
+        success = (await sheets.increment(category,value))
+        if success:
+            await ctx.send("Incremented {} by {}".format(args[0],args[1]))
+        else:
+            await ctx.send("Failed to increment")
+
+    @commands.command()
     async def luck(self, ctx, *args):
         '''Get randomised luck. Can also search by passing the title.
         '''
