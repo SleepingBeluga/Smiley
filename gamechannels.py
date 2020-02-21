@@ -320,19 +320,29 @@ class Game_Channels(commands.Cog):
         Note that you have to be the GM of the channel.
         '''
         link = ''
+        channelName = args[0].lower()
+        c = None
+        for channel in ctx.message.guild.channels:
+            if channel.name == channelName:
+                c = channel
+                index = 1
+        
+        if not c:
+            # Assume that they want to apply to the current channel
+            c = ctx.message.channel
+            index = 0
 
-        for arg in args[1:]:
+        for arg in args[index:]:
             link += str(arg) + ' '
         link = link[:-1]
 
-        failure = await sheets.addlink(ctx.author.id,args[0].lower(),link)
+        failure = await sheets.addlink(ctx.author.id,c.name,link)
         if failure:
             await ctx.send('Error adding link, make sure you have the name right and you\'re the GM')
         else:
             # Let's make this the topic
-            for channel in ctx.message.guild.channels:
-                if channel.name == args[0].lower():
-                    await channel.edit(topic=link)
+            link = "GM is <@{}> | ".format(ctx.author.id) + link
+            await c.edit(topic=link)
 
 
     @commands.command()
