@@ -31,7 +31,10 @@ class Triggers_And_More(commands.Cog):
 
         if str(t) != "":
             await longsend(ctx, t)
-            await ctx.author.send("You have rolled a trigger, presumably for a game. Make sure at the end of a gen that your GM `%claim`s and `%increment`s")
+            await ctx.author.send("You have rolled a trigger, presumably for a " +
+            "game. Make sure at the end of the gen that your GM performs `%claim` " +
+            "and `%increment`. Have them make sure the trigger remains in the " +
+            "same place using `%trigger {}`".format(t.split(":")[0]))
         else:
             await ctx.send("Could not find a trigger at " + str(index))
 
