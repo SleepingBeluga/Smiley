@@ -633,7 +633,7 @@ async def add_document(doc, link, submitter):
 
     data_to_paste = '<table><tr><td>' + doc + \
                           '</td><td>' + link + \
-                          '</td><td>' + submitter '</tr></table>'
+                          '</td><td>' + submitter + '</tr></table>'
 
     paste_req = {
         "pasteData": {
