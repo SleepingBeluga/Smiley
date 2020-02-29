@@ -399,9 +399,9 @@ class Game_Channels(commands.Cog):
             user_input = " ".join(args)
             data = (await sheets.documents())
             if user_input in data:
-                # Add a space in front of this so there is no way for people to inject commands
+                # Add a quote in front of this so there is no way for people to inject commands
                 # into Smiley using this functionality
-                await ctx.send(" " + data[user_input])
+                await ctx.send("> " + data[user_input])
             else:
                 await ctx.send("Could not find this document, trying using `%document search`")
 
