@@ -364,4 +364,44 @@ class Game_Channels(commands.Cog):
         else:
             await ctx.send('Could not find game ' + gameName)
 
+    @commands.command()
+    async def document(self, ctx, *args):
+        '''Adds or links to documents
+        Usage (colons are important when adding):
+        %document add Document name: link
+        %document search word words
+        %document Document name
+        '''
+        if len(args) == 0:
+            return
+        if args[0].lower() == "add":
+            user_input = " ".join(args[1:])
+            doc, link = user_input.split(":")
+            # Check that it doesn't already exist
+            data = (await sheets.documents())
+            if doc in data:
+                await ctx.send("A document already exists for {}".format(doc))
+                return
+            # Now add it!
+            await sheets.add_document(doc, link, ctx.author.id)
+        elif args[0].lower() == "search":
+            user_input = " ".join(args[1:])
+            data = (await sheets.documents())
+            matching = []
+            for i in data:
+                if user_input.lower() in i.lower():
+                    matching += [ i ]
+            if len(matching) == 0:
+                await ctx.send("Could not find any documents matching {}".format(user_input))
+            else:
+                await ctx.send("Found documents [{}]".format(", ".join(matching)))
+        else:
+            user_input = " ".join(args)
+            data = (await sheets.documents())
+            if user_input in data:
+                await ctx.send(data[user_input])
+            else:
+                await ctx.send("Could not find this document, trying using `%document search`")
+
+
     # - - - - End of Disaster Area - - - -

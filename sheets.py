@@ -600,4 +600,55 @@ async def cape(name):
 
     return None
 
+async def documents():
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=ID1,
+                                range='Documents!A2:C100').execute()
+    values = result.get('values', [])
+
+    data = {}
+    for row in values:
+        try:
+            if not str(row[0]) == "":
+                data[row[0]] = row[1]
+        except:
+            pass
+    
+    return data
+
+async def add_document(doc, link, submitter):
+    sheet = service.spreadsheets()
+    index = 2
+    result = sheet.values().get(spreadsheetId=ID1,
+                                range='Documents!A2:C100').execute()
+    values = result.get('values', [])
+    for row in values:
+        try:
+            if not str(row[0]) == "":
+                index += 1
+            else:
+                break
+        except:
+            break
+
+    data_to_paste = '<table><tr><td>' + doc + \
+                          '</td><td>' + link + \
+                          '</td><td>' + submitter '</tr></table>'
+
+    paste_req = {
+        "pasteData": {
+            "coordinate": {
+                "sheetId": 2032145493,
+                "rowIndex": index,
+                "columnIndex": 0
+            },
+            "data": data_to_paste,
+            "type": "PASTE_VALUES",
+            "html": True
+        }
+    }
+    reqs = [paste_req]
+    batch_res = sheet.batchUpdate(spreadsheetId=ID1, body={"requests": reqs}).execute()
+
+
 # ...sorry about the mess X|
