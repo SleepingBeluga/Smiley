@@ -18,6 +18,8 @@ async def channel_cleanup(b):
                     with open('output.txt','a+') as out:
                         out.write(f'#{to_clear} {str(message.created_at)} {message.author}: {message.clean_content}\n')
                 elif tdiff => 1209600:
+                    with open('output.txt','a+') as out:
+                        out.write(f'#{to_clear} (old) {str(message.created_at)} {message.author}: {message.clean_content}\n')
                     await message.delete()
             for batch_i in range((len(mlist)//100) + 1):
                 batch = mlist[batch_i:batch_i+99]
