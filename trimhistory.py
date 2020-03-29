@@ -13,10 +13,12 @@ async def channel_cleanup(b):
             async for message in channel_list[to_clear].history(limit=None):
                 delta = (datetime.datetime.utcnow()-message.created_at)
                 tdiff= delta.days*86400 +delta.seconds
-                if tdiff>=172800:
+                if tdiff >= 172800 and tdiff < 1209600:
                     mlist.append(message)
                     with open('output.txt','a+') as out:
                         out.write(f'#{to_clear} {str(message.created_at)} {message.author}: {message.clean_content}\n')
+                elif tdiff > 1209600:
+                    await message.delete()
             for batch_i in range((len(mlist)//100) + 1):
                 batch = mlist[batch_i:batch_i+99]
                 await channel_list[to_clear].delete_messages(batch)
