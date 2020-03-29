@@ -10,7 +10,7 @@ async def channel_cleanup(b):
         for to_clear in ('relationships', 'lgbt-plus'):
         # For each channel we want to trim
             mlist=[]
-            async for message in channel_list[to_clear].history(limit=1000):
+            async for message in channel_list[to_clear].history(limit=None):
                 delta = (datetime.datetime.utcnow()-message.created_at)
                 tdiff= delta.days*86400 +delta.seconds
                 if tdiff>=172800:
