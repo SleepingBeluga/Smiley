@@ -76,5 +76,5 @@ with open('secret') as s:
     token = s.read()[:-1]
 # Read the Discord bot token from a soup or secret file
 
-b.run(token)
+b.run("NTcxNzg1NDY4MTA3MDMwNTI5.XrV7nA.Tvgt5g7GVAkIzNamUJHcGYet7cE")
 # Start the bot, finally!

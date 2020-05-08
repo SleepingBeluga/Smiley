@@ -1,5 +1,5 @@
 from discord.ext import commands
-import docs, datetime, json
+import docs, datetime, json, pytz
 
 class AutoLogs(commands.Cog):
 
@@ -14,7 +14,7 @@ class AutoLogs(commands.Cog):
                 data = json.load(filechan)
         if ctx.channel.name not in data:
             data[ctx.channel.name] = {
-                'timezone': 5,
+                'timezone': 'EST',
                 'nocomments': True,
                 'nomarks': True,
                 'rolls': True,
@@ -48,7 +48,7 @@ class AutoLogs(commands.Cog):
 
         if args[0] == 'default':
             data[ctx.channel.name] = {
-                'timezone': 5,
+                'timezone': 'EST',
                 'nocomments': True,
                 'nomarks': True,
                 'rolls': True,
@@ -59,10 +59,10 @@ class AutoLogs(commands.Cog):
             await ctx.send("Settings set to defaults.")
 
         if args[0] == 'timezone':
-            data[ctx.channel.name]['timezone'] = int(args[1])
+            data[ctx.channel.name]['timezone'] = args[1]
             with open('logchansets.json', 'w+') as filechan:
                 json.dump(data, filechan)
-            await ctx.send("Timezone set to UTC(" + args[1] + ").")
+            await ctx.send("Timezone set to " + args[1] + ".")
 
         if args[0] == 'nocomments':
             if args[1].lower() == 'y':
@@ -118,7 +118,7 @@ class AutoLogs(commands.Cog):
                 data = json.load(filechan)
         if ctx.channel.name not in data:
             data[ctx.channel.name] = {
-                'timezone': 0,
+                'timezone': 'EST',
                 'nocomments': True,
                 'nomarks': True,
                 'rolls': True,
@@ -139,9 +139,25 @@ class AutoLogs(commands.Cog):
         strikeInds = []
         priorPoster = ''
 
-        date1 = datetime.datetime.strptime(args[0],'%y-%m-%d-%H-%M') - datetime.timedelta(hours=(data[ctx.channel.name]['timezone']))
-        date2 = datetime.datetime.strptime(args[1],'%y-%m-%d-%H-%M') + datetime.timedelta(seconds=59) - datetime.timedelta(hours=(data[ctx.channel.name]['timezone']))
+        try:
+            timezone = pytz.timezone(data[ctx.channel.name]['timezone'])
+        except:
+            await ctx.send("Error: ["  + data[ctx.channel.name]['timezone'] + "] is not a valid timezone.")
+            return
 
+        date1 = datetime.datetime.strptime(args[0],'%y-%m-%d-%H-%M')
+        date2 = datetime.datetime.strptime(args[1],'%y-%m-%d-%H-%M') + datetime.timedelta(seconds=59)
+
+        timezone.localize(date1, True)
+        timezone.localize(date2, True)
+
+        utc = pytz.utc
+
+        date1 = date1.astimezone(utc)
+        date2 = date2.astimezone(utc)
+
+        date1 = date1.replace(tzinfo=None)
+        date2 = date2.replace(tzinfo=None)
 
         async with ctx.typing():
             if len(args) == 2:
@@ -162,14 +178,16 @@ class AutoLogs(commands.Cog):
                     msg = message.content.replace('|', '')
                     if msg == '...':
                         msg = ''
-                if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
-                    msg = ''
-                if data[ctx.channel.name]['rolls']:
-                    if message.content[0] == '%':
+                if msg != '':
+                    if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
                         msg = ''
-                    if message.author == ctx.me:
-                        msg = "**    ROLL: " + message.content + "**"
-                        author = authCheck
+                if msg != '':
+                    if data[ctx.channel.name]['rolls']:
+                        if message.content[0] == '%':
+                            msg = ''
+                        if message.author == ctx.me:
+                            msg = "**    ROLL: " + message.content + "**"
+                            author = authCheck
                 if author != authCheck and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
@@ -220,8 +238,11 @@ class AutoLogs(commands.Cog):
         if text == '':
             await ctx.send('No logs found.')
         else:
-            await docs.add_text(out, postStarts, nameEnds, text=text, ind=inds)
-            await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
+            try:
+                await docs.add_text(out, postStarts, nameEnds, text=text, ind=inds)
+                await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
+            except:
+                await ctx.send("Error! Something went wrong!")
 
         with open('logchansets.json', 'w+') as filechan:
             json.dump(data, filechan)
@@ -237,7 +258,7 @@ class AutoLogs(commands.Cog):
                 data = json.load(filechan)
         if ctx.channel.name not in data:
             data[ctx.channel.name] = {
-                'timezone': 0,
+                'timezone': 'EST',
                 'nocomments': True,
                 'nomarks': True,
                 'rolls': True,
@@ -280,14 +301,16 @@ class AutoLogs(commands.Cog):
                     msg = message.content.replace('|', '')
                     if msg == '...':
                         msg = ''
-                if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
-                    msg = ''
-                if data[ctx.channel.name]['rolls']:
-                    if message.content[0] == '%':
+                if msg != '':
+                    if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
                         msg = ''
-                    if message.author == ctx.me:
-                        msg = "**    ROLL: " + message.content + "**"
-                        author = authCheck
+                if msg != '':
+                    if data[ctx.channel.name]['rolls']:
+                        if message.content[0] == '%':
+                            msg = ''
+                        if message.author == ctx.me:
+                            msg = "**    ROLL: " + message.content + "**"
+                            author = authCheck
                 if author != authCheck and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
@@ -338,8 +361,12 @@ class AutoLogs(commands.Cog):
         if text == '':
             await ctx.send('No logs found.')
         else:
-            await docs.add_text(out, postStarts, nameEnds, text=text, ind=inds)
-            await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
+            try:
+                await docs.add_text(out, postStarts, nameEnds, text=text, ind=inds)
+                await ctx.send('Logs: https://docs.google.com/document/d/' + str(out[0]))
+            except Exception as e:
+                await ctx.send("Error! Something went wrong!")
+                print(e)
 
         with open('logchansets.json', 'w+') as filechan:
             json.dump(data, filechan)
