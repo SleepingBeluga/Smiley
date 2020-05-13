@@ -49,6 +49,8 @@ class Game_Channels(commands.Cog):
             for role in ctx.message.guild.roles:
                 if role.name == 'Game Master':
                     gameMaster = role
+                if role.name == "Bot":
+                    bot = role
                 #elif discord.Role.name == roleName:
                  #   gameRole = discord.Role
 
@@ -58,7 +60,8 @@ class Game_Channels(commands.Cog):
                 ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
                 #gameRole: discord.PermissionOverwrite(read_messages=True),
                 ctx.author: discord.PermissionOverwrite(read_messages=True),
-                ctx.me: discord.PermissionOverwrite(read_messages=True)
+                ctx.me: discord.PermissionOverwrite(read_messages=True),
+                bot: discord.PermissionOverwrite(read_messages=True)
             }
 
             for category in ctx.guild.categories:
