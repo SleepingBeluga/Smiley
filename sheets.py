@@ -158,8 +158,10 @@ async def execute_updates(memory, reqs):
 ID1 = '1Foxb_C_zKvLuSMOB4HN5tRMpVwtPrkq6tdlokKSgEqY'
 # This is now the permanent trigger doc
 TriggerID = '1bWigKxmpEObOWTP0uRA_xwmMnF3Lpk9ZQer5msl6WnA'
+TriggerSuggestionsID = '1IZmqUsIXKejHKycZoUEz-agXiQYgoxedz_XF80x8zF4'
 DetailID = '1aHyZ7c7TIgt903mPinOakrgli2WZu5IRtiGYPCnCqDE'
 SuggestionID = '1kWxWhvKzAYl98nuvgCQOchw7mgH7aecyB82hSwMtatQ'
+TradingDatabaseID = '1T7-1FfEsXGH0zKrIeTi21BDPS1xIEDOpStMu0rOV4bs'
 CapesDatabaseID = '1_syrsmptzWG0u3xdY3qzutYToY1t3I8s6yaryIpfckU'
 
 async def newgame(name, GM, type):
@@ -576,6 +578,320 @@ async def skill(skill, arg):
             return string
 
     return "Haven't added this skill yet"
+
+async def trading_capes():
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TradingDatabaseID,
+                                range='Capes!A2:K1000').execute()
+    values = result.get('values', [])
+    allinfo = []
+    for row in values:
+        try:
+            if not str(row[0]) == "":
+                allinfo += [ row ]
+            else:
+                break
+        except:
+            break
+
+    return allinfo
+
+async def owned_cards():
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TradingDatabaseID,
+                                range='Owned!A2:B10000').execute()
+    values = result.get('values', [])
+    allinfo = []
+    for row in values:
+        try:
+            if not str(row[0]) == "":
+                allinfo += [ row ]
+            else:
+                break
+        except:
+            break
+
+    return allinfo
+
+async def gain_card(claimer, card_index):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TradingDatabaseID,
+                                range='Owned!A2:B10000').execute()
+    values = result.get('values', [])
+    used_rows = 1
+    for row in values:
+        try:
+            if not str(row[0]) == "":
+                used_rows += 1
+            else:
+                break
+        except:
+            break
+
+    data_to_paste = '<table><tr><td>' + claimer + \
+                          '</td><td>' + str(card_index) + '</tr></table>'
+
+    paste_req = {
+        "pasteData": {
+            "coordinate": {
+                "sheetId": 1429634698,
+                "rowIndex": used_rows,
+                "columnIndex": 0
+            },
+            "data": data_to_paste,
+            "type": "PASTE_VALUES",
+            "html": True
+        }
+    }
+    reqs = [paste_req]
+    batch_res = sheet.batchUpdate(spreadsheetId=TradingDatabaseID, body={"requests": reqs}).execute()
+    
+
+async def move_card_owner(old, new, cards):
+    if len(cards) == 0:
+        return
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TradingDatabaseID,
+                                range='Owned!A2:B10000').execute()
+    values = result.get('values', [])
+    reqs = []
+    for card in cards:
+        for row in range(0, len(values)):
+            try:
+                owner = str(values[row][0])
+                c_index = str(values[row][1])
+                if owner == old and c_index == str(card):
+                    values[row][0] = new
+                    reqs += [{
+                        "pasteData": {
+                            "coordinate": {
+                                "sheetId": 1429634698,
+                                "rowIndex": row+1,
+                                "columnIndex": 0
+                            },
+                            "data": '<table><tr><td>' + new + '</td></tr></table>',
+                            "type": "PASTE_VALUES",
+                            "html": True
+                        }
+                    }]
+                    break
+            except:
+                continue
+    
+    batch_res = sheet.batchUpdate(spreadsheetId=TradingDatabaseID, body={"requests": reqs}).execute()
+
+async def remove_cards(owner, cards):
+    if len(cards) == 0:
+        return
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TradingDatabaseID,
+                                range='Owned!A2:B10000').execute()
+    values = result.get('values', [])
+    rows_to_delete = []
+    for card in cards:
+        for row in range(0, len(values)):
+            try:
+                own = str(values[row][0])
+                c_index = str(values[row][1])
+                if owner == own and c_index == str(card) and not row in rows_to_delete:
+                    rows_to_delete += [row]
+                    break
+            except:
+                continue
+    
+    if len(rows_to_delete) != len(cards):
+        return
+
+    # Delete in reverse order!
+    rows_to_delete.sort(reverse=True)
+    for i in rows_to_delete:
+        del_req = {
+            "deleteDimension": {
+                "range": {
+                    "sheetId": 1429634698, # Triggers
+                    "dimension": "ROWS",
+                    "startIndex": i+1,
+                    "endIndex": i+2
+                }
+            }
+        }
+        batch_res = sheet.batchUpdate(spreadsheetId=TradingDatabaseID, body={"requests": [del_req]}).execute()
+
+
+async def waiting_triggers():
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TriggerSuggestionsID,
+                                range='Trigger Suggestions!A2:C1000').execute()
+    values = result.get('values', [])
+    triggers = {}
+    for row in values:
+        try:
+            if str(row[0]) != "":
+                trigger = str(row[0])
+                reviewers = []
+                try:
+                    r_string = str(row[1]) # Don't let people review their own trigger
+                    r_string = r_string.split("(")[-1]
+                    r_string = r_string.split(")")[0]
+                    if r_string.strip() != "":
+                        reviewers += [r_string.strip()]
+                except:
+                    pass
+                try:
+                    r_string = str(row[2])
+                    r_string = r_string.split(",")
+                    for i in r_string:
+                        if i != "":
+                            reviewers += [i.strip()]
+                except:
+                    pass
+                triggers[trigger] = reviewers
+            else:
+                break
+        except:
+            continue
+    return triggers
+
+async def get_relevant_trigger_row(triggers, trigger):
+    for row in range(0, len(triggers)):
+        try:
+            if str(triggers[row][0]) != "":
+                if str(triggers[row][0]) == trigger:
+                    return row
+            else:
+                break
+        except:
+            continue
+
+async def submit_trigger(trigger, u_id, u_name):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TriggerSuggestionsID,
+                                range='Trigger Suggestions!A2:F1000').execute()
+    triggers = result.get('values', [])
+    index = 0
+    for row in triggers:
+        try:
+            if str(row[0]) == "":
+                break
+            else:
+                index += 1
+        except:
+            break # Assuming that failure also means empty row!
+
+    data_to_paste = '<table><tr><td>' + trigger + \
+                          '</td><td>' + u_name + ' (' + str(u_id) + ')</tr></table>'
+
+    paste_req = {
+        "pasteData": {
+            "coordinate": {
+                "sheetId": 1029421998,
+                "rowIndex": index+1,
+                "columnIndex": 0
+            },
+            "data": data_to_paste,
+            "type": "PASTE_VALUES",
+            "html": True
+        }
+    }
+    reqs = [paste_req]
+    batch_res = sheet.batchUpdate(spreadsheetId=TriggerSuggestionsID, body={"requests": reqs}).execute()
+
+async def approve_trigger(trigger, u_id, u_name, comments=""):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TriggerSuggestionsID,
+                                range='Trigger Suggestions!A2:F1000').execute()
+    triggers = result.get('values', [])
+    index = await get_relevant_trigger_row(triggers, trigger)
+    ids = ""
+    users = ""
+    comm = ""
+    try:
+        if str(triggers[index][2]) != "":
+            ids = str(triggers[index][2]) + ", "
+    except:
+        pass
+    try:
+        if str(triggers[index][3]) != "":
+            users = str(triggers[index][3]) + ", "
+    except:
+        pass
+    try:
+        comm = str(triggers[index][4])
+        if comments != "" and comm != "":
+            comm += ", "
+    except:
+        pass
+    ids += str(u_id)
+    users += str(u_name)
+    if comments != "":
+        comm += comments + " - " + str(u_name)
+
+    data_to_paste = '<table><tr><td>' + ids + \
+                          '</td><td>' + users + \
+                          '</td><td>' + comm + '</tr></table>'
+
+    paste_req = {
+        "pasteData": {
+            "coordinate": {
+                "sheetId": 1029421998,
+                "rowIndex": index+1,
+                "columnIndex": 2
+            },
+            "data": data_to_paste,
+            "type": "PASTE_VALUES",
+            "html": True
+        }
+    }
+    reqs = [paste_req]
+    batch_res = sheet.batchUpdate(spreadsheetId=TriggerSuggestionsID, body={"requests": reqs}).execute()
+
+
+async def critique_trigger(trigger, u_id, u_name, comments):
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TriggerSuggestionsID,
+                                range='Trigger Suggestions!A2:F1000').execute()
+    triggers = result.get('values', [])
+    index = await get_relevant_trigger_row(triggers, trigger)
+    ids = ""
+    users = ""
+    comm = ""
+    try:
+        if str(triggers[index][2]) != "":
+            ids = str(triggers[index][2]) + ", "
+    except:
+        pass
+    try:
+        users = str(triggers[index][3])
+    except:
+        pass
+    try:
+        comm = str(triggers[index][4])
+        if comments != "" and comm != "":
+            comm += ", "
+    except:
+        pass
+    ids += str(u_id)
+    if comments != "":
+        comm += comments + " - " + str(u_name)
+
+    data_to_paste = '<table><tr><td>' + ids + \
+                          '</td><td>' + users + \
+                          '</td><td>' + comm + '</tr></table>'
+
+    paste_req = {
+        "pasteData": {
+            "coordinate": {
+                "sheetId": 1029421998,
+                "rowIndex": index+1,
+                "columnIndex": 2
+            },
+            "data": data_to_paste,
+            "type": "PASTE_VALUES",
+            "html": True
+        }
+    }
+    reqs = [paste_req]
+    batch_res = sheet.batchUpdate(spreadsheetId=TriggerSuggestionsID, body={"requests": reqs}).execute()
 
 async def cape(name):
     sheet = service.spreadsheets()

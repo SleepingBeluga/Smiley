@@ -1,7 +1,676 @@
 from discord.ext import commands
 import discord, sheets
+import random, datetime, difflib
+
+class Cape:
+    def __init__(
+        self,
+        name,
+        tier,
+        civ,
+        power,
+        affiliation,
+        alignment,
+        classification,
+        pc,
+        campaign,
+        submitter,
+        tagline = ""
+    ):
+        self.name = name.strip()
+        self.tier = tier.strip()
+        self.civ = civ.strip()
+        self.power = power.strip()
+        self.affiliation = affiliation.strip()
+        self.alignment = alignment.strip()
+        self.classification = classification.strip()
+        self.pc = pc.strip()
+        self.campaign = campaign.strip()
+        self.submitter = submitter.strip()
+        self.tagline = tagline.strip()
 
 class Capes(commands.Cog):
+
+    def __init__(self):
+        self.capelist = []
+        self.trading = {}
+        self.claims = {}
+        self.bonus_claim = {}
+        self.trades = {}
+        self.triggers = {} # Completed reviews
+        self.reviewing = {} # Reviews in progress
+        self.cached = False
+        self.pause = False
+
+    async def set_local_cache(self):
+        await self.load_capes()
+        await self.load_owners()
+        await self.load_triggers()
+        self.cached = True
+
+    async def load_capes(self):
+        capes = (await sheets.trading_capes())
+        for cape in capes:
+            new_cape = Cape(*cape)
+            self.capelist += [ new_cape ]
+
+    async def load_owners(self):
+        card_owns = (await sheets.owned_cards())
+        for card in card_owns:
+            if not card[0] in self.trading:
+                self.trading[card[0]] = []
+            self.trading[card[0]] += [self.capelist[int(card[1])]]
+
+    async def load_triggers(self):
+        self.triggers = (await sheets.waiting_triggers())
+
+    async def random_claim(self, ctx, claimer_id):
+        # Check if this person has already claimed today
+        day = datetime.datetime.now().day
+        if not day in self.claims:
+            self.claims = {day: []}
+
+        if claimer_id in self.claims[day] and claimer_id not in self.bonus_claim:
+            if datetime.datetime.now().hour == 23:
+                timeleft = "{} minutes".format(60-datetime.datetime.now().minute)
+            else:
+                timeleft = "{} hours".format(24-datetime.datetime.now().hour)
+            await ctx.send("You have already made your daily claim! Next claim available in {}".format(timeleft))
+            return
+
+        amount = 0
+        if claimer_id in self.bonus_claim:
+            await ctx.send("Claiming {} bonus cards".format(self.bonus_claim[claimer_id]))
+            amount += self.bonus_claim[claimer_id]
+        if not claimer_id in self.claims[day]:
+            amount += 1
+
+        total = 0
+        for i in self.capelist:
+            if i.tier == "C":
+                total += 27
+            elif i.tier == "B":
+                total += 9
+            elif i.tier == "A":
+                total += 3
+            elif i.tier == "S":
+                total += 1
+        selectedValues = []
+        for i in range(0, amount):
+            selectedValues += [ random.randrange(0,total) ]
+        collected = ""
+        for selectedValue in selectedValues:
+            counting = 0
+            cape = None
+            for i in self.capelist:
+                if i.tier == "C":
+                    val_to_add = 27
+                elif i.tier == "B":
+                    val_to_add = 9
+                elif i.tier == "A":
+                    val_to_add = 3
+                elif i.tier == "S":
+                    val_to_add = 1
+                if selectedValue >= counting and selectedValue < counting + val_to_add:
+                    cape = i
+                    break
+                else:
+                    counting += val_to_add
+            # If we didn't find a cape, make it the last one!
+            if cape == None:
+                cape = self.capelist[-1]
+            if not claimer_id in self.trading:
+                self.trading[claimer_id] = []
+            await sheets.gain_card(claimer_id, self.capelist.index(cape))
+            self.trading[claimer_id] += [cape]
+            collected += cape.name + ", "
+        await ctx.send("You gained the card for {}".format(collected[:-2]))
+        if not claimer_id in self.claims[day]:
+            self.claims[day] += [ claimer_id ]
+        if claimer_id in self.bonus_claim:
+            del self.bonus_claim[claimer_id]
+
+    async def view_card(self, ctx, cape):
+        message =   "**{}** ({})\n".format(cape.name, cape.classification)
+        if cape.tagline != "":
+            message += "> ***{}***\n".format(cape.tagline)
+        message +=  "> Tier: **{}**\n".format(cape.tier)
+        if cape.civ != "Unknown":
+            message +=  "> Civilian Identity: ||{}||\n".format(cape.civ)
+        else:
+            message +=  "> Civilian Identity: {}\n".format(cape.civ)
+        message +=  "> Power: {}\n".format(cape.power)
+        message +=  "> Campaign: **{}**, {}\n".format(cape.campaign, cape.pc)
+        message +=  "> Affiliation: {}, {}".format(cape.affiliation, cape.alignment)
+        await ctx.send(message)
+
+    async def messagify_ownership(self, user, c_list, c_filter = ""):
+        if c_filter != "":
+            c_filter = " **{}** ".format(c_filter)
+        owned_cards = 0
+        owned = {}
+        if user in self.trading:
+            for i in self.trading[user]:
+                if i in c_list:
+                    owned_cards += 1
+                    if not i.name in owned:
+                        owned[i.name] = 0
+                    owned[i.name] += 1
+        initial = "You own {}{} cards\n".format(owned_cards,c_filter[:-1])
+        m_index = 0
+        messages = ["> "]
+        for i in owned:
+            messages[m_index] += i
+            if owned[i] > 1:
+                messages[m_index] += "x{}".format(owned[i])
+            messages[m_index] += ", "
+            if len(messages[m_index]) > 1800: # Don't let it get too long
+                messages[m_index] = messages[m_index][:-1]
+                m_index += 1
+                messages += ["> "]
+        messages[m_index] = messages[m_index][:-2]
+        
+        messages[0] = "{}{}Cards collected {}/{}\n{}".format(initial, c_filter,len(owned),len(c_list),messages[0])
+        return messages
+
+    async def view(self, ctx, owner, *args):
+        if not owner in self.trading:
+            await ctx.send("You own no cards")
+            return
+        if len(args) == 0:
+            # Let's display all cards
+            messages = (await self.messagify_ownership(owner, self.capelist))
+            for i in messages:
+                await ctx.send(i)
+        else:
+            name = ""
+            for i in args:
+                name += "{} ".format(i)
+            name = name[:-1]
+            capes_owned = []
+            for i in self.trading[owner]:
+                if i.name.lower() == name.lower():
+                    return await self.view_card(ctx, i)
+                if not i.name in capes_owned:
+                    capes_owned += [ i.name ]
+            
+            closestCapes = difflib.get_close_matches(name, capes_owned)
+            if len(closestCapes) > 1:
+                await ctx.send("That cape could not be found, did you mean one of: " + closestCapes)
+            elif len(closestCapes) == 1:
+                await ctx.send("That cape could not be found, did you mean " + closestCapes[0])
+            else:
+                await ctx.send("You don't own that that card!")
+
+    async def get_cape(self, name):
+        for i in self.capelist:
+            if i.name == name:
+                return i
+
+    async def at_to_id(self, at):
+        at = at.replace("<", "")
+        at = at.replace("@", "")
+        at = at.replace("!", "")
+        at = at.replace(">", "")
+        return at.strip()
+
+    async def has_cards(self, user, cards):
+        # Cards comes in as an array of strings
+        if len(cards) == 0:
+            # You always have some of nothing!
+            return True
+        if user not in self.trading:
+            # Can't have the required cards if they have nothing
+            return False
+        card_dict = {}
+        for i in self.trading[user]:
+            if not i.name in card_dict:
+                card_dict[i.name] = 0
+            card_dict[i.name] += 1
+        for i in cards:
+            if i in card_dict and card_dict[i] > 0:
+                card_dict[i] -= 1
+            else:
+                return False
+
+        return True
+        
+
+    async def trade(self, ctx, user, subaction, *args):
+        if len(args) > 0 and (await self.at_to_id(args[0])) == user:
+            await ctx.send("Trading with yourself just don't make sense...")
+            return
+        if subaction ==  "help":
+            message = "**Trading commands:**\n```"
+            message += "%tc trade offer @username [Card you have, Another card you have] [Card they have, another card they have] - Make an offer to someone\n"
+            message += "%tc trade view - View all open trades you have\n"
+            message += "%tc trade view @username - View an offer someone has made/you have made to them\n"
+            message += "%tc trade cancel @username - Cancel a trade you have with someone\n"
+            message += "%tc trade reject @username - Reject a trade someone has made to you\n"
+            message += "%tc trade accept @username - Accept an open trade you have with someone\n"
+            message += "```"
+            await ctx.send(message)
+        elif subaction == "offer":
+            if args[0] == "help":
+                message = "Specify who you want to trade with, your offer in parenthesis, then what you want back\n"
+                message += "`    %tc trade offer @someperson [My Card, My Other Card] [Their Card, Another of their cards, a third card of theirs]`"
+                await ctx.send(message)
+                return 
+
+            # First arg will be a person
+            request_to_id = (await self.at_to_id(args[0]))
+            # Make sure an existing offer with them doesn't already exist
+            if (user in self.trades and request_to_id in self.trades[user]) or (request_to_id in self.trades and user in self.trades[request_to_id]):
+                await ctx.send("Already have a trade proposed with them! Will have to cancel or reject trade to start a new one.")
+                await self.trade(ctx, user, "view", *args[0:1])
+                return
+            offers = ""
+            for i in args[1:]:
+                offers += i + " "
+            
+            offer, desire, nil = offers.split("]")
+            nil, offer = offer.split("[")
+            offer = offer.split(",")
+            nil, desire = desire.split("[")
+            desire = desire.split(",")
+
+            if len(offer) == 1 and offer[0] == "":
+                offer = []
+            if len(desire) == 1 and desire[0] == "":
+                desire = []
+            if len(offer) == 0 and len(desire) == 0:
+                await ctx.send("You can't trade nothing for nothing, that's just silly")
+                return
+
+            for i in range(0, len(offer)):
+                offer[i] = offer[i].strip()
+
+            for i in range(0, len(desire)):
+                desire[i] = desire[i].strip()
+            
+            # Check whether they even both have the required cards
+            if not (await self.has_cards(user, offer)):
+                await ctx.send("You do not have the cards required to trade!")
+            elif not (await self.has_cards(request_to_id, desire)):
+                await ctx.send("They don't have the cards you want!")
+            else:
+                if not user in self.trades:
+                    self.trades[user] = {}
+                self.trades[user][request_to_id] = [offer, desire]
+                await ctx.send("Offer made")
+        elif subaction == "view":
+            if len(args) == 0:
+                open_offers = ""
+                for i in self.trades:
+                    if user == i:
+                        for j in self.trades[i]:
+                            open_offers += "<@!{}>, ".format(j)
+                    elif user in self.trades[i]:
+                        open_offers += "<@!{}>, ".format(i)
+                if open_offers == "":
+                    await ctx.send("Don't have any open trades")
+                else:
+                    await ctx.send("Have open trades with {}".format(open_offers[:-2]))
+            request_to_id = (await self.at_to_id(args[0]))
+            if user in self.trades and request_to_id in self.trades[user]:
+                offer = self.trades[user][request_to_id][0]
+                o = "["
+                for i in offer:
+                    o += i + ", "
+                o = o[:-2] + "]"
+                if len(offer) == 0:
+                    o = "nothing"
+                
+                desire = self.trades[user][request_to_id][1]
+                d = "["
+                for i in desire:
+                    d += i + ", "
+                d = d[:-2] + "]"
+                if len(desire) == 0:
+                    d = "nothing"
+
+                message = "You offered to trade {} for their {}\nYou can cancel this trade with `%tc trade cancel @username`".format(o, d)
+                await ctx.send(message)
+            elif request_to_id in self.trades and user in self.trades[request_to_id]:
+                offer = self.trades[request_to_id][user][0]
+                o = "["
+                for i in offer:
+                    o += i + ", "
+                o = o[:-2] + "]"
+                if len(offer) == 0:
+                    o = "nothing"
+
+                desire = self.trades[request_to_id][user][1]
+                d = "["
+                for i in desire:
+                    d += i + ", "
+                d = d[:-2] + "]"
+                if len(desire) == 0:
+                    d = "nothing"
+
+                message = "They offered to trade {} for your {}\nYou can reject this trade with `%tc trade reject @username`".format(o, d)
+                await ctx.send(message)
+            else:
+                await ctx.send("Found no trade offer between the two of you")
+        elif subaction == "accept":
+            request_to_id = (await self.at_to_id(args[0]))
+            if request_to_id in self.trades and user in self.trades[request_to_id]:
+                offer = self.trades[request_to_id][user][0]
+                desire = self.trades[request_to_id][user][1]
+                if not (await self.has_cards(request_to_id, offer)):
+                    await ctx.send("They no longer have the required cards! Trade cancelled")
+                    del self.trades[request_to_id][user]
+                elif not (await self.has_cards(user, desire)):
+                    await ctx.send("You no longer have the required cards! Trade cancelled")
+                    del self.trades[request_to_id][user]
+                else:
+                    offer_indexes = []
+                    for i in offer:
+                        cape = await self.get_cape(i)
+                        self.trading[request_to_id].remove(cape)
+                        self.trading[user] += [cape]
+                        offer_indexes += [ self.capelist.index(cape) ]
+                    
+                    await sheets.move_card_owner(request_to_id, user, offer_indexes)
+
+                    desire_indexes = []
+                    for i in desire:
+                        cape = await self.get_cape(i)
+                        self.trading[user].remove(cape)
+                        self.trading[request_to_id] += [cape]
+                        desire_indexes += [ self.capelist.index(cape) ]
+                    
+                    await sheets.move_card_owner(user, request_to_id, desire_indexes)
+
+                    await ctx.send("Trade made!")
+                    del self.trades[request_to_id][user]
+                    return
+            else:
+                await ctx.send("They haven't sent you a trade")
+        elif subaction == "reject" or subaction == "cancel":
+            request_to_id = (await self.at_to_id(args[0]))
+            if user in self.trades and request_to_id in self.trades[user]:
+                del self.trades[user][request_to_id]
+                await ctx.send("Trade cancelled")
+            elif request_to_id in self.trades and user in self.trades[request_to_id]:
+                del self.trades[request_to_id][user]
+                await ctx.send("Trade rejected")
+            else:
+                await ctx.send("Found no trade offer between the two of you")
+
+    async def filter(self, ctx, user, *args):
+        s = ""
+        for i in args:
+            s += i + " "
+        s = s[:-1]
+        categories = [
+            "mover", "shaker", "brute", "breaker", "master", "tinker",
+            "blaster", "thinker", "striker", "changer", "trump", "stranger"
+        ]
+        relevant = []
+        if s.lower() in ["s", "a", "b", "c"]:
+            for i in self.capelist:
+                if i.tier.lower() == s.lower():
+                    relevant += [i]
+            messages = (await self.messagify_ownership(user, relevant, "{} Tier".format(s.upper())))
+            
+        elif s.lower() in categories:
+            for i in self.capelist:
+                if s.lower() in i.classification.lower():
+                    relevant += [i]
+            messages = (await self.messagify_ownership(user, relevant, "{} Capes".format(s)))
+        elif s.lower() in ["pc", "npc"]:
+            for i in self.capelist:
+                if i.pc.lower() == s.lower():
+                    relevant += [i]
+            messages = (await self.messagify_ownership(user, relevant, "{} Capes".format(s)))
+        elif s.lower() in ["hero", "villain", "rogue"]:
+            for i in self.capelist:
+                if i.alignment.lower() == s.lower():
+                    relevant += [i]
+            messages = (await self.messagify_ownership(user, relevant, "{} Aligned".format(s)))
+        else:
+            # We're filtering by affiliation or campaign
+            for i in self.capelist:
+                if i.affiliation.lower() == s.lower():
+                    relevant += [i]
+            if len(relevant) > 0:
+                messages = (await self.messagify_ownership(user, relevant, "{} Affiliates".format(s)))
+            else:
+                for i in self.capelist:
+                    if i.campaign.lower() == s.lower():
+                        relevant += [i]
+                if len(relevant) > 0:
+                    messages = (await self.messagify_ownership(user, relevant, "{} Campaign".format(s)))
+                else:
+                    for i in self.capelist:
+                        if s.lower() in i.name.lower():
+                            relevant += [i]
+                    if len(relevant) > 0:
+                        messages = (await self.messagify_ownership(user, relevant, "{} Cape".format(s)))
+                    else:
+                        messages = ["Could not find any cards that matched the **{}** filter".format(s)]
+        for i in messages:
+            await ctx.send(i)
+
+    async def grant(self, who, amount):
+        if not who in self.bonus_claim:
+            self.bonus_claim[who] = 0
+        self.bonus_claim[who] += amount
+
+    async def craft(self, ctx, who, *args):
+        s = ""
+        for i in args:
+            s += i + " "
+        s = s[:-1]
+        if s == "help":
+            message = "Pass in three cards you own to craft one of a higher tier. "
+            message += "Mixing card tiers spreads your probability of getting an upgraded tier "
+            message += "(ie [Tier A, Tier A, Tier C] = 66% chance of Tier S, 33% chance of Tier B).\n"
+            message += "`%tc craft [Card 1, Card 2, Card 3]`"
+            await ctx.send(message)
+            return
+        nil,s = s.split("[")
+        s,nil = s.split("]")
+        c1,c2,c3 = s.split(",")
+        c1 = c1.strip()
+        c2 = c2.strip()
+        c3 = c3.strip()
+        my_cards = [c1,c2,c3]
+        if not await self.has_cards(who, my_cards):
+            await ctx.send("You don't have all those cards available to craft with!")
+            return
+        upgrade = {"C": "B", "B": "A", "A": "S"}
+        roll = []
+        cards_to_remove = []
+        for i in range(0,len(my_cards)):
+            for j in self.capelist:
+                if my_cards[i] == j.name:
+                    if j.tier == "S":
+                        await ctx.send("Can't upgrade from S tier cards")
+                        return
+                    roll += [upgrade[j.tier]]
+                    cards_to_remove += [j]
+                    break
+        
+        target = roll[random.randrange(0,3)]
+        if target == "A":
+            await ctx.send("Crafting an **{} Tier** card".format(target))
+        else:
+            await ctx.send("Crafting a **{} Tier** card".format(target))
+        relevant = []
+        for i in self.capelist:
+            if i.tier == target:
+                relevant += [i]
+        selection = relevant[random.randrange(0,len(relevant))]
+        r_card_index = []
+        for i in cards_to_remove:
+            self.trading[who].remove(i)
+            r_card_index += [self.capelist.index(i)]
+        await sheets.remove_cards(who, r_card_index)
+        self.trading[who] += [selection]
+        await sheets.gain_card(who, self.capelist.index(selection))
+        await ctx.send("Crafted **{}** card".format(selection.name))
+
+    @commands.command()
+    async def tc(self, ctx, action, *args):
+        '''Do things for the Parahumans server trading card game.
+            %tc claim - Claim your daily free card
+            %tc view [Card] - View all the cards you own
+            %tc submit - Get the link to submit new cards for review
+            %tc masterlist - View the existing cape masterlist
+            %tc trade [offer/view/accept/reject/cancel/help] @username - Make a trade
+            %tc craft [Card 1, Card 2, Card 3] - Craft three cards together into a new one
+        '''
+        if action == "unpause" and str(ctx.author.id) == "227834498019098624":
+            self.pause = False
+            return
+        if self.pause:
+            # For when developing on a secondary bot
+            return
+        if not self.cached:
+            await ctx.send("Caching things on first run")
+            await self.set_local_cache()
+        if action == "claim":
+            #await ctx.send("Claiming paused while Wellwick fixes things")
+            await self.random_claim(ctx, str(ctx.author.id))
+        elif action == "recache" and str(ctx.author.id) == "227834498019098624":
+            self.capelist = []
+            self.trading = {}
+            self.triggers = {}
+            self.reviewing = {}
+            await self.set_local_cache()
+        elif action == "view" or action == "list" or action == "check":
+            await self.view(ctx, str(ctx.author.id), *args)
+        elif action == "submit":
+            await ctx.send("<https://docs.google.com/forms/d/e/1FAIpQLSdntX_uPBSttXxuYlHh_lLszN1YYk248xSBLbuFXiGAQ3PdIA/viewform>")
+        elif action == "masterlist":
+            await ctx.send("<https://docs.google.com/spreadsheets/d/1PcMDs_zm8xg22IdXl8hoHS8IPF5skX-_GK3djUZSlBw/edit#gid=0>")
+        elif action == "trade":
+            if len(args) == 0:
+                await ctx.send("Missing trade subcommand (ie offer, accept, reject, view, cancel)")
+            else:
+                await self.trade(ctx, str(ctx.author.id), args[0], *args[1:])
+        elif action == "offer" and len(args) > 0 and args[1] == "trade":
+            await self.trade(ctx, str(ctx.author.id), "offer", *args[1:])
+        elif action == "filter":
+            await self.filter(ctx, str(ctx.author.id), *args)
+        elif action == "pause" and str(ctx.author.id) == "227834498019098624":
+            self.pause = True
+        elif action == "grant" and str(ctx.author.id) == "227834498019098624":
+            who = await self.at_to_id(args[0])
+            amount = int(args[1])
+            await self.grant(who, amount)
+        elif action == "craft":
+            await self.craft(ctx, str(ctx.author.id), *args)
+
+    @commands.command()
+    async def submit(self, ctx, *args):
+        '''Submit a trigger to the sheet and gain a few cards. Please only submit if putting in actual effort or this feature will be removed/you will be blacklisted.
+        If a mistake is made (ie spelling, trigger longer than a discord message can contain) PM Wellwick
+        '''
+        if not self.cached:
+            await ctx.send("Caching things on first run")
+            await self.set_local_cache()
+        if len(args) == 0:
+            await ctx.send("Can't submit an empty trigger")
+            return
+        s = ""
+        for i in args:
+            s += i + " "
+        s = s.strip()
+        s = s.replace("\"", "'")
+        if s in self.triggers:
+            await ctx.send("This trigger already exists!")
+            return
+        self.triggers[s] = [str(ctx.author.id)]
+        await sheets.submit_trigger(s, str(ctx.author.id), ctx.author.name)
+        await self.grant(str(ctx.author.id),3)
+        await ctx.send("Thanks for submitting a trigger. You've earned some bonus cards that you can `%tc claim`")
+
+    @commands.command()
+    async def r(self, ctx, subaction, *args):
+        '''Do some reviewing of submitted triggers and earn some cards. Is done in PMs!
+        %r get - Get a trigger to review
+        %r approve - Approve the trigger you are reviewing
+        %r critique [criticism] - Add a critique for the trigger
+        %r skip - Skip the trigger you are currently reviewing'''
+        if not self.cached:
+            await ctx.send("Caching things on first run")
+            await self.set_local_cache()
+        user = str(ctx.author.id)
+        if subaction == "get":
+            message = ""
+            if user in self.reviewing:
+                message += "You are already reviewing a trigger\n"
+                message += self.reviewing[user]
+            else:
+                # Randomly select from one they haven't already reviewed
+                triggers = []
+                for i in self.triggers:
+                    if not user in self.triggers[i]:
+                        triggers += [i]
+                if len(triggers) == 0:
+                    await ctx.author.send("You've already reviewed all the triggers available. Great job!")
+                    return
+                selected = triggers[random.randrange(0,len(triggers))]
+                self.reviewing[user] = selected
+                message += selected + "\n"
+            message += "```%r approve comments - Approve the trigger. Comments optional\n"
+            message += "%r critique comments - Critique the trigger\n"
+            message += "%r skip - Skip reviewing this trigger```"
+            await ctx.author.send(message)
+        elif subaction == "approve":
+            if not user in self.reviewing:
+                await ctx.author.send("You aren't reviewing anything")
+                return
+            comments = ""
+            for i in args:
+                comments += i + " "
+            comments[:-1]
+            trigger = self.reviewing[user]
+            self.triggers[trigger] += [user]
+            try:
+                await sheets.approve_trigger(trigger, user, ctx.author.name, comments)
+            except:
+                await ctx.send("Looks like this trigger may have changed remotely! Please ping Wellwick to ask for a recache. Skipping trigger")
+                self.triggers[self.reviewing[user]] += [user]
+                del self.reviewing[user]
+                return
+            del self.reviewing[user]
+            await self.grant(user,1)
+            await ctx.author.send("Thanks for reviewing a trigger. You've earned a bonus card that you can `%tc claim`")
+        elif subaction == "critique":
+            if not user in self.reviewing:
+                await ctx.author.send("You aren't reviewing anything")
+                return
+            comments = ""
+            if len(args) == 0:
+                await ctx.author.send("You have provided no comments")
+                return
+            for i in args:
+                comments += i + " "
+            comments[:-1]
+            trigger = self.reviewing[user]
+            self.triggers[trigger] += [user]
+            try:
+                await sheets.critique_trigger(trigger, user, ctx.author.name, comments)
+            except:
+                await ctx.send("Looks like this trigger may have changed remotely so you can't review it right now, sorry! Please ping Wellwick to ask for a recache. Skipping trigger")
+                self.triggers[self.reviewing[user]] += [user]
+                del self.reviewing[user]
+                return
+            del self.reviewing[user]
+            await self.grant(user,1)
+            await ctx.author.send("Thanks for reviewing a trigger. You've earned a bonus card that you can `%tc claim`")
+        elif subaction == "skip":
+            if not user in self.reviewing:
+                await ctx.author.send("You aren't reviewing anything")
+                return
+            self.triggers[self.reviewing[user]] += [user]
+            del self.reviewing[user]
+
+
     @commands.command()
     async def cape(self, ctx, *args):
         '''Provide information on Weaverdice capes in the database. 
