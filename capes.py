@@ -99,6 +99,7 @@ class Capes(commands.Cog):
         for i in range(0, amount):
             selectedValues += [ random.randrange(0,total) ]
         collected = ""
+        cards = []
         for selectedValue in selectedValues:
             counting = 0
             cape = None
@@ -121,9 +122,10 @@ class Capes(commands.Cog):
                 cape = self.capelist[-1]
             if not claimer_id in self.trading:
                 self.trading[claimer_id] = []
-            await sheets.gain_card(claimer_id, self.capelist.index(cape))
             self.trading[claimer_id] += [cape]
+            cards += [self.capelist.index(cape)]
             collected += cape.name + ", "
+        await sheets.gain_cards(claimer_id, cards)
         await ctx.send("You gained the card for {}".format(collected[:-2]))
         if not claimer_id in self.claims[day]:
             self.claims[day] += [ claimer_id ]
@@ -224,12 +226,12 @@ class Capes(commands.Cog):
             return False
         card_dict = {}
         for i in self.trading[user]:
-            if not i.name in card_dict:
-                card_dict[i.name] = 0
-            card_dict[i.name] += 1
+            if not i.name.lower() in card_dict:
+                card_dict[i.name.lower()] = 0
+            card_dict[i.name.lower()] += 1
         for i in cards:
-            if i in card_dict and card_dict[i] > 0:
-                card_dict[i] -= 1
+            if i.lower() in card_dict and card_dict[i.lower()] > 0:
+                card_dict[i.lower()] -= 1
             else:
                 return False
 
@@ -509,7 +511,7 @@ class Capes(commands.Cog):
             r_card_index += [self.capelist.index(i)]
         await sheets.remove_cards(who, r_card_index)
         self.trading[who] += [selection]
-        await sheets.gain_card(who, self.capelist.index(selection))
+        await sheets.gain_cards(who, [self.capelist.index(selection)])
         await ctx.send("Crafted **{}** card".format(selection.name))
 
     @commands.command()
@@ -565,21 +567,17 @@ class Capes(commands.Cog):
             await self.craft(ctx, str(ctx.author.id), *args)
 
     @commands.command()
-    async def submit(self, ctx, *args):
+    async def submit(self, ctx, *, args):
         '''Submit a trigger to the sheet and gain a few cards. Please only submit if putting in actual effort or this feature will be removed/you will be blacklisted.
         If a mistake is made (ie spelling, trigger longer than a discord message can contain) PM Wellwick
         '''
         if not self.cached:
             await ctx.send("Caching things on first run")
             await self.set_local_cache()
-        if len(args) == 0:
+        s = args.strip()
+        if len(s) == 0:
             await ctx.send("Can't submit an empty trigger")
             return
-        s = ""
-        for i in args:
-            s += i + " "
-        s = s.strip()
-        s = s.replace("\"", "'")
         if s in self.triggers:
             await ctx.send("This trigger already exists!")
             return
