@@ -570,6 +570,7 @@ class Draft(commands.Cog):
             if not str(ctx.author) in memory['players']:
                 memory['players'].append(str(ctx.author))
                 memory['proper names'][str(ctx.author)] = ctx.author.display_name
+                memory['ids'][str(ctx.author)] = ctx.author.id
                 await ctx.send(ctx.author.display_name + ' has joined!')
             else:
                 await ctx.send('You\'ve already joined!')
@@ -883,8 +884,8 @@ class Draft(commands.Cog):
                                                                 h_players = '&'.join(h_players)
 
                                                                 memory['trade contents'][h_players] = (offered, wanted)
-                                                                await ctx.send(to_say, recipient)
-                                                                await ctx.send('Trade offer sent!', ctx.author.display_name)
+                                                                await pm(memory['ids'][recipient], to_say)
+                                                                await ctx.send('Trade offer sent!')
                                                             else:
                                                                 await ctx.send('You can\'t request a category you already have unless you offer the same one in return!')
                                                         else:
@@ -930,7 +931,7 @@ class Draft(commands.Cog):
                         h_players = '&'.join(h_players)
                         if h_players in memory['trade contents']:
                             await ctx.send('Trade denied!')
-                            await ctx.send(ctx.author.display_name + ' denied your trade.', offerer)
+                            await pm(memory['ids'][offerer.lower()], ctx.author.display_name + ' denied your trade.')
                             del memory['trade contents'][h_players]
                             memory['pending trades'].remove(str(ctx.author))
                             memory['pending trades'].remove(offerer.lower())
