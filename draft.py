@@ -949,11 +949,54 @@ class Draft(commands.Cog):
         else:
             await ctx.send('There\'s no draft going on.')
 
-
-    ##### DELETE!!!
     @commands.command()
-    async def listplayers(self, ctx):
-        to_send = ''
-        for p in memory['players']:
-            to_send += ', ' + p
-        await ctx.send(to_send[2:])
+    async def confirmtrade(self, ctx, *args):
+        '''Lets players accept trades offered them.
+        '''
+        lower_args = [arg.lower() for arg in args]
+        if memory['phase'] == 'the draft':
+            if str(ctx.author) in memory['players']:
+                if ctx.author.display_name.lower() in memory['pending trades']:
+                    offerer = lower_args[0]
+                    h_players = [offerer.lower(), ctx.author.display_name.lower()]
+                    h_players.sort()
+                    h_players = '&'.join(h_players)
+                    if h_players in memory['trade contents']:
+                        o_user = memory['Users'][offerer.lower()]
+                        o_pname = str(o_user)
+                        r_user = ctx.author
+                        r_pname = str(r_user)
+                        offered, wanted = memory['trade contents'][h_players]
+                        for item in offered:
+                            if item[0] in memory['cats']:
+                                memory[item[0]][item[1]] = r_name
+                            elif item[0] == 'bmark':
+                                memory['black marks'][o_pname] -= item[1]
+                                memory['black marks'][r_pname] += item[1]
+                            elif item[0] == 'wmark':
+                                memory['white marks'][o_pname] -= item[1]
+                                memory['white marks'][r_pname] += item[1]
+                        for item in wanted:
+                            if item[0] in memory['cats']:
+                                memory[item[0]][item[1]] = o_name
+                            elif item[0] == 'bmark':
+                                memory['black marks'][r_pname] -= item[1]
+                                memory['black marks'][o_pname] += item[1]
+                            elif item[0] == 'wmark':
+                                memory['white marks'][r_pname] -= item[1]
+                                memory['white marks'][o_pname] += item[1]
+
+                        await update_sheet()
+                        await ctx.send('Trade accepted!')
+                        await pm(o_user, ctx.author.display_name + ' accepted your trade!')
+                        del memory['trade contents'][h_players]
+                        memory['pending trades'].remove(ctx.author.display_name.lower())
+                        memory['pending trades'].remove(offerer.lower())
+                    else:
+                        await ctx.send('You don\'t have a pending trade with ' + offerer + '!')
+                else:
+                    await ctx.send('You don\'t have any pending trades!')
+            else:
+                await ctx.send('You\'re not in the draft!')
+        else:
+            await ctx.send('There\'s no draft going on.')
