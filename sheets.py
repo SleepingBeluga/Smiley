@@ -480,7 +480,7 @@ async def luck(column, beta = False, search = None):
                 relevantLuck.append(found)
                 if search:
                     distance = difflib.SequenceMatcher(None, search, found[:len(search)].lower()).ratio()
-                    if distance > 0.7:
+                    if distance > 0.85:
                         return found
         except:
             pass
@@ -648,7 +648,7 @@ async def gain_cards(claimer, cards):
     }
     reqs = [paste_req]
     batch_res = sheet.batchUpdate(spreadsheetId=TradingDatabaseID, body={"requests": reqs}).execute()
-    
+
 
 async def move_card_owner(old, new, cards):
     if len(cards) == 0:
@@ -680,7 +680,7 @@ async def move_card_owner(old, new, cards):
                     break
             except:
                 continue
-    
+
     batch_res = sheet.batchUpdate(spreadsheetId=TradingDatabaseID, body={"requests": reqs}).execute()
 
 async def remove_cards(owner, cards):
@@ -701,7 +701,7 @@ async def remove_cards(owner, cards):
                     break
             except:
                 continue
-    
+
     if len(rows_to_delete) != len(cards):
         return
 
@@ -912,7 +912,7 @@ async def cape(name):
                 count += 1
         except:
             pass
-    
+
     if name == "":
         num = random.randrange(0,count)
         return values[num]
@@ -932,7 +932,7 @@ async def documents():
                 data[str(row[0])] = str(row[1])
         except:
             pass
-    
+
     return data
 
 async def add_document(doc, link, submitter):
