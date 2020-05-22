@@ -79,6 +79,8 @@ async def subround(clash):
         instructions = 'It\'s the beginning of round ' + str(memory['round']) + '! Submit your bids by PMing me with e.x. `%bid Executions 2`'
         if memory['round'] == 1:
             instructions += '. Note that lower numbers are better. 1 is Supreme, etc.'
+        elif memory['round'] > 7:
+            instructions += '\n If you already have a slot in each category, you don\'t need to bid!'
         await memory['channel'].send(instructions)
         # Start a full round & tell players to submit bids
     else:
@@ -129,7 +131,15 @@ async def subround(clash):
     # If it's the last round, end the draft
 
     else:
-        memory['to resolve'] = memory['players']
+        memory['to resolve'] = []
+        for player in memory['players']:
+            in_all = True
+            for cat in memory['cats']:
+                if not player in cats:
+                    in_all = False
+                    break
+            if not in_all:
+                memory['to resolve'].append(player)
         memory['round'] += 1
         await subround(False)
     # Go on to the next full round!
@@ -505,7 +515,6 @@ async def autofill():
         for cat in memory['cats']:
             if not player in memory[cat]:
                 for index, slot in enumerate(memory[cat]):
-                    print(player, cat, index, slot)
                     if not slot:
                         memory[cat][index] = player
                         break
