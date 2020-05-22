@@ -368,13 +368,14 @@ class Game_Channels(commands.Cog):
             await ctx.send('Could not find game ' + gameName)
 
     @commands.command()
-    async def document(self, ctx, *args):
+    async def document(self, ctx, *, arguments):
         '''Adds or links to documents
         Usage (colons are important when adding):
         %document add Document name: link
         %document search word words
         %document Document name
         '''
+        args = arguments.strip().split(" ")
         if len(args) == 0:
             return
         if args[0].lower() == "add":
