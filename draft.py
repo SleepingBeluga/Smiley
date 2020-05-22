@@ -16,6 +16,7 @@ async def setup():
     # Set all the 'state' indicators to defaults
 
     memory['players'] = []
+    memory['human names'] = []
     memory['to resolve'] = []
     memory['player colors'] = []
 
@@ -23,6 +24,8 @@ async def setup():
     memory['trade contents'] = {}
 
     memory['proper names'] = {}
+    memory['hn to pn'] = {}
+    memory['Users'] = {}
     memory['bids'] = {}
     memory['clash choices'] = {}
     memory['black marks'] = {}
@@ -511,9 +514,8 @@ async def check_clash_choices():
     if not None in memory['clash choices'].values():
         memory['clashesin'].set()
 
-async def pm(id, message):
-    user = await client.get_user_info(id)
-    await client.send_message(user, message)
+async def pm(user, message):
+    await user.dm_channel.send(message)
 
 # Gonna add some bot stuff here on. Mostly just modified versions of the player stuff
 
@@ -569,8 +571,10 @@ class Draft(commands.Cog):
         if memory['phase'] == 'setup':
             if not str(ctx.author) in memory['players']:
                 memory['players'].append(str(ctx.author))
+                memory['human names'].append(ctx.author.display_name.lower())
+                memory['hn to pn'][ctx.author.display_name.lower()] = str(ctx.author)
                 memory['proper names'][str(ctx.author)] = ctx.author.display_name
-                memory['ids'][str(ctx.author)] = ctx.author.id
+                memory['Users'][ctx.author.display_name.lower()] = ctx.author
                 await ctx.send(ctx.author.display_name + ' has joined!')
             else:
                 await ctx.send('You\'ve already joined!')
@@ -580,18 +584,19 @@ class Draft(commands.Cog):
             await ctx.send('You can\'t join right now, we\'re in ' + memory['phase'] + '!')
 
     @commands.command()
-    async def addbot(self, ctx, *args):
+    async def addbot(self, ctx, number = 1):
         '''Adds a bot player
         '''
         if memory['phase'] == 'setup':
-            x = draftai.Other(memory)
-            memory['bots'].append(x)
-            if not str(x.name) in memory['players']:
-                memory['players'].append(str(x.name))
-                memory['proper names'][str(x.name)] = x.name
-                await ctx.send(x.name + ' has joined!')
-            else:
-                await ctx.send('Error!')
+            for _ in range(number):
+                x = draftai.Other(memory)
+                memory['bots'].append(x)
+                if not str(x.name) in memory['players']:
+                    memory['players'].append(str(x.name))
+                    memory['proper names'][str(x.name)] = x.name
+                    await ctx.send(x.name + ' has joined!')
+                else:
+                    await ctx.send('Error!')
         elif memory['phase'] == 'none':
             await ctx.send('You can\'t make a bot because there\'s no draft going on! (Use `%open` to start one)')
         else:
@@ -731,7 +736,10 @@ class Draft(commands.Cog):
                     args = lower_args
                     if len(args) >= 6:
                         recipient = args[0].lower()
-                        if recipient in memory['players']:
+                        if recipient in memory['human names']:
+                            if recipient == ctx.author.display_name.lower():
+                                await ctx.send('You can\'t trade with yourself!')
+                                return
                             if not recipient in memory['pending trades']:
                                 offered = []
                                 wanted = []
@@ -762,16 +770,13 @@ class Draft(commands.Cog):
                                             if not ((item[0] in memory['cats'] and memory[item[0]][int(item[1]) - 1] == str(ctx.author)) \
                                                     or (item[0] == 'bmark' and memory['black marks'][str(ctx.author)] >= int(item[1]))   \
                                                     or (item[0] == 'wmark' and memory['white marks'][str(ctx.author)] >= int(item[1]))):
-                                                await ctx.send(str(ctx.author))
-                                                await ctx.send(item[0])
-                                                await ctx.send(item[1])
                                                 offered_owned = False
                                         if offered_owned:
                                             wanted_owned = True
-                                            for item in wanted:
-                                                if not ((item[0] in memory['cats'] and memory[item[0]][int(item[1]) - 1] == recipient) \
-                                                        or (item[0] == 'bmark' and memory['black marks'][recipient] >= int(item[1]))   \
-                                                        or (item[0] == 'wmark' and memory['white marks'][recipient] >= int(item[1]))):
+                                            for item in wanted: # TODO:
+                                                if not ((item[0] in memory['cats'] and memory[item[0]][int(item[1]) - 1] == memory['hn to pn'][recipient]) \
+                                                        or (item[0] == 'bmark' and memory['black marks'][memory['hn to pn'][recipient]] >= int(item[1]))   \
+                                                        or (item[0] == 'wmark' and memory['white marks'][memory['hn to pn'][recipient]] >= int(item[1]))):
                                                     wanted_owned = False
                                             if wanted_owned:
                                                 # Make sure people can't offer a category unless they
@@ -850,8 +855,8 @@ class Draft(commands.Cog):
                                                                 # Save the pending trade and send a confirmation
                                                                 # message to the recipient.
 
-                                                                memory['pending trades'].append(str(ctx.author))
-                                                                memory['pending trades'].append(recipient)
+                                                                memory['pending trades'].append(ctx.author.display_name.lower())
+                                                                memory['pending trades'].append(recipient.lower())
 
                                                                 to_say = 'You have a trade offer from ' + ctx.author.display_name + '! They want to trade their '
                                                                 for item in offered:
@@ -860,7 +865,7 @@ class Draft(commands.Cog):
                                                                     elif item[0] == 'wmark' and item[1] == '1':
                                                                         to_say += 'white mark, '
                                                                     elif item[0] == 'wmark':
-                                                                        to_say += item[1] + ' white marks, '
+                                                                        to_say += item[1] + 'white marks, '
                                                                     elif item[0] == 'bmark' and item[1] == '1':
                                                                         to_say += 'black mark, '
                                                                     elif item[0] == 'bmark':
@@ -870,21 +875,21 @@ class Draft(commands.Cog):
                                                                     if item[0] in memory['cats']:
                                                                         to_say += item[0].capitalize() + ' ' + item[1] + ', '
                                                                     elif item[0] == 'wmark' and item[1] == '1':
-                                                                        to_say += ' white mark, '
+                                                                        to_say += 'white mark, '
                                                                     elif item[0] == 'wmark':
-                                                                        to_say += item[1] + ' white marks, '
+                                                                        to_say += item[1] + 'white marks, '
                                                                     elif item[0] == 'bmark' and item[1] == '1':
                                                                         to_say += ' black mark, '
                                                                     elif item[0] == 'bmark':
-                                                                        to_say += item[1] + ' black marks, '
+                                                                        to_say += item[1] + 'black marks, '
                                                                 to_say = to_say[:-2] + '! Reply with `%confirmtrade ' + ctx.author.display_name + '` to confirm, or `%denytrade ' + ctx.author.display_name + '` to deny.'
 
-                                                                h_players = [str(ctx.author),recipient]
+                                                                h_players = [ctx.author.display_name.lower(),recipient.lower()]
                                                                 h_players.sort()
                                                                 h_players = '&'.join(h_players)
 
                                                                 memory['trade contents'][h_players] = (offered, wanted)
-                                                                await pm(memory['ids'][recipient], to_say)
+                                                                await pm(memory['Users'][recipient.lower()], to_say)
                                                                 await ctx.send('Trade offer sent!')
                                                             else:
                                                                 await ctx.send('You can\'t request a category you already have unless you offer the same one in return!')
@@ -906,7 +911,8 @@ class Draft(commands.Cog):
                             else:
                                 await ctx.send('Your recipient already has a trade pending! To avoid shenanigans, a player can only have one trade pending at a time.')
                         else:
-                            await ctx.send('That recipient isn\'t in the draft! Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
+                            await ctx.send(f'{recipient} isn\'t in the draft! Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
+                            await ctx.send(f'Valid recipients are {", ".join([hn for hn in memory["human names"]])}')
                     else:
                         await ctx.send('Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
                 else:
@@ -917,31 +923,37 @@ class Draft(commands.Cog):
             await ctx.send('There\'s no draft going on.')
 
     @commands.command()
-    async def deny(self, ctx, *args):
+    async def denytrade(self, ctx, *args):
         '''Lets players deny trades offered them.
         '''
         lower_args = [arg.lower() for arg in args]
         if memory['phase'] == 'the draft':
             if str(ctx.author) in memory['players']:
-                if str(ctx.author) in memory['pending trades']:
+                if ctx.author.display_name.lower() in memory['pending trades']:
                     offerer = lower_args[0]
-                    if offerer.lower() in memory['players']:
-                        h_players = [offerer.lower(), str(ctx.author)]
-                        h_players.sort()
-                        h_players = '&'.join(h_players)
-                        if h_players in memory['trade contents']:
-                            await ctx.send('Trade denied!')
-                            await pm(memory['ids'][offerer.lower()], ctx.author.display_name + ' denied your trade.')
-                            del memory['trade contents'][h_players]
-                            memory['pending trades'].remove(str(ctx.author))
-                            memory['pending trades'].remove(offerer.lower())
-                        else:
-                            await ctx.send('You don\'t have a pending trade with ' + offerer + '!')
+                    h_players = [offerer.lower(), ctx.author.display_name.lower()]
+                    h_players.sort()
+                    h_players = '&'.join(h_players)
+                    if h_players in memory['trade contents']:
+                        await ctx.send('Trade denied!')
+                        await pm(memory['Users'][offerer.lower()], ctx.author.display_name + ' denied your trade.')
+                        del memory['trade contents'][h_players]
+                        memory['pending trades'].remove(ctx.author.display_name.lower())
+                        memory['pending trades'].remove(offerer.lower())
                     else:
-                        await ctx.send(offerer + ' isn\'t a player in this draft!')
+                        await ctx.send('You don\'t have a pending trade with ' + offerer + '!')
                 else:
                     await ctx.send('You don\'t have any pending trades!')
             else:
                 await ctx.send('You\'re not in the draft!')
         else:
             await ctx.send('There\'s no draft going on.')
+
+
+    ##### DELETE!!!
+    @commands.command()
+    async def listplayers(self, ctx):
+        to_send = ''
+        for p in memory['players']:
+            to_send += ', ' + p
+        await ctx.send(to_send[2:])
