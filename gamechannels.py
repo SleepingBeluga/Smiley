@@ -380,13 +380,14 @@ class Game_Channels(commands.Cog):
         if args[0].lower() == "add":
             user_input = " ".join(args[1:])
             doc, link = user_input.split(":")
+            link = link.strip()
             # Check that it doesn't already exist
             data = (await sheets.documents())
             if doc in data:
                 await ctx.send("A document already exists for {}".format(doc))
                 return
             # Now add it!
-            await sheets.add_document(doc, link, ctx.author.id)
+            await sheets.add_document(doc, link, "{} - ({})".format(ctx.author.name, ctx.author.id))
         elif args[0].lower() == "search":
             user_input = " ".join(args[1:])
             data = (await sheets.documents())

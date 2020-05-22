@@ -168,7 +168,7 @@ async def newgame(name, GM, type):
 
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
-                                range='Campaigns!A1:E100').execute()
+                                range='Campaigns!A1:E1000').execute()
     values = result.get('values', [])
 
     rowNum = 0
@@ -215,7 +215,7 @@ async def newgame(name, GM, type):
 async def category(game):
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
-                                range='Campaigns!A1:E100').execute()
+                                range='Campaigns!A1:E1000').execute()
     values = result.get('values', [])
 
     game = game.lower()
@@ -230,7 +230,7 @@ async def gamecheck(name, game):
 
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
-                                range='Campaigns!A1:E100').execute()
+                                range='Campaigns!A1:E1000').execute()
     values = result.get('values', [])
 
     check = False
@@ -248,7 +248,7 @@ async def gamecheck(name, game):
 async def ownercheck(game):
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
-                                range='Campaigns!A1:E100').execute()
+                                range='Campaigns!A1:E1000').execute()
     values = result.get('values', [])
     game = game.lower()
 
@@ -262,7 +262,7 @@ async def addlink(name, campaign, link):
 
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
-                                range='Campaigns!A1:E100').execute()
+                                range='Campaigns!A1:E1000').execute()
     values = result.get('values', [])
 
     rowNum = 0
@@ -285,7 +285,7 @@ async def changeState(name,yesno):
 
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
-                                range='Campaigns!A1:E100').execute()
+                                range='Campaigns!A1:E1000').execute()
     values = result.get('values', [])
 
     rowNum = 0
@@ -922,14 +922,14 @@ async def cape(name):
 async def documents():
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=ID1,
-                                range='Documents!A2:C100').execute()
+                                range='Documents!A2:C1000').execute()
     values = result.get('values', [])
 
     data = {}
     for row in values:
         try:
             if not str(row[0]) == "":
-                data[row[0]] = row[1]
+                data[str(row[0])] = str(row[1])
         except:
             pass
     
@@ -937,9 +937,9 @@ async def documents():
 
 async def add_document(doc, link, submitter):
     sheet = service.spreadsheets()
-    index = 2
+    index = 1
     result = sheet.values().get(spreadsheetId=ID1,
-                                range='Documents!A2:C100').execute()
+                                range='Documents!A2:C1000').execute()
     values = result.get('values', [])
     for row in values:
         try:
@@ -952,7 +952,7 @@ async def add_document(doc, link, submitter):
 
     data_to_paste = '<table><tr><td>' + doc + \
                           '</td><td>' + link + \
-                          '</td><td>' + submitter + '</tr></table>'
+                          '</td><td>' + submitter + '</td></tr></table>'
 
     paste_req = {
         "pasteData": {
