@@ -206,7 +206,7 @@ class Capes(commands.Cog):
 
     async def get_cape(self, name):
         for i in self.capelist:
-            if i.name == name:
+            if i.name.lower() == name.lower():
                 return i
 
     async def at_to_id(self, at):
@@ -313,6 +313,7 @@ class Capes(commands.Cog):
                     await ctx.send("Don't have any open trades")
                 else:
                     await ctx.send("Have open trades with {}".format(open_offers[:-2]))
+                return
             request_to_id = (await self.at_to_id(args[0]))
             if user in self.trades and request_to_id in self.trades[user]:
                 offer = self.trades[user][request_to_id][0]
