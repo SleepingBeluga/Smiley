@@ -380,7 +380,8 @@ class Game_Channels(commands.Cog):
             return
         if args[0].lower() == "add":
             user_input = " ".join(args[1:])
-            doc, link = user_input.split(":")
+            doc = user_input[:user_input.index(":")]
+            link = user_input[user_input.index(":")+1:]
             link = link.strip()
             # Check that it doesn't already exist
             data = (await sheets.documents())
