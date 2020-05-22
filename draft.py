@@ -96,6 +96,10 @@ async def subround(clash):
     await get_bids()
     # Wait until bids are all submitted
 
+    memory['trade contents'] = {}
+    memory['pending trades'] = []
+    # Get rid of any pending trades
+
     if memory['phase'] == 'none':
         return
     # Make sure the draft hasn't been reset
@@ -645,37 +649,40 @@ class Draft(commands.Cog):
         lower_args = [arg.lower() for arg in args]
         if memory['bidding']:
             if str(ctx.author) in memory['to resolve']:
-                if len(lower_args) == 2:
-                    cat = lower_args[0]
-                    rung = int(lower_args[1])
-                    if cat in memory['cats']:
-                        if not str(ctx.author) in memory[cat]:
-                            if (rung <= len(memory['players']) and rung >= memory['limits'][str(ctx.author)]) or rung == memory['limits'][str(ctx.author)]:
-                                if memory[cat][rung - 1] == '':
-                                    await ctx.send('Got it!')
-                                    memory['bids'][str(ctx.author)] = (cat, rung)
-                                    await check_bids()
+                if not ctx.author.display_name.lower() in memory['pending trades']:
+                    if len(lower_args) == 2:
+                        cat = lower_args[0]
+                        rung = int(lower_args[1])
+                        if cat in memory['cats']:
+                            if not str(ctx.author) in memory[cat]:
+                                if (rung <= len(memory['players']) and rung >= memory['limits'][str(ctx.author)]) or rung == memory['limits'][str(ctx.author)]:
+                                    if memory[cat][rung - 1] == '':
+                                        await ctx.send('Got it!')
+                                        memory['bids'][str(ctx.author)] = (cat, rung)
+                                        await check_bids()
+                                    else:
+                                        await ctx.send('That one\'s taken, please choose another.')
                                 else:
-                                    await ctx.send('That one\'s taken, please choose another.')
+                                    to_say = 'Please choose a rung between '
+                                    if memory['limits'][str(ctx.author)] == 0:
+                                        to_say += '1'
+                                    else:
+                                        to_say += str(memory['limits'][str(ctx.author)])
+                                    to_say += ' and '
+                                    if memory['limits'][str(ctx.author)] <= len(memory['players']):
+                                        to_say += str(len(memory['players']))
+                                    else:
+                                        to_say += str(memory['limits'][str(ctx.author)])
+                                    to_say += '. Format your message like this: `%bid puissance 4`'
+                                    await ctx.send(to_say)
                             else:
-                                to_say = 'Please choose a rung between '
-                                if memory['limits'][str(ctx.author)] == 0:
-                                    to_say += '1'
-                                else:
-                                    to_say += str(memory['limits'][str(ctx.author)])
-                                to_say += ' and '
-                                if memory['limits'][str(ctx.author)] <= len(memory['players']):
-                                    to_say += str(len(memory['players']))
-                                else:
-                                    to_say += str(memory['limits'][str(ctx.author)])
-                                to_say += '. Format your message like this: `%bid puissance 4`'
-                                await ctx.send(to_say)
+                                await ctx.send('You already have a rung in that category! Pick another, please.')
                         else:
-                            await ctx.send('You already have a rung in that category! Pick another, please.')
+                            await ctx.send ('I don\'t know that category. Format your message like this: `%bid puissance 4`')
                     else:
-                        await ctx.send ('I don\'t know that category. Format your message like this: `%bid puissance 4`')
+                        await ctx.send('Format your message like this: `%bid puissance 4`')
                 else:
-                    await ctx.send('Format your message like this: `%bid puissance 4`')
+                    await ctx.send('You have a trade pending! To avoid inconsistencies in the draft, you can\'t bid until you accept or deny.')
             else:
                 await ctx.send('I don\'t need a bid from you right now.')
         else:
@@ -732,7 +739,7 @@ class Draft(commands.Cog):
         lower_args = [arg.lower() for arg in args]
         if memory['phase'] == 'the draft':
             if str(ctx.author) in memory['players']:
-                if not str(ctx.author) in memory['pending trades']:
+                if not ctx.author.display_name.lower() in memory['pending trades']:
                     args = lower_args
                     if len(args) >= 6:
                         recipient = args[0].lower()
@@ -966,26 +973,26 @@ class Draft(commands.Cog):
                         o_pname = str(o_user)
                         r_user = ctx.author
                         r_pname = str(r_user)
+                        # Actually execute the trade!
                         offered, wanted = memory['trade contents'][h_players]
                         for item in offered:
                             if item[0] in memory['cats']:
-                                memory[item[0]][item[1]] = r_name
+                                memory[item[0]][int(item[1]) - 1] = r_pname
                             elif item[0] == 'bmark':
-                                memory['black marks'][o_pname] -= item[1]
-                                memory['black marks'][r_pname] += item[1]
+                                memory['black marks'][o_pname] -= int(item[1])
+                                memory['black marks'][r_pname] += int(item[1])
                             elif item[0] == 'wmark':
-                                memory['white marks'][o_pname] -= item[1]
-                                memory['white marks'][r_pname] += item[1]
+                                memory['white marks'][o_pname] -= int(item[1])
+                                memory['white marks'][r_pname] += int(item[1])
                         for item in wanted:
                             if item[0] in memory['cats']:
-                                memory[item[0]][item[1]] = o_name
+                                memory[item[0]][int(item[1]) - 1] = o_pname
                             elif item[0] == 'bmark':
-                                memory['black marks'][r_pname] -= item[1]
-                                memory['black marks'][o_pname] += item[1]
+                                memory['black marks'][r_pname] -= int(item[1])
+                                memory['black marks'][o_pname] += int(item[1])
                             elif item[0] == 'wmark':
-                                memory['white marks'][r_pname] -= item[1]
-                                memory['white marks'][o_pname] += item[1]
-
+                                memory['white marks'][r_pname] -= int(item[1])
+                                memory['white marks'][o_pname] += int(item[1])
                         await update_sheet()
                         await ctx.send('Trade accepted!')
                         await pm(o_user, ctx.author.display_name + ' accepted your trade!')
