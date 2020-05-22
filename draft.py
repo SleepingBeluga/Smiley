@@ -511,6 +511,10 @@ async def check_clash_choices():
     if not None in memory['clash choices'].values():
         memory['clashesin'].set()
 
+async def pm(id, message):
+    user = await client.get_user_info(id)
+    await client.send_message(user, message)
+
 # Gonna add some bot stuff here on. Mostly just modified versions of the player stuff
 
 async def bots_bid():
@@ -528,15 +532,12 @@ async def bots_bid():
                                 memory['limits'][str(botName)]:
                             if memory[cat][rung - 1] == '':
                                 memory['bids'][str(botName)] = (cat, rung)
-
     await check_bids()
 
 async def bots_clash():
     for bot in memory['bots']:
         botName = bot.name
-
         returned = bot.auto_clash()
-
         if returned:
             if memory['clashing']:
                 if str(botName) in memory['clashes'][0]:
@@ -545,7 +546,6 @@ async def bots_clash():
             if memory['clashing']:
                 if str(botName) in memory['clashes'][0]:
                     memory['clash choices'][str(botName)] = 'concede'
-
     await check_clash_choices()
 
 
