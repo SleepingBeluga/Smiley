@@ -76,10 +76,10 @@ async def subround(clash):
     Return: None
     '''
     if not clash:
-        instructions = 'It\'s the beginning of round ' + str(memory['round']) + '! Submit your bids by PMing me with e.x. `%bid Executions 2`'
+        instructions = 'It\'s the beginning of round ' + str(memory['round']) + '! Submit your bids by PMing me with ex. `%bid Executions 2`'
         if memory['round'] == 1:
             instructions += '. Note that lower numbers are better. 1 is Supreme, etc.'
-        elif memory['round'] > 7:
+        elif memory['round'] > 3:
             instructions += '\n If you already have a slot in each category, you don\'t need to bid!'
         await memory['channel'].send(instructions)
         # Start a full round & tell players to submit bids
@@ -89,9 +89,9 @@ async def subround(clash):
         for player in memory['to resolve']:
             to_say = to_say + memory['proper names'][player] + ', '
         if len(memory['to resolve']) > 1:
-            to_say = to_say + 'please submit your bids by PMing me with e.x. `%bid Executions 2`'
+            to_say = to_say + 'please submit your bids by PMing me with ex. `%bid Executions 2`'
         else:
-            to_say = to_say + 'please submit your bid by PMing me with e.x. `%bid Executions 2`'
+            to_say = to_say + 'please submit your bid by PMing me with ex. `%bid Executions 2`'
         await memory['channel'].send(to_say)
         await memory['channel'].send('Remember, bids are restricted by the results of the clashes.')
         # Tell players to submit bids
@@ -135,7 +135,7 @@ async def subround(clash):
         for player in memory['players']:
             in_all = True
             for cat in memory['cats']:
-                if not player in cats:
+                if not player in cat:
                     in_all = False
                     break
             if not in_all:
@@ -741,17 +741,17 @@ class Draft(commands.Cog):
         else:
             await ctx.send('There\'s no draft going on.')
 
-    @commands.command()
-    async def offer(self, ctx, *args):
+    @commands.command() # TODO : clear bids on trade, prompt for new bid if they have a bid in
+    async def offer(self, ctx, *args): # TODO : don't allow trade offers in clash rounds
         '''Allows players to offer trades to other players.
         '''
-        lower_args = [arg.lower() for arg in args]
+        lower_args = [arg.lower() for arg in args] # TODO : don't allow dupes in wanted/offered
         if memory['phase'] == 'the draft':
             if str(ctx.author) in memory['players']:
                 if not ctx.author.display_name.lower() in memory['pending trades']:
                     args = lower_args
                     if len(args) >= 6:
-                        recipient = args[0].lower()
+                        recipient = args[0]
                         if recipient in memory['human names']:
                             if recipient == ctx.author.display_name.lower():
                                 await ctx.send('You can\'t trade with yourself!')
@@ -765,12 +765,18 @@ class Draft(commands.Cog):
                                     if args[i] == 'for':
                                         past_offered = True
                                         i += 1
+                                    if args[i] == 'nothing':
+                                        i += 1
                                     if past_offered:
-                                        wanted.append((args[i].lower(), args[i + 1]))
-                                        i += 1
+                                        to_add_to = wanted
                                     else:
-                                        offered.append((args[i].lower(), args[i + 1]))
-                                        i += 1
+                                        to_add_to = offered
+                                    try:
+                                        if not args[i].lower() in [x[0] for x in to_add_to]:
+                                            to_add_to.append((args[i].lower(), args[i + 1]))
+                                            i += 1
+                                    except:
+                                        await ctx.send('Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
                                     i += 1
                                 if past_offered:
                                     valid = True
@@ -789,7 +795,7 @@ class Draft(commands.Cog):
                                                 offered_owned = False
                                         if offered_owned:
                                             wanted_owned = True
-                                            for item in wanted: # TODO:
+                                            for item in wanted:
                                                 if not ((item[0] in memory['cats'] and memory[item[0]][int(item[1]) - 1] == memory['hn to pn'][recipient]) \
                                                         or (item[0] == 'bmark' and memory['black marks'][memory['hn to pn'][recipient]] >= int(item[1]))   \
                                                         or (item[0] == 'wmark' and memory['white marks'][memory['hn to pn'][recipient]] >= int(item[1]))):
@@ -837,12 +843,12 @@ class Draft(commands.Cog):
                                                             all_cats_ok = False
                                                     if all_cats_ok:
                                                         # Make sure people can't offer a category the recipient
-                                                        # has if they aren't requesting one in return.
+                                                        # has if they aren't requesting one in return. TODO
                                                         cat_ok = {}
                                                         for item in offered:
                                                             if item[0] in memory['cats']:
                                                                 cat_ok[item[0]] = False
-                                                                if recipient in memory[item[0]]:
+                                                                if memory['hn to pn'][recipient] in memory[item[0]]:
                                                                     for req_item in wanted:
                                                                         if req_item[0] == item[0]:
                                                                             cat_ok[item[0]] = True
@@ -874,7 +880,11 @@ class Draft(commands.Cog):
                                                                 memory['pending trades'].append(ctx.author.display_name.lower())
                                                                 memory['pending trades'].append(recipient.lower())
 
-                                                                to_say = 'You have a trade offer from ' + ctx.author.display_name + '! They want to trade their '
+                                                                to_say = 'You have a trade offer from ' + ctx.author.display_name + '! '
+                                                                if len(offered):
+                                                                    to_say += 'They want to trade their '
+                                                                else:
+                                                                    to_say += 'They want to trade nothing '
                                                                 for item in offered:
                                                                     if item[0] in memory['cats']:
                                                                         to_say += item[0].capitalize() + ' ' + item[1] + ', '
@@ -886,7 +896,10 @@ class Draft(commands.Cog):
                                                                         to_say += 'black mark, '
                                                                     elif item[0] == 'bmark':
                                                                         to_say += item[1] + ' black marks, '
-                                                                to_say = to_say[:-2] + ' for your '
+                                                                if len(wanted):
+                                                                    to_say = to_say[:-2] + ' for your '
+                                                                else:
+                                                                    to_say = to_say[:-2] + ' for nothing'
                                                                 for item in wanted:
                                                                     if item[0] in memory['cats']:
                                                                         to_say += item[0].capitalize() + ' ' + item[1] + ', '
@@ -920,7 +933,7 @@ class Draft(commands.Cog):
                                         else:
                                             await ctx.send('You can only offer things that you have!')
                                     else:
-                                        await ctx.send('You can offer a category, like puissance, with the category\'s name or black or white marks with \'bmark\' or \'wmark\'')
+                                        await ctx.send('You can specify a category, like puissance, with the category\'s name or black or white marks with \'bmark\' or \'wmark\'. You can also specify nothing with \'nothing\'')
                                         await ctx.send('Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
                                 else:
                                     await ctx.send('Don\'t forget the \'for\'! Format your message like this: `%offer nick puissance 1 wmark 1 for access 1 executions 3 bmark 1`')
@@ -969,7 +982,7 @@ class Draft(commands.Cog):
     async def confirmtrade(self, ctx, *args):
         '''Lets players accept trades offered them.
         '''
-        lower_args = [arg.lower() for arg in args]
+        lower_args = [arg.lower() for arg in args] # TODO : fix display name issues
         if memory['phase'] == 'the draft':
             if str(ctx.author) in memory['players']:
                 if ctx.author.display_name.lower() in memory['pending trades']:
