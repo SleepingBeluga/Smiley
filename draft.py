@@ -741,12 +741,12 @@ class Draft(commands.Cog):
         else:
             await ctx.send('There\'s no draft going on.')
 
-    @commands.command() # TODO : clear bids on trade, prompt for new bid if they have a bid in
-    async def offer(self, ctx, *args): # TODO : don't allow trade offers in clash rounds
+    @commands.command()
+    async def offer(self, ctx, *args):
         '''Allows players to offer trades to other players.
         '''
-        lower_args = [arg.lower() for arg in args] # TODO : don't allow dupes in wanted/offered
-        if memory['phase'] == 'the draft':
+        lower_args = [arg.lower() for arg in args]
+        if memory['phase'] == 'the draft' and memory['bidding']:
             if str(ctx.author) in memory['players']:
                 if not ctx.author.display_name.lower() in memory['pending trades']:
                     args = lower_args
@@ -843,7 +843,7 @@ class Draft(commands.Cog):
                                                             all_cats_ok = False
                                                     if all_cats_ok:
                                                         # Make sure people can't offer a category the recipient
-                                                        # has if they aren't requesting one in return. TODO
+                                                        # has if they aren't requesting one in return.
                                                         cat_ok = {}
                                                         for item in offered:
                                                             if item[0] in memory['cats']:
@@ -855,7 +855,7 @@ class Draft(commands.Cog):
                                                             else:
                                                                 cat_ok[item[0]] = True
                                                         for i in cat_ok:
-                                                            if not i:
+                                                            if not cat_ok[i]:
                                                                 all_cats_ok = False
                                                         if all_cats_ok:
                                                             # Make sure people can't request a category they
@@ -871,7 +871,7 @@ class Draft(commands.Cog):
                                                                 else:
                                                                     cat_ok[item[0]] = True
                                                             for i in cat_ok:
-                                                                if not i:
+                                                                if not cat_ok[i]:
                                                                     all_cats_ok = False
                                                             if all_cats_ok:
                                                                 # Save the pending trade and send a confirmation
@@ -949,7 +949,7 @@ class Draft(commands.Cog):
             else:
                 await ctx.send('You\'re not in the draft!')
         else:
-            await ctx.send('There\'s no draft going on.')
+            await ctx.send('You can\'t offer a trade outside of the bid round of a draft.')
 
     @commands.command()
     async def denytrade(self, ctx, *args):
@@ -982,7 +982,7 @@ class Draft(commands.Cog):
     async def confirmtrade(self, ctx, *args):
         '''Lets players accept trades offered them.
         '''
-        lower_args = [arg.lower() for arg in args] # TODO : fix display name issues
+        lower_args = [arg.lower() for arg in args] # TODO : fix display name issues e.g. when there's sever nicks
         if memory['phase'] == 'the draft':
             if str(ctx.author) in memory['players']:
                 if ctx.author.display_name.lower() in memory['pending trades']:
@@ -995,6 +995,14 @@ class Draft(commands.Cog):
                         o_pname = str(o_user)
                         r_user = ctx.author
                         r_pname = str(r_user)
+                        r_cleared_bid = False
+                        o_cleared_bid = False
+                        if memory['bids'][r_pname] and memory['bids'][r_pname] != 0:
+                            memory['bids'][r_pname] = None
+                            r_cleared_bid = True
+                        if memory['bids'][o_pname] and memory['bids'][o_pname] != 0:
+                            memory['bids'][o_pname] = None
+                            o_cleared_bid = True
                         # Actually execute the trade!
                         offered, wanted = memory['trade contents'][h_players]
                         for item in offered:
@@ -1016,8 +1024,14 @@ class Draft(commands.Cog):
                                 memory['white marks'][r_pname] -= int(item[1])
                                 memory['white marks'][o_pname] += int(item[1])
                         await update_sheet()
-                        await ctx.send('Trade accepted!')
-                        await pm(o_user, ctx.author.display_name + ' accepted your trade!')
+                        if not r_cleared_bid:
+                            await ctx.send('Trade accepted!')
+                        else:
+                            await ctx.send('Trade accepted! Accepting this trade cleared your pending bid. Please bid again.')
+                        if not o_cleared_bid:
+                            await pm(o_user, ctx.author.display_name + ' accepted your trade!')
+                        else:
+                            await pm(o_user, ctx.author.display_name + ' accepted your trade! This trade cleared your pending bid. Please bid again.')
                         del memory['trade contents'][h_players]
                         memory['pending trades'].remove(ctx.author.display_name.lower())
                         memory['pending trades'].remove(offerer.lower())
