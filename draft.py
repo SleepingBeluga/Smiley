@@ -584,10 +584,10 @@ class Draft(commands.Cog):
         if memory['phase'] == 'setup':
             if not str(ctx.author) in memory['players']:
                 memory['players'].append(str(ctx.author))
-                memory['human names'].append(ctx.author.display_name.lower())
-                memory['hn to pn'][ctx.author.display_name.lower()] = str(ctx.author)
+                memory['human names'].append(ctx.author.name.lower())
+                memory['hn to pn'][ctx.author.name.lower()] = str(ctx.author)
                 memory['proper names'][str(ctx.author)] = ctx.author.display_name
-                memory['Users'][ctx.author.display_name.lower()] = ctx.author
+                memory['Users'][ctx.author.name.lower()] = ctx.author
                 await ctx.send(ctx.author.display_name + ' has joined!')
             else:
                 await ctx.send('You\'ve already joined!')
@@ -658,7 +658,7 @@ class Draft(commands.Cog):
         lower_args = [arg.lower() for arg in args]
         if memory['bidding']:
             if str(ctx.author) in memory['to resolve']:
-                if not ctx.author.display_name.lower() in memory['pending trades']:
+                if not ctx.author.name.lower() in memory['pending trades']:
                     if len(lower_args) == 2:
                         cat = lower_args[0]
                         rung = int(lower_args[1])
@@ -748,12 +748,12 @@ class Draft(commands.Cog):
         lower_args = [arg.lower() for arg in args]
         if memory['phase'] == 'the draft' and memory['bidding']:
             if str(ctx.author) in memory['players']:
-                if not ctx.author.display_name.lower() in memory['pending trades']:
+                if not ctx.author.name.lower() in memory['pending trades']:
                     args = lower_args
                     if len(args) >= 6:
                         recipient = args[0]
                         if recipient in memory['human names']:
-                            if recipient == ctx.author.display_name.lower():
+                            if recipient == ctx.author.name.lower():
                                 await ctx.send('You can\'t trade with yourself!')
                                 return
                             if not recipient in memory['pending trades']:
@@ -877,7 +877,7 @@ class Draft(commands.Cog):
                                                                 # Save the pending trade and send a confirmation
                                                                 # message to the recipient.
 
-                                                                memory['pending trades'].append(ctx.author.display_name.lower())
+                                                                memory['pending trades'].append(ctx.author.name.lower())
                                                                 memory['pending trades'].append(recipient.lower())
 
                                                                 to_say = 'You have a trade offer from ' + ctx.author.display_name + '! '
@@ -913,7 +913,7 @@ class Draft(commands.Cog):
                                                                         to_say += item[1] + 'black marks, '
                                                                 to_say = to_say[:-2] + '! Reply with `%confirmtrade ' + ctx.author.display_name + '` to confirm, or `%denytrade ' + ctx.author.display_name + '` to deny.'
 
-                                                                h_players = [ctx.author.display_name.lower(),recipient.lower()]
+                                                                h_players = [ctx.author.name.lower(),recipient.lower()]
                                                                 h_players.sort()
                                                                 h_players = '&'.join(h_players)
 
@@ -958,16 +958,16 @@ class Draft(commands.Cog):
         lower_args = [arg.lower() for arg in args]
         if memory['phase'] == 'the draft':
             if str(ctx.author) in memory['players']:
-                if ctx.author.display_name.lower() in memory['pending trades']:
+                if ctx.author.name.lower() in memory['pending trades']:
                     offerer = lower_args[0]
-                    h_players = [offerer.lower(), ctx.author.display_name.lower()]
+                    h_players = [offerer.lower(), ctx.author.name.lower()]
                     h_players.sort()
                     h_players = '&'.join(h_players)
                     if h_players in memory['trade contents']:
                         await ctx.send('Trade denied!')
                         await pm(memory['Users'][offerer.lower()], ctx.author.display_name + ' denied your trade.')
                         del memory['trade contents'][h_players]
-                        memory['pending trades'].remove(ctx.author.display_name.lower())
+                        memory['pending trades'].remove(ctx.author.name.lower())
                         memory['pending trades'].remove(offerer.lower())
                     else:
                         await ctx.send('You don\'t have a pending trade with ' + offerer + '!')
@@ -982,12 +982,12 @@ class Draft(commands.Cog):
     async def confirmtrade(self, ctx, *args):
         '''Lets players accept trades offered them.
         '''
-        lower_args = [arg.lower() for arg in args] # TODO : fix display name issues e.g. when there's sever nicks
+        lower_args = [arg.lower() for arg in args]
         if memory['phase'] == 'the draft':
             if str(ctx.author) in memory['players']:
-                if ctx.author.display_name.lower() in memory['pending trades']:
+                if ctx.author.name.lower() in memory['pending trades']:
                     offerer = lower_args[0]
-                    h_players = [offerer.lower(), ctx.author.display_name.lower()]
+                    h_players = [offerer.lower(), ctx.author.name.lower()]
                     h_players.sort()
                     h_players = '&'.join(h_players)
                     if h_players in memory['trade contents']:
@@ -1033,7 +1033,7 @@ class Draft(commands.Cog):
                         else:
                             await pm(o_user, ctx.author.display_name + ' accepted your trade! This trade cleared your pending bid. Please bid again.')
                         del memory['trade contents'][h_players]
-                        memory['pending trades'].remove(ctx.author.display_name.lower())
+                        memory['pending trades'].remove(ctx.author.name.lower())
                         memory['pending trades'].remove(offerer.lower())
                     else:
                         await ctx.send('You don\'t have a pending trade with ' + offerer + '!')
