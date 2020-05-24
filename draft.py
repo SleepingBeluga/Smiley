@@ -531,7 +531,7 @@ async def check_bids():
                     if not player in memory[cat]:
                         in_all = False
                         break
-            all_in_all = all_in_all and in_all
+                all_in_all = all_in_all and in_all
         if all_in_all:
             memory['bidsin'].set()
 
