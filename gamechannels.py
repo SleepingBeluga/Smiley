@@ -23,6 +23,7 @@ class Game_Channels(commands.Cog):
         gameMaster = None
         #gameRole = None
         gamecat = None
+        altcat = None
 
         for arg in args[1:]:
             gameName = gameName + str(arg).lower()
@@ -69,8 +70,13 @@ class Game_Channels(commands.Cog):
                     gamecat = category
                 elif (category.name == 'WeaverDice Games' and gameType == 'wd'):
                     gamecat = category
+                elif (category.name == 'WeaverDice Games 2'and gameType == 'wd'):
+                    altcat = category
 
-            await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
+            try:
+                await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
+            except:
+                await ctx.message.guild.create_text_channel(gameName, category=altcat, overwrites=overwrites)
             await sheets.newgame(str('#' + gameName),str(ctx.author.id), str(gameType).upper())
 
     @commands.command()
@@ -112,9 +118,9 @@ class Game_Channels(commands.Cog):
                 continue
             # If the channel has no category, move to the next channel
             catName = channel.category.name
-            if (catName in ['PactDice Games', 'WeaverDice Games', 'Archives']):
+            if (catName in ['PactDice Games', 'WeaverDice Games', 'WeaverDice Games 2', 'Archives', 'Archives 2']):
                 applicableChannels += [channel.name]
-            if joinAllWD and catName == 'WeaverDice Games':
+            if joinAllWD and catName in ['WeaverDice Games', 'WeaverDice Games 2']:
                 joining += channel.name + ", "
                 channelsJoined += 1
                 await channel.set_permissions(ctx.author, read_messages=True)
@@ -122,7 +128,7 @@ class Game_Channels(commands.Cog):
                 joining += channel.name + ", "
                 channelsJoined += 1
                 await channel.set_permissions(ctx.author, read_messages=True)
-            elif joinAllArchive and catName == 'Archives':
+            elif joinAllArchive and catName in ['Archives', 'Archives 2']:
                 joining += channel.name + ", "
                 channelsJoined += 1
                 await channel.set_permissions(ctx.author, read_messages=True)
@@ -131,7 +137,7 @@ class Game_Channels(commands.Cog):
               'pd' + channel.name == gameName:
                 game = channel
                 joining += game.name
-                check = (catName in ['PactDice Games', 'WeaverDice Games', 'Archives'])
+                check = (catName in ['PactDice Games', 'WeaverDice Games', 'WeaverDice Games 2', 'Archives', 'Archives 2'])
                 break
 
         # Let's do some debugging
@@ -183,18 +189,18 @@ class Game_Channels(commands.Cog):
                 continue
             # If the channel has no category, move to the next channel
             catName = channel.category.name
-            if leavewd and catName == 'WeaverDice Games':
+            if leavewd and catName in ['WeaverDice Games', 'WeaverDice Games 2']:
                 check = True
                 await channel.set_permissions(ctx.author, read_messages=False)
             elif leavepd and catName == 'PactDice Games':
                 check = True
                 await channel.set_permissions(ctx.author, read_messages=False)
-            elif leavearchive and catName == 'Archives':
+            elif leavearchive and catName in ['Archives', 'Archives 2']:
                 check = True
                 await channel.set_permissions(ctx.author, read_messages=False)
             if channel.name == to_leave:
                 game = channel
-                check = (catName in ['PactDice Games', 'WeaverDice Games', 'Archives'])
+                check = (catName in ['PactDice Games', 'WeaverDice Games', 'WeaverDice Games 2', 'Archives', 'Archives 2'])
                 if check:
                     await channel.set_permissions(ctx.author, read_messages=False)
 
@@ -211,8 +217,10 @@ class Game_Channels(commands.Cog):
         gameName = ''
         gameID = None
         archiveID = None
+        archive2ID = None
         PDID = None
         WDID = None
+        WD2ID = None
 
         for arg in args:
             gameName = gameName + str(arg).lower()
@@ -229,8 +237,12 @@ class Game_Channels(commands.Cog):
                 PDID = category
             if category.name == 'WeaverDice Games':
                 WDID = category
+            elif category.name == 'WeaverDice Games 2':
+                WD2ID = category
             elif category.name == 'Archives':
                 archiveID = category
+            elif category.name == 'Archives 2':
+                archive2ID = category
 
         for channel in ctx.message.guild.channels:
             if channel.name == gameName:
@@ -238,17 +250,20 @@ class Game_Channels(commands.Cog):
 
         if gameName == '':
             await ctx.send("Please write out the game you wish to archive after the command (i.e. %archive New York)")
-        elif gameID == archiveID:
+        elif gameID == archiveID or gameID == archive2ID:
             await ctx.send("That game is already archived.")
         elif namecheck == False and moderator == False:
             await ctx.send("You don't have permission to archive this.")
         else:
-            if gameID != PDID and gameID != WDID:
+            if gameID != PDID and gameID != WDID and gameID != WD2ID:
                 await ctx.send("That game could not be found.")
             else:
                 for ctx.TextChannel in ctx.message.guild.text_channels:
                     if ctx.TextChannel.name == gameName:
-                        await ctx.TextChannel.edit(category=archiveID)
+                        try:
+                            await ctx.TextChannel.edit(category=archiveID)
+                        except:
+                            await ctx.TextChannel.edit(category=archive2ID)
                         await sheets.changeState(gameName,'N')
 
     @commands.command()
@@ -267,16 +282,22 @@ class Game_Channels(commands.Cog):
         gameChan = None
         gameID = None
         archiveID = None
+        archive2ID = None
         PDID = None
         WDID = None
+        WD2ID = None
 
         for category in ctx.message.guild.categories:
             if category.name == 'PactDice Games':
                 PDID = category
             elif category.name == 'WeaverDice Games':
                 WDID = category
+            elif category.name == 'WeaverDice Games 2':
+                WD2ID = category
             elif category.name == 'Archives':
                 archiveID = category
+            elif category.name == 'Archives 2':
+                archive2ID = category
 
         for arg in args[argStart:]:
             gameName = gameName + str(arg).lower()
@@ -295,12 +316,12 @@ class Game_Channels(commands.Cog):
 
         if gameName == '':
             await ctx.send("Please write out the game you wish to unarchive after the command (i.e. %unarchive New York)")
-        elif gameID == PDID or gameID == WDID:
+        elif gameID == PDID or gameID == WDID or gameID == WD2ID:
             await ctx.send("That game is already active.")
         elif namecheck == False and moderator == False:
             await ctx.send("You don't have permission to unarchive this.")
         else:
-            if gameID != archiveID:
+            if gameID != archiveID and gameID != archive2ID:
                 await ctx.send("That game could not be found.")
             else:
                 for ctx.TextChannel in ctx.message.guild.text_channels:
@@ -309,11 +330,17 @@ class Game_Channels(commands.Cog):
                         if gameType == 'pd':
                             await ctx.TextChannel.edit(category=PDID)
                         elif gameType == 'wd':
-                            await ctx.TextChannel.edit(category=WDID)
+                            try:
+                                await ctx.TextChannel.edit(category=WDID)
+                            except:
+                                await ctx.TextChannel.edit(category=WD2ID)
                         elif category and category.lower() == 'pd':
                             await ctx.TextChannel.edit(category=PDID)
                         elif category and category.lower() == 'wd':
-                            await ctx.TextChannel.edit(category=WDID)
+                            try:
+                                await ctx.TextChannel.edit(category=WDID)
+                            except:
+                                await ctx.TextChannel.edit(category=WD2ID)
                         await sheets.changeState(gameName,'Y')
 
     @commands.command()
