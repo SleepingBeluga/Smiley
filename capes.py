@@ -515,11 +515,92 @@ class Capes(commands.Cog):
         await sheets.gain_cards(who, [self.capelist.index(selection)])
         await ctx.send("Crafted **{}** card".format(selection.name))
 
+    async def collection(self, ctx, who, coll="help"):
+        collections = ["Tier", "Affiliation", "Alignment", "Campaign", "Classification"]
+        if coll.lower() == "help" or coll.capitalize() not in collections:
+            await ctx.send(f"Possible collections you can specify are [{', '.join(collections)}]")
+            return
+        elif coll.lower() == "tier":
+            coll_all = { "S": [], "A": [], "B": [], "C": [] }
+            for i in self.capelist:
+                coll_all[i.tier] += [i]
+            owned = { "S": [], "A": [], "B": [], "C": [] }
+            for i in self.trading[who]:
+                if i not in owned[i.tier]:
+                    owned[i.tier] += [i]
+        elif coll.lower() == "affiliation":
+            coll_all = {}
+            owned = {}
+            for i in self.capelist:
+                if i.affiliation not in coll_all:
+                    coll_all[i.affiliation] = []
+                    owned[i.affiliation] = []
+                coll_all[i.affiliation] += [i]
+            for i in self.trading[who]:
+                if i not in owned[i.affiliation]:
+                    owned[i.affiliation] += [i]
+        elif coll.lower() == "alignment":
+            coll_all = {}
+            owned = {}
+            for i in self.capelist:
+                if i.alignment not in coll_all:
+                    coll_all[i.alignment] = []
+                    owned[i.alignment] = []
+                coll_all[i.alignment] += [i]
+            for i in self.trading[who]:
+                if i not in owned[i.alignment]:
+                    owned[i.alignment] += [i]
+        elif coll.lower() == "campaign":
+            coll_all = {}
+            owned = {}
+            for i in self.capelist:
+                if i.campaign not in coll_all:
+                    coll_all[i.campaign] = []
+                    owned[i.campaign] = []
+                coll_all[i.campaign] += [i]
+            for i in self.trading[who]:
+                if i not in owned[i.campaign]:
+                    owned[i.campaign] += [i]
+        elif coll.lower() == "classification":
+            coll_all = {
+                "Mover": [], "Shaker": [], "Brute": [], "Breaker": [],
+                "Master": [], "Tinker": [], "Blaster": [], "Thinker": [],
+                "Striker": [], "Changer": [], "Trump": [], "Stranger": []
+            }
+            owned = {
+                "Mover": [], "Shaker": [], "Brute": [], "Breaker": [],
+                "Master": [], "Tinker": [], "Blaster": [], "Thinker": [],
+                "Striker": [], "Changer": [], "Trump": [], "Stranger": []
+            }
+            for classification in coll_all:
+                for i in self.capelist:
+                    if classification in i.classification:
+                        coll_all[classification] += [i]
+                for i in self.trading[who]:
+                    if i not in owned[classification] and classification in i.classification:
+                        owned[classification] += [i]
+
+        coll_string = []
+        for i in sorted(coll_all.keys()):
+            coll_string += [ f"**{i}** ({len(owned[i])}/{len(coll_all[i])})"]
+        printouts = [f"**{coll.capitalize()}** Collections: \n> {coll_string[0]}"]
+        counter = 0
+        for i in coll_string[1:]:
+            if len(f"{printouts[counter]}, {i}") > 2000:
+                counter += 1
+                printouts += [f"> {i}"]
+            else:
+                printouts[counter] += f", {i}"
+        for printout in printouts:
+            await ctx.send(printout)
+
     @commands.command()
     async def tc(self, ctx, action, *args):
         '''Do things for the Parahumans server trading card game.
             %tc claim - Claim your daily free card
             %tc view [Card] - View all the cards you own
+            %tc filter PC/Campaign/Affiliation/Tier etc. - Filter your cards by some type of card element
+            %tc collection help - View the various collections you can view
             %tc submit - Get the link to submit new cards for review
             %tc masterlist - View the existing cape masterlist
             %tc trade [offer/view/accept/reject/cancel/help] @username - Make a trade
@@ -566,6 +647,8 @@ class Capes(commands.Cog):
             await self.grant(who, amount)
         elif action == "craft":
             await self.craft(ctx, str(ctx.author.id), *args)
+        elif action == "collection":
+            await self.collection(ctx, str(ctx.author.id), *args)
 
     @commands.command()
     async def submit(self, ctx, *, args):
