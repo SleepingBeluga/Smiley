@@ -127,7 +127,7 @@ class Triggers_And_More(commands.Cog):
         '''
         if args:
             to_find = ' '.join(args)
-            for col in range(1,4):
+            for col in range(1,5):
                 output = await sheets.luck(col, False, to_find)
                 if output:
                     if (col == 1):
@@ -165,6 +165,18 @@ class Triggers_And_More(commands.Cog):
                 column = 1
             elif args[0].lower() == "power":
                 column = 2
+            else:
+                search_perk = " ".join(args)
+                for i in [ 1, 2 ]:
+                    output = await sheets.luck(i, False, search_perk)
+                    if output:
+                        if i == 1:
+                            await ctx.send("*Life Perk*: " + output)
+                        else:
+                            await ctx.send("*Power Perk*: " + output)
+                        return
+                await ctx.send(f"Perk {search_perk} could not be found")
+                return
 
         if column == 0:
             column = random.randint(1, 2)
@@ -186,6 +198,18 @@ class Triggers_And_More(commands.Cog):
                 column = 3
             elif args[0].lower() == "power":
                 column = 4
+            else:
+                search_flaw = " ".join(args)
+                for i in [ 3, 4 ]:
+                    output = await sheets.luck(i, False, search_flaw)
+                    if output:
+                        if i == 3:
+                            await ctx.send("*Life Flaw*: " + output)
+                        else:
+                            await ctx.send("*Power Flaw*: " + output)
+                        return
+                await ctx.send(f"Flaw {search_flaw} could not be found")
+                return
 
         if column == 0:
             column = random.randint(3, 4)
@@ -237,21 +261,37 @@ class Triggers_And_More(commands.Cog):
     async def fanluck(self, ctx, *args):
         '''Get randomised luck.
         '''
-        i = 0
-        while i < 2:
-            choice = random.randint(1, 4)
-            # Ordering for these is Perk Life, Perk Power, Flaw Life, Flaw Power
-            output = (await sheets.luck(choice, True))
-            #await ctx.send("Doing some luck stuff!")
-            if (choice == 1):
-                await ctx.send("*Life Perk*: " + output)
-            elif (choice == 2):
-                await ctx.send("*Power Perk*: " + output)
-            elif (choice == 3):
-                await ctx.send("*Life Flaw*: " + output)
-            elif (choice == 4):
-                await ctx.send("*Power Flaw*: " + output)
-            i += 1
+        if args:
+            to_find = ' '.join(args)
+            for col in range(1,5):
+                output = await sheets.luck(col, True, to_find)
+                if output:
+                    if (col == 1):
+                        await ctx.send("*Life Perk*: " + output)
+                    elif (col == 2):
+                        await ctx.send("*Power Perk*: " + output)
+                    elif (col == 3):
+                        await ctx.send("*Life Flaw*: " + output)
+                    elif (col == 4):
+                        await ctx.send("*Power Flaw*: " + output)
+                    return
+            await ctx.send('Couldn\'t find a perk or flaw matching \'' + to_find + '\'')
+        else:
+            i = 0
+            while i < 2:
+                choice = random.randint(1, 4)
+                # Ordering for these is Perk Life, Perk Power, Flaw Life, Flaw Power
+                output = (await sheets.luck(choice, True))
+                #await ctx.send("Doing some luck stuff!")
+                if (choice == 1):
+                    await ctx.send("*Life Perk*: " + output)
+                elif (choice == 2):
+                    await ctx.send("*Power Perk*: " + output)
+                elif (choice == 3):
+                    await ctx.send("*Life Flaw*: " + output)
+                elif (choice == 4):
+                    await ctx.send("*Power Flaw*: " + output)
+                i += 1
 
     @commands.command()
     async def fanperk(self, ctx, *args):
@@ -263,6 +303,18 @@ class Triggers_And_More(commands.Cog):
                 column = 1
             elif args[0].lower() == "power":
                 column = 2
+            else:
+                search_perk = " ".join(args)
+                for i in [ 1, 2 ]:
+                    output = await sheets.luck(i, True, search_perk)
+                    if output:
+                        if i == 1:
+                            await ctx.send("*Life Perk*: " + output)
+                        else:
+                            await ctx.send("*Power Perk*: " + output)
+                        return
+                await ctx.send(f"Fan Perk {search_perk} could not be found")
+                return
 
         if column == 0:
             column = random.randint(1, 2)
@@ -284,6 +336,18 @@ class Triggers_And_More(commands.Cog):
                 column = 3
             elif args[0].lower() == "power":
                 column = 4
+            else:
+                search_flaw = " ".join(args)
+                for i in [ 3, 4 ]:
+                    output = await sheets.luck(i, True, search_flaw)
+                    if output:
+                        if i == 3:
+                            await ctx.send("*Life Flaw*: " + output)
+                        else:
+                            await ctx.send("*Power Flaw*: " + output)
+                        return
+                await ctx.send(f"Fan Flaw {search_flaw} could not be found")
+                return
 
         if column == 0:
             column = random.randint(3, 4)
