@@ -1,33 +1,8 @@
 from discord.ext import commands
 import discord, sheets
 import random, datetime, difflib
-
-class Cape:
-    def __init__(
-        self,
-        name,
-        tier,
-        civ,
-        power,
-        affiliation,
-        alignment,
-        classification,
-        pc,
-        campaign,
-        submitter,
-        tagline = ""
-    ):
-        self.name = name.strip()
-        self.tier = tier.strip()
-        self.civ = civ.strip()
-        self.power = power.strip()
-        self.affiliation = affiliation.strip()
-        self.alignment = alignment.strip()
-        self.classification = classification.strip()
-        self.pc = pc.strip()
-        self.campaign = campaign.strip()
-        self.submitter = submitter.strip()
-        self.tagline = tagline.strip()
+from card import Card
+from battle import Battle
 
 class Capes(commands.Cog):
 
@@ -39,6 +14,8 @@ class Capes(commands.Cog):
         self.trades = {}
         self.triggers = {} # Completed reviews
         self.reviewing = {} # Reviews in progress
+        self.battle_stats = {}
+        self.battles = {}
         self.cached = False
         self.pause = False
 
@@ -46,12 +23,14 @@ class Capes(commands.Cog):
         await self.load_capes()
         await self.load_owners()
         await self.load_triggers()
+        await self.load_battle_stats()
+        self.battles = {}
         self.cached = True
 
     async def load_capes(self):
         capes = (await sheets.trading_capes())
         for cape in capes:
-            new_cape = Cape(*cape)
+            new_cape = Card(*cape)
             self.capelist += [ new_cape ]
 
     async def load_owners(self):
@@ -63,6 +42,9 @@ class Capes(commands.Cog):
 
     async def load_triggers(self):
         self.triggers = (await sheets.waiting_triggers())
+
+    async def load_battle_stats(self):
+        self.battle_stats = (await sheets.get_battle_stats())
 
     async def random_claim(self, ctx, claimer_id):
         # Check if this person has already claimed today
@@ -616,7 +598,7 @@ class Capes(commands.Cog):
             await ctx.send("Caching things on first run")
             await self.set_local_cache()
         if action == "claim":
-            #await ctx.send("Claiming paused while Wellwick fixes things")
+            #await ctx.send("Claiming paused while Wellwick experiments with things")
             await self.random_claim(ctx, str(ctx.author.id))
         elif action == "recache" and str(ctx.author.id) == "227834498019098624":
             self.capelist = []
@@ -649,6 +631,143 @@ class Capes(commands.Cog):
             await self.craft(ctx, str(ctx.author.id), *args)
         elif action == "collection":
             await self.collection(ctx, str(ctx.author.id), *args)
+
+    async def start_battle(self, battle: Battle):
+        for i in battle.teams:
+            team = [cape.cape.name for cape in battle.teams[i].team]
+            for cape in battle.teams[i].team:
+                self.trading[i] += [ cape.cape ]
+            await battle.channel.send(f"<@{i}> has brought their team: {', '.join(team)}")
+        await battle.channel.send("It's time to fight! PM your strategy for the first round `%battle attack/defend/ambush/flee/stats`")
+
+    async def do_battle_round(self, battle: Battle):
+        starting_pools = {}
+        gameover = False
+        for i in battle.teams:
+            starting_pools[i] = battle.teams[i].pool.copy()
+        for i in battle.teams:
+            for j in battle.teams:
+                if j is not i:
+                    enemy = battle.teams[j]
+            battle.teams[i].make_move(enemy)
+        for i in battle.teams:
+            new_losses = [x.cape.name for x in battle.teams[i].pool if x not in starting_pools[i]]
+            if len(new_losses) > 0:
+                await battle.channel.send(f"<@{i}> has lost the capes {', '.join(new_losses)}")
+            elif battle.teams[i].damage_taken:
+                await battle.channel.send(f"<@{i}> has lost no units this round, but did take damage!")
+            else:
+                await battle.channel.send(f"<@{i}> has lost no units this round and took no damage!")
+            battle.teams[i].new_round()
+            if len(battle.teams[i].team) == 0:
+                await battle.channel.send(f"<@{i}>'s team has been defeated!")
+                gameover = True
+            elif battle.teams[i].fled:
+                await battle.channel.send(f"<@{i}>'s team has fled!")
+                gameover = True
+
+        if gameover:
+            await battle.channel.send("That's it, gameover! Thanks for playing.")
+            for i in starting_pools:
+                del self.battles[i]
+        else:
+            await battle.channel.send("Time for a new round! PM your strategy `%battle attack/defend/ambush/flee/stats` (check stats for ambush success)")
+
+
+    @commands.command()
+    async def battle(self, ctx, *, args=""):
+        '''Begin a battle against another player. Can specify size of game as well.'''
+        if not self.cached:
+            await ctx.send("Caching things on first run")
+            await self.set_local_cache()
+
+        player = str(ctx.author.id)
+        if not player in self.battles:
+            args = args.split()
+            if len(args) == 0:
+                args = [""]
+            enemy = await self.at_to_id(args[0].strip())
+            if len(args) > 1:
+                cap = int(args[1])
+            else:
+                cap = 10
+            if not enemy in self.trading:
+                await ctx.send("Player not recognised!\nFor now, starting a testing battle")
+                self.battles[player] = Battle({player: [], "test": self.capelist[:2]},self.battle_stats, cap=cap, channel=ctx.channel)
+                self.battles[player].teams["test"].ready = True
+                self.battles[player].teams["test"].move = "Defend"
+                return
+            else:
+                await ctx.send("Starting a battle. Both go add your cards as fighting capes in PMs using `%battle add capename, capename, capename`!")
+                self.battles[player] = Battle({player: [], enemy: []}, self.battle_stats, cap=cap, channel=ctx.channel)
+                self.battles[enemy] = self.battles[player]
+        elif not self.battles[player].started:
+            if args.split()[0] == "add":
+                splittup = args[4:].split(",")
+                capes = []
+                for i in splittup:
+                    capes += [i.strip()]
+                if await self.has_cards(player, capes):
+                    for card in capes:
+                        cape = await self.get_cape(card)
+                        self.trading[player].remove(cape)
+                        if not self.battles[player].teams[player].add_cape(cape):
+                            await ctx.send(f"Adding {card} exceeds the quota for the team")
+                else:
+                    await ctx.send(f"You don't have all of those cards!")
+
+                await ctx.send(self.battles[player].teams[player].info_string())
+            elif args.split()[0].lower() == "quit" or args.split()[0].lower() == "cancel":
+                # Quitting before the game starts!
+                await ctx.send("Quitting the game")
+                for i in self.battles[player].teams:
+                    if i != player:
+                        enemy = i
+                await self.battles[player].channel.send(f"<@{enemy}>, <@{player}> has cancelled the battle!")
+                for bc in self.battles[player].teams[player].team:
+                    self.trading[player] += [bc.cape]
+                del self.battles[player]
+                if enemy in self.battles:
+                    for bc in self.battles[enemy].teams[enemy].team:
+                        self.trading[enemy] += [bc.cape]
+                    del self.battles[enemy]
+            elif args.split()[0].lower() == "start" or args.split()[0].lower() == "ready":
+                p_team = self.battles[player].teams[player]
+                if p_team.cap is not None and p_team.quota() < p_team.cap and not p_team.forcing:
+                    p_team.forcing = True
+                    await ctx.send("You haven't filled your team to the cap, are you sure you want to start? Resend the command if so!")
+                    return
+                p_team.ready = True
+                if self.battles[player].ready():
+                    self.battles[player].started = True
+                    await ctx.send("Other player is ready. Game starting!")
+                    await self.start_battle(self.battles[player])
+                else:
+                    await ctx.send("Waiting for other player!")
+        elif self.battles[player].started:
+            strategy = args.split()[0].lower()
+            p_team = self.battles[player].teams[player]
+            if strategy == "attack":
+                p_team.move = "Attack"
+            elif strategy == "defend":
+                p_team.move = "Defend"
+            elif strategy == "ambush":
+                p_team.move = "Ambush"
+            elif strategy == "flee":
+                p_team.move = "Flee"
+            elif strategy == "stats":
+                await ctx.send(self.battles[player].teams[player].info_string())
+                return
+            else:
+                await ctx.send("Strategy is not recognised")
+                return
+
+            if self.battles[player].do_turn():
+                await ctx.send("Starting the new round!")
+                await self.do_battle_round(self.battles[player])
+            else:
+                await ctx.send("Waiting for other player to decide strategy")
+
 
     @commands.command()
     async def submit(self, ctx, *, args):

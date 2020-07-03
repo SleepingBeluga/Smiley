@@ -720,6 +720,28 @@ async def remove_cards(owner, cards):
         }
         batch_res = sheet.batchUpdate(spreadsheetId=TradingDatabaseID, body={"requests": [del_req]}).execute()
 
+async def get_battle_stats():
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=TradingDatabaseID,
+                                range='Battle Stats!A2:G20').execute()
+    values = result.get('values', [])
+    stats = {"classes": {}, "multipliers": {}}
+    for i in values[:12]:
+        stats["classes"][i[0]] = {}
+        stats["classes"][i[0]]["Defend"] = float(i[1])
+        stats["classes"][i[0]]["Attack"] = float(i[2])
+        stats["classes"][i[0]]["Flee"] = float(i[3])
+        stats["classes"][i[0]]["Ambush"] = float(i[4])
+        stats["classes"][i[0]]["Health"] = float(i[5])
+        stats["classes"][i[0]]["Wits"] = float(i[6])
+
+    for i in values[14:]:
+        stats["multipliers"][i[0]] = {}
+        stats["multipliers"][i[0]]["Defend"] = float(i[1])
+        stats["multipliers"][i[0]]["Attack"] = float(i[1])
+        stats["multipliers"][i[0]]["Wits"] = float(i[1])
+
+    return stats
 
 async def waiting_triggers():
     sheet = service.spreadsheets()
