@@ -564,7 +564,8 @@ class Capes(commands.Cog):
 
         coll_string = []
         for i in sorted(coll_all.keys()):
-            coll_string += [ f"**{i}** ({len(owned[i])}/{len(coll_all[i])})"]
+            if len(owned[i]) != 0:
+                coll_string += [ f"**{i}** ({len(owned[i])}/{len(coll_all[i])})"]
         printouts = [f"**{coll.capitalize()}** Collections: \n> {coll_string[0]}"]
         counter = 0
         for i in coll_string[1:]:
