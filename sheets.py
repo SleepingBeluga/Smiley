@@ -738,8 +738,8 @@ async def get_battle_stats():
     for i in values[14:]:
         stats["multipliers"][i[0]] = {}
         stats["multipliers"][i[0]]["Defend"] = float(i[1])
-        stats["multipliers"][i[0]]["Attack"] = float(i[1])
-        stats["multipliers"][i[0]]["Wits"] = float(i[1])
+        stats["multipliers"][i[0]]["Attack"] = float(i[2])
+        stats["multipliers"][i[0]]["Wits"] = float(i[3])
 
     return stats
 
