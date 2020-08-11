@@ -64,6 +64,7 @@ class Game_Channels(commands.Cog):
                 ctx.me: discord.PermissionOverwrite(read_messages=True),
                 bot: discord.PermissionOverwrite(read_messages=True)
             }
+            altcat = None
 
             for category in ctx.guild.categories:
                 if (category.name == 'PactDice Games' and gameType == 'pd'):
@@ -73,11 +74,17 @@ class Game_Channels(commands.Cog):
                 elif (category.name == 'WeaverDice Games 2'and gameType == 'wd'):
                     altcat = category
 
+            newChannel = None
             try:
-                await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
+                newChannel = await ctx.message.guild.create_text_channel(gameName, category=gamecat, overwrites=overwrites)
             except:
-                await ctx.message.guild.create_text_channel(gameName, category=altcat, overwrites=overwrites)
+                if altcat:
+                    newChannel = await ctx.message.guild.create_text_channel(gameName, category=altcat, overwrites=overwrites)
             await sheets.newgame(str('#' + gameName),str(ctx.author.id), str(gameType).upper())
+            if newChannel:
+                await ctx.send(f"{newChannel.mention} has been created in category {newChannel.category.name}")
+            else:
+                await ctx.send("Looks like there was a problem creating the channel. If the problem persists, please ping the bot team role")
 
     @commands.command()
     async def enter(self, ctx, *args):
