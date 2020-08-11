@@ -381,6 +381,18 @@ class Game_Channels(commands.Cog):
             link = "GM is <@{}> | ".format(ctx.author.id) + link
             await c.edit(topic=link)
 
+    @commands.command()
+    async def pin(self, ctx, *args):
+        '''Sets the message you are posting to be pinned to the channel if you are the owner of the channel.
+        Usage: %pin This is the message that is being pinned.
+        You can edit the message after the fact to remove the %pin element, if you like.
+        '''
+        c = ctx.message.channel
+        owner = await sheets.ownercheck(c.name)
+        if owner == str(ctx.author.id):
+            await ctx.message.pin()
+        else:
+            await ctx.send("You are not the owner of this channel and cannot pin this message")
 
     @commands.command()
     async def owner(self, ctx, *args):
