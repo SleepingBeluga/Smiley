@@ -8,7 +8,7 @@ import discord, git
 from discord.ext import commands
 import time, random, asyncio, sys
 import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm
-import ac, autologs, capes, schedule, snack
+import ac, autologs, capes, schedule, snack, liveread
 from wounds import WoundOption, Wound
 
 '''My (Smiley's) Main Script
@@ -58,6 +58,7 @@ b.add_cog(tm.TinyMech())
 b.add_cog(autologs.AutoLogs())
 b.add_cog(snack.Snacks())
 b.add_cog(schedule.Scheduling())
+b.add_cog(liveread.Liveread())
 # Add all the command cogs
 
 b.loop.create_task(draft.setup())
