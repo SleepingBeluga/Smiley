@@ -5,7 +5,7 @@ class Liveread(commands.Cog):
     @commands.command()
     async def liveread(self, ctx, *args):
         '''Join or leave the liveread channel.
-        Usage: %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+> <I have read the rules>
+        Usage: %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+/all> <I have read the rules>
                i.e. %liveread enter Wormverse I have read the rules
         '''
         entering = None
@@ -14,7 +14,7 @@ class Liveread(commands.Cog):
 
         if len(args) == 0:
             await ctx.send(
-                "Error: Improper format. Provide  %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+> <I have read the rules>")
+                "Error: Improper format. Provide  %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+/all> <I have read the rules>")
             return
 
         if args[0] == 'enter':
@@ -33,7 +33,7 @@ class Liveread(commands.Cog):
 
         if len(args) == 1:
             await ctx.send(
-                "Error: Improper format. Provide  %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+> <I have read the rules>")
+                "Error: Improper format. Provide  %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+/all> <I have read the rules>")
             return
 
         if len(args) > 2:
@@ -57,6 +57,37 @@ class Liveread(commands.Cog):
                         await channel.set_permissions(ctx.author, read_messages=True)
                     elif not entering:
                         await channel.set_permissions(ctx.author, read_messages=False)
+        elif args[1].lower() == 'otherverse':
+            for channel in ctx.guild.channels:
+                if channel.name == 'otherverse-livereads':
+                    if entering:
+                        await channel.set_permissions(ctx.author, read_messages=True)
+                    elif not entering:
+                        await channel.set_permissions(ctx.author, read_messages=False)
+        elif args[1].lower() == 'twigverseplus':
+            for channel in ctx.guild.channels:
+                if channel.name == 'twigverseplus-livereads':
+                    if entering:
+                        await channel.set_permissions(ctx.author, read_messages=True)
+                    elif not entering:
+                        await channel.set_permissions(ctx.author, read_messages=False)
+        elif args[1].lower() == 'all':
+            for channel in ctx.guild.channels:
+                if channel.name == 'wormverse-livereads':
+                    if entering:
+                        await channel.set_permissions(ctx.author, read_messages=True)
+                    elif not entering:
+                        await channel.set_permissions(ctx.author, read_messages=False)
+                if channel.name == 'otherverse-livereads':
+                    if entering:
+                        await channel.set_permissions(ctx.author, read_messages=True)
+                    elif not entering:
+                        await channel.set_permissions(ctx.author, read_messages=False)
+                if channel.name == 'twigverseplus-livereads':
+                    if entering:
+                        await channel.set_permissions(ctx.author, read_messages=True)
+                    elif not entering:
+                        await channel.set_permissions(ctx.author, read_messages=False)
         else:
-            await ctx.send("Error: liveread category not found. Currently available liveread categories: Wormverse")
+            await ctx.send("Error: liveread category not found. Currently available liveread categories: Wormverse, Otherverse, TwigversePlus, all")
             return
