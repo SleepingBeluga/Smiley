@@ -14,7 +14,7 @@ class Liveread(commands.Cog):
 
         if len(args) == 0:
             await ctx.send(
-                "Error: Improper format. Provide  %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+> <I have read the rules>")
+                "Error: Improper format. Provide  %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+/all> <I have read the rules>")
             return
 
         if args[0] == 'enter':
@@ -33,7 +33,7 @@ class Liveread(commands.Cog):
 
         if len(args) == 1:
             await ctx.send(
-                "Error: Improper format. Provide  %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+> <I have read the rules>")
+                "Error: Improper format. Provide  %liveread <enter/exit/rules> <Wormverse/Otherverse/Twigverse+/all> <I have read the rules>")
             return
 
         if len(args) > 2:
@@ -89,5 +89,5 @@ class Liveread(commands.Cog):
                     elif not entering:
                         await channel.set_permissions(ctx.author, read_messages=False)
         else:
-            await ctx.send("Error: liveread category not found. Currently available liveread categories: Wormverse, Otherverse, TwigversePlus")
+            await ctx.send("Error: liveread category not found. Currently available liveread categories: Wormverse, Otherverse, TwigversePlus, all")
             return
