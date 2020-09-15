@@ -7,7 +7,7 @@ os.chdir(path_here)
 import discord, git
 from discord.ext import commands
 import time, random, asyncio, sys
-import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm
+import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm, spectate
 import ac, autologs, capes, schedule, snack, liveread
 from wounds import WoundOption, Wound
 
@@ -72,6 +72,9 @@ b.loop.create_task(tm.tm_loop(b))
 
 b.loop.create_task(ac.ac_loop(b))
 # Run the autocape loop too!
+
+b.loop.create_task(spectate.spectate_topics(b))
+#Run spectate topics loop.
 
 with open('secret') as s:
     token = s.read()[:-1]
