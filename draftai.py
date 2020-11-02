@@ -43,6 +43,13 @@ class Other:
         elif self.type == 5:
             self.name = 'Angel'  # Tries to make as much positive karma as possible
             self.values = [3,3,3,3,3,3,3,3]
+        elif self.type == 6:
+            self.name = 'Lost'  # Tries to make as much positive karma as possible
+            self.values = [1,1,1,1,1,1,1,1]
+            self.values[random.randint(0,7)] += 1
+            self.values[random.randint(0,7)] += 2
+            self.values[random.randint(0,7)] += 3
+
 
     def auto_bid(self, mem):
         if (mem['to resolve'] == mem['players']) or self.name in mem['to resolve']:
@@ -89,6 +96,8 @@ class Other:
 
     def auto_clash(self):
         if (self.type == 0) or (self.type == 1) or (self.type == 2):
-            return True
+            stay = True if random.random() < 0.75 else False
+            return stay
         else:
-            return False
+            stay = True if random.random() < 0.25 else False
+            return stay

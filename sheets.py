@@ -36,6 +36,8 @@ async def new_blank_sheet(memory, NUM_PLAYERS):
         column_headers = ["","Supreme","Good","Moderate","Modest","Least"]
     elif NUM_PLAYERS == 6:
         column_headers = ["","Supreme","Great","Good","Modest","Poor","Least"]
+    elif NUM_PLAYERS == 7:
+        column_headers = ["","Supreme","Great","Good","Moderate","Modest","Poor","Least"]
     else:
         column_headers = [""] + [str(n) for n in list(range(1,4))]
     values = [column_headers]

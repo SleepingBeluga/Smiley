@@ -38,14 +38,14 @@ async def setup():
 
     memory['cats'] = ('puissance', 'longevity', 'access', 'executions', 'research', \
                           'schools',   'priority',  'family')
-    memory['puissance']  = ['', '', '', '', '',    '', '', '']
-    memory['longevity']  = ['', '', '', '', '',    '', '', '']
-    memory['access']     = ['', '', '', '', '',    '', '', '']
-    memory['executions'] = ['', '', '', '', '',    '', '', '']
-    memory['research']   = ['', '', '', '', '',    '', '', '']
-    memory['schools']    = ['', '', '', '', '',    '', '', '']
-    memory['priority']   = ['', '', '', '', '',    '', '', '']
-    memory['family']     = ['', '', '', '', '',    '', '', '']
+    memory['puissance']  = ['', '', '', '', '',    '', '', '', '', '']
+    memory['longevity']  = ['', '', '', '', '',    '', '', '', '', '']
+    memory['access']     = ['', '', '', '', '',    '', '', '', '', '']
+    memory['executions'] = ['', '', '', '', '',    '', '', '', '', '']
+    memory['research']   = ['', '', '', '', '',    '', '', '', '', '']
+    memory['schools']    = ['', '', '', '', '',    '', '', '', '', '']
+    memory['priority']   = ['', '', '', '', '',    '', '', '', '', '']
+    memory['family']     = ['', '', '', '', '',    '', '', '', '', '']
 
     memory['clashes'] = [[],[],[]]
     # More empty things
@@ -56,9 +56,10 @@ async def setup():
     memory['colors'] = {"purple": (0.2,0.1,0.5),
                         "blue":   (0.1,0.3,0.8),
                         "green":  (0.2,0.5,0.1),
-                        "yellow": (0.7,0.6,0.0), # Leave out first
-                        "orange": (0.7,0.4,0.0), # Leave out second
-                        "red":    (0.6,0.0,0.0)
+                        "yellow": (0.7,0.6,0.0), # Only in 6+ player games
+                        "orange": (0.7,0.4,0.0), # Only in 5+ player games
+                        "red":    (0.6,0.0,0.0),
+                        "pink":   (0.6,0.0,0.6)  # Only in 7 player games
                         }
     # Define colors
 
@@ -601,7 +602,7 @@ class Draft(commands.Cog):
         '''Starts the draft after players join.
         '''
         if memory['phase'] == 'setup':
-            if len(memory['players']) >= 4 and len(memory['players']) <= 6:
+            if len(memory['players']) >= 4 and len(memory['players']) <= 7:
                 await ctx.send('Starting the draft!')
                 memory['channel'] = ctx
                 memory['phase'] = 'the draft'
@@ -618,12 +619,14 @@ class Draft(commands.Cog):
                     memory['player colors'] = ['red','orange','green','blue','purple']
                 elif len(memory['players']) == 6:
                     memory['player colors'] = ['red','orange','yellow','green','blue','purple']
+                elif len(memory['players']) == 7:
+                    memory['player colors'] = ['red','orange','yellow','green','blue','purple','pink']
                 memory['rows to show'] = len(memory['players'])
                 await blank_sheet()
                 await do_player_karma_labels()
                 await subround(False)
             else:
-                await ctx.send('You must have between 4 and 6 players to start.')
+                await ctx.send('You must have between 4 and 7 players to start.')
         elif memory['phase'] == 'none':
             await ctx.send('You can\'t start the draft yet, you need players first! (Use `%open` to let players join)')
         else:

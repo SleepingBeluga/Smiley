@@ -9,9 +9,8 @@ class MessageMin(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-
-        if (not message.author.bot) and ('Mod Team' not in (str(role) for role in message.author.roles)):
-            if message.channel.id in self.lims:
+        if message.channel.id in self.lims:
+            if (not message.author.bot) and ('Mod Team' not in (str(role) for role in message.author.roles)):
                 if len(message.content) < self.lims[message.channel.id]:
                     await message.delete()
                     try:
