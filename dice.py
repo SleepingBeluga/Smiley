@@ -200,3 +200,177 @@ class Rolls(commands.Cog):
 
         result = result[:-2] + ' ]'
         await ctx.send(result)
+
+    @commands.command()
+    async def archetypes(self, ctx, *args):
+        '''Generates random archetypes for PD character creation'''
+        types = [
+            'Lancer: +1 Brawn, +1 Athletics, ',
+            'Fury: +1 Brawn, +1 Dexterity, ',
+            'Gladiator: +1 Brawn, +1 Wits, ',
+            'Bully: +1 Brawn, +1 Social, ',
+            'Master: +1 Brawn, +1 Knowledge, ',
+            'Titan: +1 Brawn, +1 Guts, ',
+            'Raider: +1 Athletics, +1 Brawn, ',
+            'Hunter: +1 Athletics, +1 Dexterity, ',
+            'Stalker: +1 Athletics, +1 Wits, ',
+            'Wayfarer: +1 Athletics, +1 Social, ',
+            'Explorer: +1 Athletics, +1 Knowledge, ',
+            'Interceptor: +1 Athletics, +1 Guts, ',
+            'Assassin: +1 Dexterity, +1 Brawn, ',
+            'Scoundrel: +1 Dexterity, +1 Athletics, ',
+            'Marksman: +1 Dexterity, +1 Wits, ',
+            'Broker: +1 Dexterity, +1 Social, ',
+            'Craftsman: +1 Dexterity, +1 Knowledge, ',
+            'Packrat: +1 Dexterity, +1 Guts, ',
+            'Guard: +1 Wits, +1 Brawn, ',
+            'Lookout: +1 Wits, +1 Athletics, ',
+            'Monitor: +1 Wits, +1 Dexterity, ',
+            'Handler: +1 Wits, +1 Social, ',
+            'Investigator: +1 Wits, +1 Knowledge, ',
+            'Sentinel: +1 Wits, +1 Guts, ',
+            'Boss: +1 Social, +1 Brawn, ',
+            'Lead: +1 Social, +1 Athletics, ',
+            'Playboy: +1 Social, +1 Dexterity, ',
+            'Psychologist: +1 Social, +1 Wits, ',
+            'Manipulator: +1 Social, +1 Knowledge, ',
+            'Holdout: +1 Social, +1 Guts, ',
+            'Expert: +1 Knowledge, +1 Brawn, ',
+            'Pioneer: +1 Knowledge, +1 Athletics, ',
+            'Polymath: +1 Knowledge, +1 Dexterity, ',
+            'Schemer: +1 Knowledge, +1 Wits, ',
+            'Tactician: +1 Knowledge, +1 Social, ',
+            'Architect: +1 Knowledge, +1 Guts, ',
+            'Juggernaut: +1 Guts, +1 Brawn, ',
+            'Horse: +1 Guts, +1 Athletics, ',
+            'Tough: +1 Guts, +1 Dexterity, ',
+            'Survivor: +1 Guts, +1 Wits, ',
+            'Icon: +1 Guts, +1 Social, ',
+            'Pillar: +1 Guts, +1 Knowledge, '
+        ]
+        minuses = [
+            ['-1 Social', '-1 Social'],  # Lancer
+            ['-1 Knowledge', '-1 Social'],
+            ['-1 Knowledge', '-1 Knowledge'],
+            ['-1 Dexterity', '-1 Dexterity'],
+            ['-1 Dexterity', '-1 Wits'],
+            ['-1 Wits', '-1 Wits'],
+            ['-1 Social', '-1 Social'],  # Raider
+            ['-1 Knowledge', '-1 Knowledge'],
+            ['-1 Knowledge', '-1 Guts'],
+            ['-1 Guts', '-1 Guts'],
+            ['-1 Wits', '-1 Wits'],
+            ['-1 Wits', '-1 Social'],
+            ['-1 Social', '-1 Knowledge'],  # Assassin
+            ['-1 Knowledge', '-1 Knowledge'],
+            ['-1 Guts', '-1 Guts'],
+            ['-1 Guts', '-1 Brawn'],
+            ['-1 Brawn', '-1 Brawn'],
+            ['-1 Social', '-1 Social'],
+            ['-1 Knowledge', '-1 Knowledge'],  # Guard
+            ['-1 Knowledge', '-1 Guts'],
+            ['-1 Guts', '-1 Guts'],
+            ['-1 Brawn', '-1 Brawn'],
+            ['-1 Brawn', '-1 Athletics'],
+            ['-1 Athletics', '-1 Athletics'],
+            ['-1 Dexterity', '-1 Dexterity'],  # Boss
+            ['-1 Guts', '-1 Guts'],
+            ['-1 Guts', '-1 Brawn'],
+            ['-1 Brawn', '-1 Brawn'],
+            ['-1 Athletics', '-1 Athletics'],
+            ['-1 Athletics', '-1 Dexterity'],
+            ['-1 Dexterity', '-1 Wits'],  # Expert
+            ['-1 Wits', '-1 Wits'],
+            ['-1 Brawn', '-1 Brawn'],
+            ['-1 Brawn', '-1 Athletics'],
+            ['-1 Athletics', '-1 Athletics'],
+            ['-1 Dexterity', '-1 Dexterity'],
+            ['-1 Wits', '-1 Wits'],  # Juggernaut
+            ['-1 Wits', '-1 Social'],
+            ['-1 Social', '-1 Social'],
+            ['-1 Athletics', '-1 Athletics'],
+            ['-1 Athletics', '-1 Dexterity'],
+            ['-1 Dexterity', '-1 Dexterity']
+        ]
+        specials = [
+            'Champion: +2 Brawn, ',
+            'Athlete: +2 Athletics, ',
+            'Ace: +2 Dexterity, ',
+            'Scout: +2 Wits, ',
+            'Politician: +2 Social, ',
+            'Genius: +2 Knowledge, ',
+            'Indomitable: +2 Guts, '
+        ]
+        specialMinuses = [
+            ['-1 Wits', '-1 Social'],
+            ['-1 Social', '-1 Knowledge'],
+            ['-1 Knowledge', '-1 Guts'],
+            ['-1 Guts', '-1 Brawn'],
+            ['-1 Brawn', '-1 Athletics'],
+            ['-1 Athletics', '-1 Dexterity'],
+            ['-1 Dexterity', '-1 Wits']
+        ]
+        output = ''
+
+        if len(args) == 0:
+            num = [random.randint(0, 41) for roll in range(3)]
+            diffs = [random.randint(0, 1) for roll in range(3)]
+            if len(set(num)) == 3:
+                counter = 0
+                for number in num:
+                    output += types[number]
+                    output += minuses[number][diffs[counter]]
+                    output += '\n'
+                    counter += 1
+
+            elif len(set(num)) == 2:
+                checker = []
+                counter = 0
+                for number in num:
+                    if number in checker:
+                        output += specials[int((number + 1) / 7)]
+                        output += specialMinuses[int((number + 1) / 7)][diffs[counter]]
+                        output += '\n'
+                        counter += 1
+                    else:
+                        checker.append(number)
+                        output += types[number]
+                        output += minuses[number][diffs[counter]]
+                        output += '\n'
+                        counter += 1
+
+            elif len(set(num)) == 1:
+                output += "Triple!\n"
+                output += types[num[1]]
+                output += minuses[num[1]][diffs[0]]
+                output += '\n'
+                output += specials[int((num[1] + 1) / 7)]
+                output += specialMinuses[int((num[1] + 1) / 7)][0]
+                output += '\n'
+                output += specials[int((num[1] + 1) / 7)]
+                output += specialMinuses[int((num[1] + 1) / 7)][1]
+                output += '\n'
+
+        else:
+            try:
+                amount = int(args[0])
+                if amount > 7:
+                    output = "Error: This command is capped at 7 to avoid spam."
+                elif amount < 1:
+                    output = "Error: This command needs to provide at least 1 archetype."
+                else:
+                    types += specials
+                    minuses += specialMinuses
+                    rolls = [random.randint(0,48) for x in range(amount)]
+                    diffs = [random.randint(0, 1) for x in range(amount)]
+                    counter = 0
+                    for roll in rolls:
+                        output += types[roll]
+                        output += minuses[roll][diffs[counter]]
+                        output += '\n'
+                        counter += 1
+
+            except ValueError:
+               output = "Error: Cannot parse input."
+
+        await ctx.send(output)
