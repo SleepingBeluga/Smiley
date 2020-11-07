@@ -20,10 +20,6 @@ class AutoLogs(commands.Cog):
                 'rolls': True,
                 'discord': True
             }
-        try:
-            data[ctx.channel.name]['timezone'] = int(args[0])
-        except:
-            x=1
         else:
             if len(args) == 5:
                 if args[1].lower() == 'y':
@@ -109,8 +105,10 @@ class AutoLogs(commands.Cog):
 
     @commands.command()
     async def log(self, ctx, *args):
-        '''Create a log with the current options. Format: %log [yy]-[MM]-[dd]-[hh]-[mm] [yy]-[MM]-[dd]-[hh]-[mm]
-        First date/time is where to start logging, last date/time is where to stop. Use military time for hours.'''
+        '''Create a log with the current options.
+        Based on UTC, adjust as necessary. Use military time for hours.
+        Format: %log YY-MM-dd-hh-mm YY-MM-dd-hh-mm
+        First date/time is where to start logging, last date/time is where to stop.'''
         data = {}
         with open('logchansets.json', 'r+') as filechan:
             if len(filechan.read()):
@@ -148,46 +146,39 @@ class AutoLogs(commands.Cog):
         date1 = datetime.datetime.strptime(args[0],'%y-%m-%d-%H-%M')
         date2 = datetime.datetime.strptime(args[1],'%y-%m-%d-%H-%M') + datetime.timedelta(seconds=59)
 
-        timezone.localize(date1, True)
-        timezone.localize(date2, True)
-
-        utc = pytz.utc
-
-        date1 = date1.astimezone(utc)
-        date2 = date2.astimezone(utc)
-
-        date1 = date1.replace(tzinfo=None)
-        date2 = date2.replace(tzinfo=None)
-
         async with ctx.typing():
             if len(args) == 2:
                 async for message in ctx.history(limit=10000,oldest_first=True,after=date1,before=date2):
                     if message.author.display_name not in plyrs:
                         plyrs.append(message.author.display_name)
             else:
-                await ctx.send("Error with input. Correct command format for start and end log dates: %log [yy-MM-dd-hh-mm] [yy-MM-dd-hh-mm]")
+                await ctx.send("Error with input. Correct command format for start and end log dates: %log YY-MM-dd-hh-mm YY-MM-dd-hh-mm")
                 return
 
         out = await docs.new_log_doc(thing, ctx.channel.name, plyrs)
 
         async with ctx.typing():
+            flag = 0
             async for message in ctx.history(limit=10000,oldest_first=True,after=date1,before=date2):
-                msg = message.content
+                if flag < 2:
+                    flag += 1
+                msg = message.system_content
                 author = message.author.display_name
                 if data[ctx.channel.name]['nomarks']:
-                    msg = message.content.replace('|', '')
+                    msg = message.system_content.replace('|', '')
                     if msg == '...':
                         msg = ''
                 if msg != '':
-                    if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
+                    if data[ctx.channel.name]['nocomments'] and message.system_content[0] == '(' and message.system_content[1] == '(':
                         msg = ''
                 if msg != '':
                     if data[ctx.channel.name]['rolls']:
-                        if message.content[0] == '%':
-                            msg = ''
-                        if message.author == ctx.me:
-                            msg = "**    ROLL: " + message.content + "**"
-                            author = authCheck
+                        if flag > 1:
+                            if message.system_content[0] == '%':
+                                msg = ''
+                            if message.author == ctx.me:
+                                msg = "    **ROLL: " + message.system_content + "**"
+                                author = authCheck
                 if author != authCheck and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
@@ -294,23 +285,27 @@ class AutoLogs(commands.Cog):
         out = await docs.new_log_doc(thing, ctx.channel.name, plyrs)
 
         async with ctx.typing():
+            flag = 0
             async for message in ctx.history(limit=10000, oldest_first=True, after=date1, before=date2):
-                msg = message.content
+                if flag < 2:
+                    flag += 1
+                msg = message.system_content
                 author = message.author.display_name
                 if data[ctx.channel.name]['nomarks']:
-                    msg = message.content.replace('|', '')
+                    msg = message.system_content.replace('|', '')
                     if msg == '...':
                         msg = ''
                 if msg != '':
-                    if data[ctx.channel.name]['nocomments'] and message.content[0] == '(' and message.content[1] == '(':
+                    if data[ctx.channel.name]['nocomments'] and message.system_content[0] == '(' and message.system_content[1] == '(':
                         msg = ''
                 if msg != '':
                     if data[ctx.channel.name]['rolls']:
-                        if message.content[0] == '%':
-                            msg = ''
-                        if message.author == ctx.me:
-                            msg = "**    ROLL: " + message.content + "**"
-                            author = authCheck
+                        if flag > 1:
+                            if message.system_content[0] == '%':
+                                msg = ''
+                            if message.author == ctx.me:
+                                msg = "    **ROLL: " + message.system_content + "**"
+                                author = authCheck
                 if author != authCheck and msg != '':
                     postCount += 1
                     authCheck = message.author.display_name
@@ -326,11 +321,11 @@ class AutoLogs(commands.Cog):
                     squigStart = text.find('~~')
                     while (starStart != -1) or (dashStart != -1) or (squigStart != -1):
                         if starStart < 0:
-                            starStart += 2000000000
+                            starStart += 3000000000
                         if dashStart < 0:
-                            dashStart += 2000000000
+                            dashStart += 3000000000
                         if squigStart < 0:
-                            squigStart += 2000000000
+                            squigStart += 3000000000
                         if (-1 < starStart < squigStart) and (-1 < starStart < dashStart):
                             if text[starStart + 1] == '*':
                                 starEnd = text.find('**', starStart + 3)
