@@ -7,7 +7,7 @@ os.chdir(path_here)
 import discord, git
 from discord.ext import commands
 import time, random, asyncio, sys
-import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm, spectate
+import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm, spectate, channelorder
 import ac, autologs, capes, schedule, snack, liveread, messagemin
 from wounds import WoundOption, Wound
 
@@ -60,6 +60,7 @@ b.add_cog(snack.Snacks())
 b.add_cog(schedule.Scheduling())
 b.add_cog(liveread.Liveread())
 b.add_cog(messagemin.MessageMin(b))
+b.add_cog(channelorder.ChanOrder(b))
 # Add all the command cogs
 
 b.loop.create_task(draft.setup())

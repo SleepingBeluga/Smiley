@@ -10,7 +10,7 @@ class MessageMin(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.channel.id in self.lims:
-            if (not message.author.bot) and ('Mod Team' not in (str(role) for role in message.author.roles)):
+            if (not message.author.bot) and (('Mod Team' not in (str(role) for role in message.author.roles)) or ('Author' not in (str(role) for role in message.author.roles))):
                 if len(message.content) < self.lims[message.channel.id]:
                     await message.delete()
                     try:
@@ -21,7 +21,7 @@ class MessageMin(commands.Cog):
     @commands.command()
     async def setmin(self, ctx, *args):
 
-        if 'Mod Team' not in (str(role) for role in ctx.author.roles):
+        if ('Mod Team' not in (str(role) for role in ctx.author.roles)) or ('Author' not in (str(role) for role in ctx.author.roles)):
             await ctx.send("Only moderators may use this command.")
             return
         elif len(args) > 0:
