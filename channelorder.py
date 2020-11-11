@@ -12,6 +12,9 @@ class ChanOrder(commands.Cog):
 
     @commands.command()
     async def sort(self, ctx, *args):
+        # TODO: reenable when fixed
+        await ctx.send("Sorry! This command is currently disabled due to Discord throwing tantrums.")
+        return
 
         if self.time != None:
             delta = datetime.datetime.now() - self.time
