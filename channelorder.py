@@ -1,5 +1,5 @@
 from discord.ext import commands
-import datetime
+import datetime, asyncio
 
 class ChanOrder(commands.Cog):
     '''
@@ -12,10 +12,6 @@ class ChanOrder(commands.Cog):
 
     @commands.command()
     async def sort(self, ctx, *args):
-        # TODO: reenable when fixed
-        await ctx.send("Sorry! This command is currently disabled due to Discord throwing tantrums.")
-        return
-
         if self.time != None:
             delta = datetime.datetime.now() - self.time
             if delta.total_seconds() < 3600:
@@ -24,45 +20,27 @@ class ChanOrder(commands.Cog):
 
         self.time = datetime.datetime.now()
 
-        await ctx.send("Sorting channels...")
+        await ctx.send("Sorting channels. Be patient, we don't want to DDOS the server!")
 
         async with ctx.typing():
 
             wdGames = []
             pdGames = []
             archives = []
-            pos = 0
 
-            for server in self.b.guilds:
-                for channel in server.channels:
-                    if channel.category == None:
-                        pass
-                    elif channel.category.name in ('WeaverDice Games', 'WeaverDice Games 2'):
-                        wdGames.append(channel)
-                    elif channel.category.name in ('PactDice Games', 'PactDice Games 2'):
-                        pdGames.append(channel)
-                    elif channel.category.name in ('Archives', 'Archives 2'):
-                        archives.append(channel)
-
-            def getName(c):
-                return c.name
-
-            wdGames.sort(key=getName)
-            for chan in wdGames:
-                if chan.position != pos:
-                    await chan.edit(position=pos)
-                pos += 1
-
-            pdGames.sort(key=getName)
-            for chan in pdGames:
-                if chan.position != pos:
-                    await chan.edit(position=pos)
-                pos += 1
-
-            archives.sort(key=getName)
-            for chan in archives:
-                if chan.position != pos:
-                    await chan.edit(position=pos)
-                pos += 1
+            for category in 'WeaverDice Games', 'WeaverDice Games 2', 'PactDice Games', 'PactDice Games 2', 'Archives', 'Archives 2':
+                await sortCategory(self.b.guilds[0], category)
 
         await ctx.send("Channels sorted!")
+
+
+async def sortCategory(server, category):
+    channels = [channel for channel in server.channels if channel.category and channel.category.name == category]
+    if channels and len(channels):
+        channels.sort(key=lambda c: c.name)
+        base = min(channels, key=lambda c: c.position).position
+        for i, channel in enumerate(channels):
+            pos = i + base
+            if pos != channel.position:
+                await channel.edit(position=pos)
+                await asyncio.sleep(5)
