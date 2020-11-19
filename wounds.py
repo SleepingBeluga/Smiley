@@ -31,16 +31,13 @@ class Wound:
             part = part.capitalize()
             if not part in ['Leg','Torso','Arm','Head']:
                 return "I don't know that body part."
-        if not part:
+            # Part was chosen/required
+        else:
             part = random.choice(['Leg','Torso','Torso','Torso','Arm','Head'])
             # Roll a random target location (based on old rulebook)
-        else:
-            part = part.capitalize()
-            # Part was chosen/required
-        if (not random.randint(1,4) > 4 - len(self.any)) and (not self.any == None):
+        if self.any and len(self.any) and random.randint(1,4) != 4:
             pool = self.any
-        # Use an 'any' result pool
-
+        # Use an 'any' result pool if you roll below a 4, if possible
         elif part == 'Torso':
             pool = self.torso
         elif part == 'Leg':
@@ -49,15 +46,11 @@ class Wound:
             pool = self.arm
         elif part == 'Head':
             pool = self.head
-        # Use a result pool specific to the part
+        # Else, use a result pool specific to the part
 
         if pool == None or pool == []:
             pool = self.any
         # For wounds without part-specific options, use 'any'
-
-        while pool == None or pool == []:
-            pool = random.choice([self.head,self.torso,self.arm,self.leg])
-        # If 'any' is chosen and is empty, randomly choose another
 
         res = random.choice(pool)
 
@@ -84,6 +77,56 @@ class Wound:
         # Specific extras
 
         return resstring
+
+class AlternateWound:
+    def __init__ (self, type, severity, effects):
+        self.type = type
+        self.severity = severity
+        self.effects = effects
+
+    async def roll(self):
+        res = random.choice(self.effects)
+        return f'{self.severity} {self.type} (Alt.) - {res}'
+
+altwoundd = {}
+
+altwoundd['lesser'] = {}
+altwoundd['moderate'] = {}
+altwoundd['critical'] = {}
+
+no_eff = 'No effect.'
+bleed = 'Inflict *Bleeding*.'
+mangle = 'Inflict *Mangled*.'
+bloody_eyes = 'Inflict *Bleeding* and *Blinded* with blood in the eyes.'
+ouch_cut = 'Inflict *Pain* and *Bleeding*.'
+altwoundd['lesser']['cut'] = AlternateWound('Cut', 'Lesser', (no_eff, no_eff, bleed, mangle, bloody_eyes, ouch_cut))
+
+dis_arm = 'Arm *Disabled*.'
+dis_leg = 'Leg *Disabled*, halves movement.'
+bad_bleed = 'Inflict *Bleeding*, -1 Brawn until bleeding is stopped.'
+drained = 'Inflict *Death Sentence* via. bleeding.'
+altwoundd['moderate']['cut'] = AlternateWound('Cut', 'Moderate', (bleed, bleed, dis_arm, dis_leg, bad_bleed, drained))
+
+lose_arm = 'Lose an arm, reattachable with surgery in a five minute window. Spent effort doubles time, multiplicative.'
+lose_leg = 'Lose a leg, reattachable with surgery in a five minute window. Spent effort doubles time, multiplicative.'
+bisect = 'Make a Guts roll, DC 7+. Die, bisected on failue. Spend effort for a +1 on roll.'
+altwoundd['critical']['cut'] = AlternateWound('Cut', 'Critical', (lose_arm, lose_arm, lose_leg, lose_leg, bisect, bisect))
+
+kb_five = 'Knocks back target 5\'.'
+kb_ten = 'Knocks back target 10\'.'
+kd = 'Knocked down, wound fades on the next rest.'
+disarm = 'Target is *Disarmed*.'
+delay = 'Inflict *Delay* 1 focus loss.'
+altwoundd['lesser']['bash'] = AlternateWound('Bash', 'Lesser', (kb_five, kb_ten, kd, kd, disarm, delay))
+
+kb_kd = 'Target is knocked back 10\' and knocked down.'
+ouch_stat = 'Inflict *Pain*, -1 to Brawn, Athletics, or Guts, whichever is highest.'
+broken = f'Broken: {ouch_stat} Inflict *Mangled*. Each time a check is failed, double duration.'
+altwoundd['moderate']['bash'] = AlternateWound('Bash', 'Moderate', (kb_kd, kb_kd, kb_kd, ouch_stat, ouch_stat, broken))
+
+pulv = 'Pulverized: Choose to lose 2 stat points or pick an intact limb/your head and lose all functionality of that part. Then roll 1d6 and repeat the process on a 2+. In advance, the target may spend effort to raise the DC by 1. (1 effort = a 3+)'
+altwoundd['critical']['bash'] = AlternateWound('Bash', 'Critical', (pulv, pulv, pulv, pulv, pulv, pulv))
+
 
 woundd = {}
 
@@ -246,7 +289,6 @@ class Wounds(commands.Cog):
     @commands.command()
     async def moderate(self, ctx, wtype, part=None):
         '''Roll a moderate wound. Must specify type.'''
-
         await roll_wound(ctx, 'moderate', wtype, part)
     @commands.command()
     async def critical(self, ctx, wtype, part=None):
@@ -277,3 +319,8 @@ class Wounds(commands.Cog):
     async def rend(self, ctx, sev, part=None):
         '''Roll a rend. Must specify severity'''
         await roll_wound(ctx, sev, 'rend', part)
+
+    @commands.command()
+    async def altwound(self, ctx, sev, wtype):
+        '''Roll an alternate (module) wound. Must specify severity and type, in that order.'''
+        await ctx.send(await altwoundd[sev.lower()][wtype.lower()].roll())
