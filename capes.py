@@ -4,6 +4,23 @@ import random, datetime, difflib
 from card import Card
 from battle import Battle
 
+async def longpm(ctx, content):
+    if len(content) > 1990:
+        msgs = content.split('\n')
+    else:
+        msgs = [content]
+    found_too_long = True
+    while found_too_long:
+        found_too_long = False
+        for i, msg in enumerate(msgs):
+            if len(msg) > 1990:
+                found_too_long = True
+                msgs[i] = msg[:1990]
+                msgs.insert(i+1,msg[1990:])
+    for msg in msgs:
+        await ctx.author.send(msg)
+
+
 class Capes(commands.Cog):
 
     def __init__(self):
@@ -153,7 +170,7 @@ class Capes(commands.Cog):
                 m_index += 1
                 messages += ["> "]
         messages[m_index] = messages[m_index][:-2]
-        
+
         messages[0] = "{}{}Cards collected {}/{}\n{}".format(initial, c_filter,len(owned),len(c_list),messages[0])
         return messages
 
@@ -177,7 +194,7 @@ class Capes(commands.Cog):
                     return await self.view_card(ctx, i)
                 if not i.name in capes_owned:
                     capes_owned += [ i.name ]
-            
+
             closestCapes = difflib.get_close_matches(name, capes_owned)
             if len(closestCapes) > 1:
                 await ctx.send("That cape could not be found, did you mean one of: " + closestCapes)
@@ -218,7 +235,7 @@ class Capes(commands.Cog):
                 return False
 
         return True
-        
+
 
     async def trade(self, ctx, user, subaction, *args):
         if len(args) > 0 and (await self.at_to_id(args[0])) == user:
@@ -239,7 +256,7 @@ class Capes(commands.Cog):
                 message = "Specify who you want to trade with, your offer in parenthesis, then what you want back\n"
                 message += "`    %tc trade offer @someperson [My Card, My Other Card] [Their Card, Another of their cards, a third card of theirs]`"
                 await ctx.send(message)
-                return 
+                return
 
             # First arg will be a person
             request_to_id = (await self.at_to_id(args[0]))
@@ -251,7 +268,7 @@ class Capes(commands.Cog):
             offers = ""
             for i in args[1:]:
                 offers += i + " "
-            
+
             offer, desire, nil = offers.split("]")
             nil, offer = offer.split("[")
             offer = offer.split(",")
@@ -271,7 +288,7 @@ class Capes(commands.Cog):
 
             for i in range(0, len(desire)):
                 desire[i] = desire[i].strip()
-            
+
             # Check whether they even both have the required cards
             if not (await self.has_cards(user, offer)):
                 await ctx.send("You do not have the cards required to trade!")
@@ -305,7 +322,7 @@ class Capes(commands.Cog):
                 o = o[:-2] + "]"
                 if len(offer) == 0:
                     o = "nothing"
-                
+
                 desire = self.trades[user][request_to_id][1]
                 d = "["
                 for i in desire:
@@ -355,7 +372,7 @@ class Capes(commands.Cog):
                         self.trading[request_to_id].remove(cape)
                         self.trading[user] += [cape]
                         offer_indexes += [ self.capelist.index(cape) ]
-                    
+
                     await sheets.move_card_owner(request_to_id, user, offer_indexes)
 
                     desire_indexes = []
@@ -364,7 +381,7 @@ class Capes(commands.Cog):
                         self.trading[user].remove(cape)
                         self.trading[request_to_id] += [cape]
                         desire_indexes += [ self.capelist.index(cape) ]
-                    
+
                     await sheets.move_card_owner(user, request_to_id, desire_indexes)
 
                     await ctx.send("Trade made!")
@@ -398,7 +415,7 @@ class Capes(commands.Cog):
                 if i.tier.lower() == s.lower():
                     relevant += [i]
             messages = (await self.messagify_ownership(user, relevant, "{} Tier".format(s.upper())))
-            
+
         elif s.lower() in categories:
             for i in self.capelist:
                 if s.lower() in i.classification.lower():
@@ -477,7 +494,7 @@ class Capes(commands.Cog):
                     roll += [upgrade[j.tier]]
                     cards_to_remove += [j]
                     break
-        
+
         target = roll[random.randrange(0,3)]
         if target == "A":
             await ctx.send("Crafting an **{} Tier** card".format(target))
@@ -821,7 +838,7 @@ class Capes(commands.Cog):
             message += "```%r approve comments - Approve the trigger. Comments optional\n"
             message += "%r critique comments - Critique the trigger\n"
             message += "%r skip - Skip reviewing this trigger```"
-            await ctx.author.send(message)
+            await longpm(ctx, message)
         elif subaction == "approve":
             if not user in self.reviewing:
                 await ctx.author.send("You aren't reviewing anything")
@@ -875,7 +892,7 @@ class Capes(commands.Cog):
 
     @commands.command()
     async def cape(self, ctx, *args):
-        '''Provide information on Weaverdice capes in the database. 
+        '''Provide information on Weaverdice capes in the database.
 
         Can access the google sheets at https://docs.google.com/spreadsheets/d/1_syrsmptzWG0u3xdY3qzutYToY1t3I8s6yaryIpfckU/edit#gid=1668315016
         '''

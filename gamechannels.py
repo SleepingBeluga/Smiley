@@ -202,7 +202,7 @@ class Game_Channels(commands.Cog):
             if leavewd and catName in ['WeaverDice Games', 'WeaverDice Games 2']:
                 check = True
                 await channel.set_permissions(ctx.author, read_messages=False)
-            elif leavepd and catName in ['PactDice Games', 'PactDice Games 2]':
+            elif leavepd and catName in ['PactDice Games', 'PactDice Games 2']:
                 check = True
                 await channel.set_permissions(ctx.author, read_messages=False)
             elif leavearchive and catName in ['Archives', 'Archives 2']:
