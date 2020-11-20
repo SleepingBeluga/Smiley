@@ -130,6 +130,9 @@ class Game_Channels(commands.Cog):
             if joinAllWD and catName in ['WeaverDice Games', 'WeaverDice Games 2']:
                 joining += channel.name + ", "
                 channelsJoined += 1
+                if debugging:
+                    await ctx.send("Trying to join" + channel.name)
+
                 await channel.set_permissions(ctx.author, read_messages=True)
             elif joinAllPD and catName == 'PactDice Games':
                 joining += channel.name + ", "
@@ -148,10 +151,10 @@ class Game_Channels(commands.Cog):
                 break
 
         # Let's do some debugging
-        if debugging:
-            await ctx.send(joining)
-            if channelsJoined > 0:
-                await ctx.send("That is trying to join " + channelsJoined)
+        # if debugging:
+        #     await ctx.send(joining)
+        #     if channelsJoined > 0:
+        #         await ctx.send("That is trying to join " + channelsJoined)
 
         if gameName == '':
             await ctx.send("Please write out the game you wish to access after the command (i.e. %enter New York)")
@@ -199,7 +202,7 @@ class Game_Channels(commands.Cog):
             if leavewd and catName in ['WeaverDice Games', 'WeaverDice Games 2']:
                 check = True
                 await channel.set_permissions(ctx.author, read_messages=False)
-            elif leavepd and catName == 'PactDice Games':
+            elif leavepd and catName in ['PactDice Games', 'PactDice Games 2]':
                 check = True
                 await channel.set_permissions(ctx.author, read_messages=False)
             elif leavearchive and catName in ['Archives', 'Archives 2']:
@@ -363,7 +366,7 @@ class Game_Channels(commands.Cog):
             if channel.name == channelName:
                 c = channel
                 index = 1
-        
+
         if not c:
             # Assume that they want to apply to the current channel
             c = ctx.message.channel
