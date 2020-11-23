@@ -7,7 +7,7 @@ os.chdir(path_here)
 import discord, git
 from discord.ext import commands
 import time, random, asyncio, sys
-import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, tm, spectate, channelorder
+import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, spectate, channelorder
 import ac, autologs, capes, schedule, snack, liveread, messagemin
 from wounds import WoundOption, Wound
 
@@ -54,7 +54,7 @@ b.add_cog(wounds.Wounds())
 b.add_cog(trigger.Triggers_And_More())
 b.add_cog(srpg.SRPG())
 b.add_cog(ac.Autocape())
-b.add_cog(tm.TinyMech())
+# b.add_cog(tm.TinyMech())
 b.add_cog(autologs.AutoLogs())
 b.add_cog(snack.Snacks())
 b.add_cog(schedule.Scheduling())
@@ -69,8 +69,8 @@ b.loop.create_task(draft.setup())
 b.loop.create_task(trimhistory.channel_cleanup(b))
 # Start the channel cleanup task on a loop.
 
-b.loop.create_task(tm.tm_loop(b))
-# Start running Tiny Mechs in the background.
+# b.loop.create_task(tm.tm_loop(b))
+# # Start running Tiny Mechs in the background.
 
 b.loop.create_task(ac.ac_loop(b))
 # Run the autocape loop too!
