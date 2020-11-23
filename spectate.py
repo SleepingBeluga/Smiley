@@ -28,12 +28,12 @@ async def spectate_topics(b):
 
         for chan in wdGames:
             async for message in chan.history(limit=1):
-                if (datetime.datetime.utcnow() - message.created_at).seconds < 1800 and (datetime.datetime.utcnow() - message.created_at).days == 0:
+                if (datetime.datetime.utcnow() - message.created_at).total_seconds() < 1800:
                     wdActive.append(chan)
 
         for chan in pdGames:
             async for message in chan.history(limit=1):
-                if (datetime.datetime.utcnow() - message.created_at).seconds < 1800 and (datetime.datetime.utcnow() - message.created_at).days == 0:
+                if (datetime.datetime.utcnow() - message.created_at).total_seconds() < 1800:
                     pdActive.append(chan)
 
         if len(wdSpec) == 1:
