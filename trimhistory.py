@@ -19,11 +19,8 @@ async def channel_cleanup(b):
                         out.write(f'#{to_clear} {str(message.created_at)} {message.author}: {message.clean_content}\n')
                 elif tdiff >= 1209600:
                     with open('output.txt','a+') as out:
-                        try:
-                            await message.delete()
-                            out.write(f'#{to_clear} (old) {str(message.created_at)} {message.author}: {message.clean_content}\n')
-                        except Exception as error:
-                            out.write(f'{str(error)} ERROR DELETING: #{to_clear} {str(message.created_at)} {message.author}: {message.clean_content}\n')
+                        await message.delete()
+                        out.write(f'#{to_clear} (old) {str(message.created_at)} {message.author}: {message.clean_content}\n')
             for batch_i in range((len(mlist)//100) + 1):
                 batch = mlist[batch_i:batch_i+99]
                 await channel_list[to_clear].delete_messages(batch)
