@@ -514,6 +514,71 @@ class Capes(commands.Cog):
         await sheets.gain_cards(who, [self.capelist.index(selection)])
         await ctx.send("Crafted **{}** card".format(selection.name))
 
+    async def autocraft(self, ctx, who):
+        owned = {}
+        for i in self.trading[who]:
+            if i.tier == "S":
+                # We can't upgrade S tier cards!
+                continue
+            if i.tier not in owned:
+                owned[i.tier] = {}
+            if i not in owned[i.tier]:
+                owned[i.tier][i] = 0
+            owned[i.tier][i] += 1
+        
+        crafted = False
+
+        upgrade = {"C": "B", "B": "A", "A": "S"}
+        tier_sorted = {}
+        gained = {}
+        r_card_index = []
+
+        for i in self.cardlist:
+            if i.tier not in tier_sorted:
+                tier_sorted[i.tier] = []
+            tier_sorted[i.tier] += [i]
+
+        for tier in owned:
+            # We're looking for a collection of three things!
+            group = []
+            for card in owned[tier]:
+                while owned[tier][card] > 1:
+                    owned[tier][card] -= 1
+                    group += [card]
+                    if len(group) == 3:
+                        crafted_card = random.choice(tier_sorted[upgrade[tier]])
+                        if upgrade[tier] not in gained:
+                            gained[upgrade[tier]] = []
+                        gained[upgrade[tier]] += [crafted_card]
+                        for i in group:
+                            r_card_index += [self.cardlist.index(i)]
+                            self.trading[who].remove(i)
+                        crafted = True
+                        group = []
+        
+        if not crafted:
+            await ctx.send("Couldn't find enough duplicate cards to craft together")
+        else:
+            string = "Auto-crafting complete! Here is what's gotten made: \n"
+            for tier in gained:
+                r_string = f"**{tier}**:\n> "
+                for i in gained[tier]:
+                    r_string += f"{i.name}, "
+                r_string = r_string[:-2] + "\n"
+                if len(string + r_string) > 1999:
+                    await ctx.send(string)
+                    string = r_string
+                else:
+                    string += r_string
+            await ctx.send(string)
+            await sheets.remove_cards(who, r_card_index)
+            gain_list = []
+            for i in gained:
+                self.trading[who] += gained[i]
+                for card in gained[i]:
+                    gain_list += [self.cardlist.index(card)]
+            await sheets.gain_cards(who, gain_list)
+
     async def collection(self, ctx, who, coll="help"):
         collections = ["Tier", "Affiliation", "Alignment", "Campaign", "Classification"]
         if coll.lower() == "help" or coll.capitalize() not in collections:
@@ -605,6 +670,7 @@ class Capes(commands.Cog):
             %tc masterlist - View the existing cape masterlist
             %tc trade [offer/view/accept/reject/cancel/help] @username - Make a trade
             %tc craft [Card 1, Card 2, Card 3] - Craft three cards together into a new one
+            %tc autocraft - Automatically craft away duplicates (as long as you have 3 or more in a specific rarity)
         '''
         if action == "unpause" and str(ctx.author.id) == "227834498019098624":
             self.pause = False
@@ -647,6 +713,8 @@ class Capes(commands.Cog):
             await self.grant(who, amount)
         elif action == "craft":
             await self.craft(ctx, str(ctx.author.id), *args)
+        elif action == "autocraft":
+            await self.autocraft(ctx, str(ctx.author.id))
         elif action == "collection":
             await self.collection(ctx, str(ctx.author.id), *args)
 
