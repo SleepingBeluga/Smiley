@@ -11,11 +11,11 @@ import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, sp
 import ac, autologs, capes, schedule, snack, liveread, messagemin
 from wounds import WoundOption, Wound
 
-'''My (Smiley's) Main Script
-I'm friendly, and I have commands to support playing PD and WD!
-'''
+class myHelp(commands.DefaultHelpCommand):
+    def get_ending_note(self):
+        return '```Type `%help <command>` for more info on a command.\nYou can also type `%help <category>` for more info on a category.\nFor more thorough documentation, go to https://smileybot.gitlab.io (WIP)```'
 
-b = commands.Bot(command_prefix=('%'),  case_insensitive=True)
+b = commands.Bot(command_prefix=('%'), case_insensitive=True, help_command=myHelp(dm_help=None))
 
 @b.command()
 async def hi(ctx, *args):
