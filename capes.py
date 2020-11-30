@@ -533,7 +533,7 @@ class Capes(commands.Cog):
         gained = {}
         r_card_index = []
 
-        for i in self.cardlist:
+        for i in self.capelist:
             if i.tier not in tier_sorted:
                 tier_sorted[i.tier] = []
             tier_sorted[i.tier] += [i]
@@ -551,7 +551,7 @@ class Capes(commands.Cog):
                             gained[upgrade[tier]] = []
                         gained[upgrade[tier]] += [crafted_card]
                         for i in group:
-                            r_card_index += [self.cardlist.index(i)]
+                            r_card_index += [self.capelist.index(i)]
                             self.trading[who].remove(i)
                         crafted = True
                         group = []
@@ -576,7 +576,7 @@ class Capes(commands.Cog):
             for i in gained:
                 self.trading[who] += gained[i]
                 for card in gained[i]:
-                    gain_list += [self.cardlist.index(card)]
+                    gain_list += [self.capelist.index(card)]
             await sheets.gain_cards(who, gain_list)
 
     async def collection(self, ctx, who, coll="help"):
