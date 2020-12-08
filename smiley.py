@@ -6,7 +6,7 @@ os.chdir(path_here)
 # Lets us not care where smiley runs from
 import discord, git
 from discord.ext import commands
-import time, random, asyncio, sys
+import time, random, asyncio, sys, traceback
 import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, srpg, spectate, channelorder
 import ac, autologs, capes, schedule, snack, liveread, messagemin
 from wounds import WoundOption, Wound
@@ -47,6 +47,16 @@ async def updatebot(ctx, *args):
         await ctx.send(f'Updated to commit *{message}*. Restarting!')
         await ctx.bot.logout()
         sys.exit(1)
+
+@b.event
+async def on_command_error(ctx, error):
+    if ctx.message.guild and type(error) == discord.ext.commands.errors.CommandInvokeError:
+        log_chan_cat = [cat for cat in ctx.message.guild.categories if cat.name.lower() == "moderation"][0]
+        log_chan = [chan for chan in log_chan_cat.channels if chan.name.lower() == "botlog"][0]
+        cmd = f'<#{ctx.message.channel.id}> {ctx.author.nick}: {ctx.message.content}'
+        tb = ''.join(traceback.format_tb(error.original.__traceback__))
+        await log_chan.send(f'Command Error:\n{cmd}\n```{tb}```')
+
 
 b.add_cog(capes.Capes())
 b.add_cog(draft.Draft())

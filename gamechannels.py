@@ -29,7 +29,7 @@ class Game_Channels(commands.Cog):
             gameName = gameName + str(arg).lower()
 
         # List of restricted titles
-        restricted_names = ['all', 'allactive', 'inactive', 'active', 'wdall', 'allwd', 'allpd', 'pdall', 'allarchive']
+        restricted_names = ['all', 'allactive', 'inactive', 'active', 'wdall', 'allwd', 'allpd', 'pdall', 'allarchive', 'archived', 'archives']
         if gameName in restricted_names:
             await ctx.send(gameName + " is a restricted term and you can't name your game that. Sorry!")
             return
@@ -73,6 +73,8 @@ class Game_Channels(commands.Cog):
                     gamecat = category
                 elif (category.name == 'WeaverDice Games 2'and gameType == 'wd'):
                     altcat = category
+                elif (category.name == 'PactDice Games 2'and gameType == 'pd'):
+                    altcat = category
 
             newChannel = None
             try:
@@ -80,8 +82,8 @@ class Game_Channels(commands.Cog):
             except:
                 if altcat:
                     newChannel = await ctx.message.guild.create_text_channel(gameName, category=altcat, overwrites=overwrites)
-            await sheets.newgame(str('#' + gameName),str(ctx.author.id), str(gameType).upper())
             if newChannel:
+                await sheets.newgame(str('#' + gameName),str(ctx.author.id), str(gameType).upper())
                 await ctx.send(f"{newChannel.mention} has been created in category {newChannel.category.name}")
             else:
                 await ctx.send("Looks like there was a problem creating the channel. If the problem persists, please ping the bot team role")
@@ -104,70 +106,49 @@ class Game_Channels(commands.Cog):
                 continue
             gameName = gameName + str(arg).lower()
 
-        joinAllWD = False
-        joinAllPD = False
-        joinAllArchive = False
+        if gameName == '':
+            await ctx.send("Please write out the game you wish to access after the command (i.e. %enter New York)")
+            return
 
-        if gameName in ['wdall', 'allwd', 'all', 'allactive']:
-            joinAllWD = True
-        if gameName in ['pdall', 'allpd', 'all', 'allactive']:
-            joinAllPD = True
-        if gameName in ['all', 'allarchive']:
-            joinAllArchive = True
+        joinAllWD = gameName in ['wdall', 'allwd', 'all', 'allactive']
+        joinAllPD = gameName in ['pdall', 'allpd', 'all', 'allactive']
+        joinAllArchive = gameName in ['all', 'allarchive', 'inactive', 'archived', 'archives']
 
-        # Let's track some info for debugging
-        joining = "We are trying to join "
-        channelsJoined = 0
-        applicableChannels = []
+        applicableChannels = set()
 
         for channel in ctx.guild.channels:
             if not channel.category:
                 continue
             # If the channel has no category, move to the next channel
             catName = channel.category.name
-            if (catName in ['PactDice Games', 'WeaverDice Games', 'WeaverDice Games 2', 'Archives', 'Archives 2']):
-                applicableChannels += [channel.name]
+            if (catName in ['PactDice Games', 'PactDice Games 2', 'WeaverDice Games', 'WeaverDice Games 2', 'Archives', 'Archives 2']):
+                applicableChannels.add(channel.name)
             if joinAllWD and catName in ['WeaverDice Games', 'WeaverDice Games 2']:
-                joining += channel.name + ", "
-                channelsJoined += 1
                 if debugging:
-                    await ctx.send("Trying to join" + channel.name)
-
+                    await ctx.send("Trying to join " + channel.name)
                 await channel.set_permissions(ctx.author, read_messages=True)
-            elif joinAllPD and catName == 'PactDice Games':
-                joining += channel.name + ", "
-                channelsJoined += 1
+            elif joinAllPD and catName in ['PactDice Games', 'PactDice Games 2']:
+                if debugging:
+                    await ctx.send("Trying to join " + channel.name)
                 await channel.set_permissions(ctx.author, read_messages=True)
             elif joinAllArchive and catName in ['Archives', 'Archives 2']:
-                joining += channel.name + ", "
-                channelsJoined += 1
+                if debugging:
+                    await ctx.send("Trying to join " + channel.name)
                 await channel.set_permissions(ctx.author, read_messages=True)
-            elif channel.name == gameName or \
-              'wd' + channel.name == gameName or \
-              'pd' + channel.name == gameName:
-                game = channel
-                joining += game.name
-                check = (catName in ['PactDice Games', 'WeaverDice Games', 'WeaverDice Games 2', 'Archives', 'Archives 2'])
-                break
+            elif channel.name == gameName or 'wd' + channel.name == gameName or 'pd' + channel.name == gameName:
+                check = (catName in ['PactDice Games', 'PactDice Games 2', 'WeaverDice Games', 'WeaverDice Games 2', 'Archives', 'Archives 2'])
+                if check:
+                    await channel.set_permissions(ctx.author, read_messages=True)
+                    return
 
-        # Let's do some debugging
-        # if debugging:
-        #     await ctx.send(joining)
-        #     if channelsJoined > 0:
-        #         await ctx.send("That is trying to join " + channelsJoined)
-
-        if gameName == '':
-            await ctx.send("Please write out the game you wish to access after the command (i.e. %enter New York)")
-        elif check == False and not (joinAllWD or joinAllPD or joinAllArchive):
+        if check == False and not (joinAllWD or joinAllPD or joinAllArchive):
             closestChannels = difflib.get_close_matches(gameName, applicableChannels)
             if len(closestChannels) > 1:
-                await ctx.send("That game could not be found, did you mean one of: " + closestChannels)
+                await ctx.send("That game could not be found, did you mean one of: " + ', '.join(closestChannels))
             elif len(closestChannels) == 1:
                 await ctx.send("That game could not be found, did you mean " + closestChannels[0])
             else:
                 await ctx.send("That game could not be found.")
-        else:
-            await game.set_permissions(ctx.author, read_messages=True)
 
     @commands.command()
     async def exit(self, ctx, *args):
@@ -177,22 +158,18 @@ class Game_Channels(commands.Cog):
         Group arguments include wdall, pdall, allactive, allarchive, all
         '''
         to_leave = ''
-        game = None
         check = False
 
         for arg in args:
             to_leave += str(arg).lower()
 
-        leavepd = to_leave == 'pdall' or to_leave == 'allpd'
-        leavewd = to_leave == 'wdall' or to_leave == 'allwd'
-        leavearchive = to_leave == 'inactive' or to_leave == 'archived' or to_leave == 'allarchive'
-        if to_leave == 'allactive' or to_leave == 'active':
-            leavepd = True
-            leavewd = True
-        if to_leave == 'all':
-            leavepd = True
-            leavewd = True
-            leavearchive = True
+        if to_leave == '':
+            await ctx.send("Please write out the game you wish to exit after the command (i.e. %exit New York)")
+            return
+
+        leavewd = to_leave in ['wdall', 'allwd', 'all', 'allactive']
+        leavepd = to_leave in ['pdall', 'allpd', 'all', 'allactive']
+        leavearchive = to_leave in ['all', 'allarchive', 'inactive', 'archived', 'archives']
 
         for channel in ctx.guild.channels:
             if not channel.category:
@@ -213,11 +190,9 @@ class Game_Channels(commands.Cog):
                 check = (catName in ['PactDice Games', 'WeaverDice Games', 'WeaverDice Games 2', 'Archives', 'Archives 2'])
                 if check:
                     await channel.set_permissions(ctx.author, read_messages=False)
+                    return
 
-
-        if to_leave == '':
-            await ctx.send("Please write out where you wish to exit after the command (i.e. %exit New York)")
-        elif check == False:
+        if check == False:
             await ctx.send("That game could not be found.")
 
     @commands.command()
