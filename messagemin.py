@@ -20,7 +20,8 @@ class MessageMin(commands.Cog):
 
     @commands.command()
     async def setmin(self, ctx, *args):
-
+        '''Moderators only. Establish a mimimum character limit for messages in the current channel.
+        '''
         if ('Mod Team' not in (str(role) for role in ctx.author.roles)) or ('Author' not in (str(role) for role in ctx.author.roles)):
             await ctx.send("Only moderators may use this command.")
             return

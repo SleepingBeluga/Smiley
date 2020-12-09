@@ -1,7 +1,7 @@
 from discord.ext import commands
 import docs, datetime, json, pytz
 
-class AutoLogs(commands.Cog):
+class Auto_Logs(commands.Cog):
 
     @commands.command()
     async def set(self,ctx,*args):
@@ -365,4 +365,3 @@ class AutoLogs(commands.Cog):
 
         with open('logchansets.json', 'w+') as filechan:
             json.dump(data, filechan)
-
