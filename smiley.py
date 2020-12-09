@@ -53,9 +53,11 @@ async def on_command_error(ctx, error):
     if ctx.message.guild and type(error) == discord.ext.commands.errors.CommandInvokeError:
         log_chan_cat = [cat for cat in ctx.message.guild.categories if cat.name.lower() == "moderation"][0]
         log_chan = [chan for chan in log_chan_cat.channels if chan.name.lower() == "botlog"][0]
-        cmd = f'<#{ctx.message.channel.id}> {ctx.author.nick}: {ctx.message.content}'
+        escaped_message = ctx.message.content.replace("`","<backtick>")
+        cmd = f'<#{ctx.message.channel.id}> **{ctx.author.display_name}**: `{escaped_message}`'
         tb = ''.join(traceback.format_tb(error.original.__traceback__))
-        await log_chan.send(f'Command Error:\n{cmd}\n```{tb}```')
+        error = discord.utils.escape_markdown(f'{repr(error.original)}')
+        await log_chan.send(f'{error} in command:\n{cmd}\n```{tb}```')
 
 
 b.add_cog(capes.Capes())
