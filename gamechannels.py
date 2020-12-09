@@ -135,7 +135,7 @@ class Game_Channels(commands.Cog):
                 if debugging:
                     await ctx.send("Trying to join " + channel.name)
                 await channel.set_permissions(ctx.author, read_messages=True)
-            elif channel.name == gameName or 'wd' + channel.name == gameName or 'pd' + channel.name == gameName:
+            elif channel.name == gameName or 'wd' + channel.name == gameName or 'pd' + channel.name == gameName or '#' + channel.name == gameName:
                 check = (catName in ['PactDice Games', 'PactDice Games 2', 'WeaverDice Games', 'WeaverDice Games 2', 'Archives', 'Archives 2'])
                 if check:
                     await channel.set_permissions(ctx.author, read_messages=True)
