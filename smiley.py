@@ -50,7 +50,7 @@ async def on_command_error(ctx, error):
 
 b.add_cog(capes.Capes())
 b.add_cog(draft.Draft())
-b.add_cog(gamechannels.Game_Channels())
+b.add_cog(gamechannels.Game_Channels(b))
 b.add_cog(dice.Rolls())
 b.add_cog(wounds.Wounds())
 b.add_cog(trigger.Triggers_And_More())

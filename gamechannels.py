@@ -4,6 +4,9 @@ import difflib # Used to find closest name for enter command
 
 class Game_Channels(commands.Cog):
     # - - - - Absolute mess of code below. Mostly channel stuff. Tread at your own risk. - - - -
+    def __init__(self, b):
+        self.b = b
+
     @commands.command()
     async def campaigns(self, ctx, *args):
         '''Get the link to the campaigns spreadsheet
@@ -54,8 +57,8 @@ class Game_Channels(commands.Cog):
                     bot = role
                 #elif discord.Role.name == roleName:
                  #   gameRole = discord.Role
-
-            await ctx.author.add_roles(gameMaster)
+            if gameMaster:
+                await ctx.author.add_roles(gameMaster)
 
             overwrites = {
                 ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
@@ -83,6 +86,12 @@ class Game_Channels(commands.Cog):
                 if altcat:
                     newChannel = await ctx.message.guild.create_text_channel(gameName, category=altcat, overwrites=overwrites)
             if newChannel:
+                server = self.b.guilds[0]
+                channels = [channel for channel in server.channels if channel.category and channel.category == newChannel.category]
+                for i, chan in enumerate(sorted(channels, key=lambda c: c.name)):
+                    if newChannel.name < chan.name:
+                        await newChannel.edit(position=chan.position)
+                        break
                 await sheets.newgame(str('#' + gameName),str(ctx.author.id), str(gameType).upper())
                 await ctx.send(f"{newChannel.mention} has been created in category {newChannel.category.name}")
             else:
