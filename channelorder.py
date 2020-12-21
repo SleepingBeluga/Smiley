@@ -14,13 +14,13 @@ class ChanOrder(commands.Cog):
     async def sort(self, ctx, *args):
         if self.time != None:
             delta = datetime.datetime.now() - self.time
-            if delta.total_seconds() < 3600:
-                await ctx.send("Sorry! This command may only be used once an hour, to avoid spam/abuse.")
+            if delta.total_seconds() < 10000:
+                await ctx.send("Sorry! This command has been used too recently.")
                 return
 
         self.time = datetime.datetime.now()
 
-        await ctx.send("Sorting channels. Be patient, we don't want to DDOS the server!")
+        await ctx.send("Sorting channels. Be patient, this process is intentionally slow so as not to mess anything up!")
 
         async with ctx.typing():
 
@@ -46,6 +46,6 @@ async def sortCategory(server, category, ctx):
             while pos != channel.position and attempts < 5:
                 attempts += 1
                 await channel.edit(position=pos)
-                await asyncio.sleep(10 + 5 * attempts)
+                await asyncio.sleep(30 + 60 * attempts)
         time_spent = (datetime.datetime.now() - start).total_seconds() / 60
         await ctx.send(f"Sorted {len(channels)} channels in {category} in {time_spent:.1f} minutes.")
