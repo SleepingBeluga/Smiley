@@ -8,7 +8,7 @@ import discord, git
 from discord.ext import commands
 import time, random, asyncio, sys, traceback
 import sheets, draft, dice, gamechannels, wounds, trigger, trimhistory, spectate, channelorder
-import autologs, capes, snack, liveread, messagemin
+import autologs, capes, snack, liveread, messagemin, tokens
 from wounds import WoundOption, Wound
 
 class myHelp(commands.DefaultHelpCommand):
@@ -59,10 +59,10 @@ b.add_cog(trigger.Triggers_And_More())
 # b.add_cog(tm.TinyMech())
 b.add_cog(autologs.Auto_Logs())
 b.add_cog(snack.Snacks())
-# b.add_cog(schedule.Scheduling())
 b.add_cog(liveread.Liveread())
 b.add_cog(messagemin.MessageMin(b))
 b.add_cog(channelorder.ChanOrder(b))
+b.add_cog(tokens.Tokens())
 # Add all the command cogs
 
 # b.loop.create_task(draft.setup())
