@@ -4,6 +4,67 @@ import sheets, draftai
 
 memory = {}
 
+async def clear_memory():
+    memory['channel'] = None
+    memory['phase'] = 'none'
+    memory['round'] = None
+    memory['bidding'] = False
+    memory['clashing'] = False
+    # Set all the 'state' indicators to defaults
+
+    memory['players'] = []
+    memory['to resolve'] = []
+    memory['player colors'] = []
+
+    memory['pending trades'] = []
+    memory['trade contents'] = {}
+
+    memory['proper names'] = {}
+    memory['bids'] = {}
+    memory['clash choices'] = {}
+    memory['black marks'] = {}
+    memory['white marks'] = {}
+    memory['limits'] = {}
+    # Make empty arrays/dicts for all the player things
+
+    memory['rows to show'] = 0
+
+    memory['clash'] = False
+
+    memory['quitconfirm'] = False
+
+    memory['cats'] = ('puissance', 'longevity', 'access', 'executions', 'research', \
+                          'schools',   'priority',  'family')
+    memory['puissance']  = ['', '', '', '', '',    '', '', '', '', '']
+    memory['longevity']  = ['', '', '', '', '',    '', '', '', '', '']
+    memory['access']     = ['', '', '', '', '',    '', '', '', '', '']
+    memory['executions'] = ['', '', '', '', '',    '', '', '', '', '']
+    memory['research']   = ['', '', '', '', '',    '', '', '', '', '']
+    memory['schools']    = ['', '', '', '', '',    '', '', '', '', '']
+    memory['priority']   = ['', '', '', '', '',    '', '', '', '', '']
+    memory['family']     = ['', '', '', '', '',    '', '', '', '', '']
+
+    memory['clashes'] = [[],[],[]]
+    # More empty things
+
+    memory['bots'] = []
+    # For holding bot objects
+
+    memory['colors'] = {"purple": (0.2,0.1,0.5),
+                        "blue":   (0.1,0.3,0.8),
+                        "green":  (0.2,0.5,0.1),
+                        "yellow": (0.7,0.6,0.0), # Only in 6+ player games
+                        "orange": (0.7,0.4,0.0), # Only in 5+ player games
+                        "red":    (0.6,0.0,0.0),
+                        "pink":   (0.6,0.0,0.6)  # Only in 7 player games
+                        }
+    # Define colors
+
+    memory['clashesin'] = asyncio.Event()
+    memory['bidsin'] = asyncio.Event()
+    # Events for the end of clash and bids
+
+
 async def subround(clash):
     '''My main loop. Executes subrounds and resolves clashes.
     Parameter: bool clash - True if function should handle post-clash bids
@@ -56,7 +117,7 @@ async def subround(clash):
         await autofill()
         await update_sheet()
         await memory['channel'].send('That\'s the end of the draft! Thanks for playing!')
-        await setup()
+        await clear_memory()
     # If it's the last round, end the draft
 
     else:
@@ -492,64 +553,7 @@ class Draft(commands.Cog):
     '''
 
     def __init__(self):
-        memory['channel'] = None
-        memory['phase'] = 'none'
-        memory['round'] = None
-        memory['bidding'] = False
-        memory['clashing'] = False
-        # Set all the 'state' indicators to defaults
-
-        memory['players'] = []
-        memory['to resolve'] = []
-        memory['player colors'] = []
-
-        memory['pending trades'] = []
-        memory['trade contents'] = {}
-
-        memory['proper names'] = {}
-        memory['bids'] = {}
-        memory['clash choices'] = {}
-        memory['black marks'] = {}
-        memory['white marks'] = {}
-        memory['limits'] = {}
-        # Make empty arrays/dicts for all the player things
-
-        memory['rows to show'] = 0
-
-        memory['clash'] = False
-
-        memory['quitconfirm'] = False
-
-        memory['cats'] = ('puissance', 'longevity', 'access', 'executions', 'research', \
-                              'schools',   'priority',  'family')
-        memory['puissance']  = ['', '', '', '', '',    '', '', '', '', '']
-        memory['longevity']  = ['', '', '', '', '',    '', '', '', '', '']
-        memory['access']     = ['', '', '', '', '',    '', '', '', '', '']
-        memory['executions'] = ['', '', '', '', '',    '', '', '', '', '']
-        memory['research']   = ['', '', '', '', '',    '', '', '', '', '']
-        memory['schools']    = ['', '', '', '', '',    '', '', '', '', '']
-        memory['priority']   = ['', '', '', '', '',    '', '', '', '', '']
-        memory['family']     = ['', '', '', '', '',    '', '', '', '', '']
-
-        memory['clashes'] = [[],[],[]]
-        # More empty things
-
-        memory['bots'] = []
-        # For holding bot objects
-
-        memory['colors'] = {"purple": (0.2,0.1,0.5),
-                            "blue":   (0.1,0.3,0.8),
-                            "green":  (0.2,0.5,0.1),
-                            "yellow": (0.7,0.6,0.0), # Only in 6+ player games
-                            "orange": (0.7,0.4,0.0), # Only in 5+ player games
-                            "red":    (0.6,0.0,0.0),
-                            "pink":   (0.6,0.0,0.6)  # Only in 7 player games
-                            }
-        # Define colors
-
-        memory['clashesin'] = asyncio.Event()
-        memory['bidsin'] = asyncio.Event()
-        # Events for the end of clash and bids
+        await clear_memory()
 
     @commands.command()
     async def reset(self, ctx, *args):
