@@ -552,7 +552,7 @@ class Draft(commands.Cog):
     '''Commands for Pact Dice drafts
     '''
 
-    def __init__(self):
+    async def __init__(self):
         await clear_memory()
 
     @commands.command()
