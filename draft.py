@@ -552,8 +552,8 @@ class Draft(commands.Cog):
     '''Commands for Pact Dice drafts
     '''
 
-    async def __init__(self):
-        await clear_memory()
+    def __init__(self):
+        asyncio.run(clear_memory())
 
     @commands.command()
     async def reset(self, ctx, *args):
