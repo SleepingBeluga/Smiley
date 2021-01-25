@@ -12,6 +12,9 @@ class ChanOrder(commands.Cog):
 
     @commands.command()
     async def sort(self, ctx, *args):
+        await ctx.send("Sorry! This command has been disabled.")
+        return
+
         if self.time != None:
             delta = datetime.datetime.now() - self.time
             if delta.total_seconds() < 10000:
