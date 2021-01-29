@@ -10,6 +10,107 @@ c = s_a.Credentials.from_service_account_file(SECRET, scopes=SCOPES)
 service = build('docs', 'v1', credentials=c)
 drive_service = build('drive', 'v3', credentials=c)
 
+async def nick_log(turns, text_style_ranges, name):
+    drive_response = drive_service.files().copy(fileId='1Orc1lONIhJKPfJSuHvFh9rbwQfJikEjrYsAuvrJzt9A', body={'name': name}).execute()
+    id = drive_response.get('id')
+    perm_result = drive_service.permissions().create(fileId=id,body={"type":"anyone","role":"reader"}).execute()
+
+    requests = []
+    for i, turn in enumerate(turns[::-1]):
+        offset = len(turn['author']) + 2
+        requests.append({
+            'insertText': {
+                'location': {
+                    'index': 1
+                },
+                'text': turn['author'] + '\n'
+            }
+        })
+        requests.append({
+            'updateTextStyle': {
+                'range': {
+                    'startIndex': 1,
+                    'endIndex': offset - 1
+                },
+                'textStyle': {
+                    'foregroundColor': {
+                        'color': {
+                            'rgbColor': {
+                                'red':   0.35,
+                                'green': 0.35,
+                                'blue':  0.35
+                            }
+                        }
+                    }
+                },
+                'fields': 'foregroundColor'
+            }
+        })
+        requests.append({
+            'insertText': {
+                'location': {
+                    'index': offset
+                },
+                'text': turn['text'] + '\n'
+            }
+        })
+        requests.append({
+            'updateTextStyle': {
+                'range': {
+                    'startIndex': offset,
+                    'endIndex': offset + len(turn['text'])
+                },
+                'textStyle': {
+                    'foregroundColor': {
+                        'color': {
+                            'rgbColor': {
+                                'red':   0,
+                                'green': 0,
+                                'blue':  0
+                            }
+                        }
+                    }
+                },
+                'fields': 'foregroundColor'
+            }
+        })
+        requests.append({
+            'updateParagraphStyle': {
+                'range': {
+                    'startIndex': offset,
+                    'endIndex': offset + len(turn['text'])
+                },
+                'paragraphStyle': {
+                    'indentStart': {
+                        'magnitude': 18,
+                        'unit': 'PT'
+                    },
+                    'indentFirstLine': {
+                        'magnitude': 18,
+                        'unit': 'PT'
+                    },
+                },
+                'fields': 'indentStart,indentFirstLine'
+            }
+        })
+        turn_num = len(turns) - 1 - i
+        for style in text_style_ranges[str(turn_num)]:
+            requests.append({
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': style['start'] + offset,
+                        'endIndex': style['end'] + offset
+                    },
+                    'textStyle': {
+                        style['type']: True
+                    },
+                    'fields': style['type']
+                }
+            })
+    service.documents().batchUpdate(documentId=id, body={'requests': requests}).execute()
+
+    return f'https://docs.google.com/document/d/{id}'
+
 async def new_log_doc(memory, name, players):
     # Call the Docs API
     memory['docs'] = service.documents()

@@ -1,7 +1,112 @@
 from discord.ext import commands
 import docs, datetime, json, pytz
 
+async def process_styles(text, text_style_ranges, turn):
+    text.replace('\*','<ASTERISK>')
+    star_start = text.find('*')
+    while (star_start != -1):
+        if text[star_start:star_start + 2] == '**':
+            star_end = text.find('**', star_start + 3)
+            true_start = len(text[:star_start].replace('*','').replace('~~','').replace('__',''))
+            true_end = true_start + len(text[star_start:star_end].replace('*','').replace('~~','').replace('__',''))
+            text_style_ranges[str(turn)].append({
+                'type':  'bold',
+                'start': true_start,
+                'end':   true_end
+            })
+            text = text.replace('**', '', 2)
+        else:
+            star_end = text.find('*', star_start + 1)
+            true_start = len(text[:star_start].replace('*','').replace('~~','').replace('__',''))
+            true_end = true_start + len(text[star_start:star_end].replace('*','').replace('~~','').replace('__',''))
+            text_style_ranges[str(turn)].append({
+                'type':  'italic',
+                'start': true_start,
+                'end':   true_end
+            })
+            text = text.replace('*', '', 2)
+        star_start = text.find('*')
+    dash_start = text.find('__')
+    while (dash_start != -1):
+        dash_end = text.find('__', dash_start + 3)
+        true_start = len(text[:dash_start].replace('*','').replace('~~','').replace('__',''))
+        true_end = true_start + len(text[dash_start:dash_end].replace('*','').replace('~~','').replace('__',''))
+        text_style_ranges[str(turn)].append({
+            'type':  'underline',
+            'start': true_start,
+            'end':   true_end
+        })
+        text = text.replace('__', '', 2)
+        dash_start = text.find('__')
+    tilde_start = text.find('~~')
+    while (tilde_start != -1):
+        tilde_end = text.find('~~', tilde_start + 3)
+        true_start = len(text[:tilde_start].replace('*','').replace('~~','').replace('__',''))
+        true_end = true_start + len(text[tilde_start:tilde_end].replace('*','').replace('~~','').replace('__',''))
+        text_style_ranges[str(turn)].append({
+            'type':  'strikethrough',
+            'start': true_start,
+            'end':   true_end
+        })
+        text = text.replace('~~', '', 2)
+        tilde_start = text.find('~~')
+    text.replace('<ASTERISK>','*')
+    return text, text_style_ranges
+
+async def process_new_log(ctx, start_hours_ago, end_hours_ago):
+    now = datetime.datetime.utcnow()
+    start = now - datetime.timedelta(hours=start_hours_ago)
+    end   = now - datetime.timedelta(hours=end_hours_ago)
+    text_style_ranges = {'0':[]}
+    turns = []
+    last_author = None
+    text_so_far = ''
+    first = True
+    async with ctx.typing():
+        async for message in ctx.history(limit=10000,oldest_first=True,after=start,before=end):
+            if (message.author != last_author or message.clean_content[:5] == '<NEW>') and message.author != ctx.me and last_author is not None:
+                text_so_far, text_style_ranges = await process_styles(text_so_far, text_style_ranges, len(turns))
+                if len(text_so_far) != 0:
+                    turns.append({
+                        'author': last_author.display_name,
+                        'text':   text_so_far.strip()
+                    })
+                    text_style_ranges[str(len(turns))] = []
+                    text_so_far = ''
+            raw = message.clean_content
+            text = raw.replace('||','').replace('|||','').replace('\n\n','\n').strip()
+            if text == '...' or text[:7] == '%newlog' or text == '':
+                continue
+            if text[:2] == '((':
+                text = f'*OOC: {text.replace("((","").replace("))","")}*'
+            if text[0] == '%':
+                text = f'*ROLL: {text}*'
+            if message.author == ctx.me:
+                text = f'*RESULT: {text}*'
+            else:
+                last_author = message.author
+            text_so_far += text + '\n'
+        if last_author is not None:
+            text_so_far, text_style_ranges = await process_styles(text_so_far, text_style_ranges, len(turns))
+            turns.append({
+                'author': last_author.display_name,
+                'text':   text_so_far.strip()
+            })
+        if not len(turns):
+            await ctx.send(f'No messages found in the range given')
+        doc_name = f'#{ctx.channel.name} log | {start.strftime("%Y-%m-%d %H:%M")} - {end.strftime("%Y-%m-%d %H:%M")}'
+        link = await docs.nick_log(turns, text_style_ranges, doc_name)
+        await ctx.send(f'Logs: {link}')
+
 class Auto_Logs(commands.Cog):
+    @commands.command()
+    async def newlog(self, ctx, start_hours_ago = 24, end_hours_ago = 0):
+        try:
+            start_hours_ago = int(start_hours_ago)
+            end_hours_ago =   int(end_hours_ago)
+        except:
+            await ctx.send('Usage: `%newlog [begin] [end]`, where `begin` is an optional number of hours ago to start logging, and `end` is an optional number of hours ago to end logging. Since `begin` defaults to 24 and `end` defaults to 0, default behavior is to log the last 24 hours.')
+        await process_new_log(ctx, start_hours_ago, end_hours_ago)
 
     @commands.command()
     async def set(self,ctx,*args):
