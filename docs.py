@@ -17,6 +17,10 @@ async def nick_log(turns, text_style_ranges, name):
 
     requests = []
     for i, turn in enumerate(turns[::-1]):
+        if i and i % 50 == 0:
+            print(i, requests)
+            service.documents().batchUpdate(documentId=id, body={'requests': requests}).execute()
+            requests = []
         offset = len(turn['author']) + 2
         requests.append({
             'insertText': {
@@ -108,8 +112,8 @@ async def nick_log(turns, text_style_ranges, name):
                 }
             })
     print(requests)
-
-    service.documents().batchUpdate(documentId=id, body={'requests': requests}).execute()
+    if len(requests):
+        service.documents().batchUpdate(documentId=id, body={'requests': requests}).execute()
 
     return f'https://docs.google.com/document/d/{id}'
 
