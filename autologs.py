@@ -9,21 +9,23 @@ async def process_styles(text, text_style_ranges, turn):
             star_end = text.find('**', star_start + 3)
             true_start = len(text[:star_start].replace('*','').replace('~~','').replace('__',''))
             true_end = true_start + len(text[star_start:star_end].replace('*','').replace('~~','').replace('__',''))
-            text_style_ranges[str(turn)].append({
-                'type':  'bold',
-                'start': true_start,
-                'end':   true_end
-            })
+            if true_end > true_start:
+                text_style_ranges[str(turn)].append({
+                    'type':  'bold',
+                    'start': true_start,
+                    'end':   true_end
+                })
             text = text.replace('**', '', 2)
         else:
             star_end = text.find('*', star_start + 1)
             true_start = len(text[:star_start].replace('*','').replace('~~','').replace('__',''))
             true_end = true_start + len(text[star_start:star_end].replace('*','').replace('~~','').replace('__',''))
-            text_style_ranges[str(turn)].append({
-                'type':  'italic',
-                'start': true_start,
-                'end':   true_end
-            })
+            if true_end > true_start:
+                text_style_ranges[str(turn)].append({
+                    'type':  'italic',
+                    'start': true_start,
+                    'end':   true_end
+                    })
             text = text.replace('*', '', 2)
         star_start = text.find('*')
     dash_start = text.find('__')
@@ -31,11 +33,12 @@ async def process_styles(text, text_style_ranges, turn):
         dash_end = text.find('__', dash_start + 3)
         true_start = len(text[:dash_start].replace('*','').replace('~~','').replace('__',''))
         true_end = true_start + len(text[dash_start:dash_end].replace('*','').replace('~~','').replace('__',''))
-        text_style_ranges[str(turn)].append({
-            'type':  'underline',
-            'start': true_start,
-            'end':   true_end
-        })
+        if true_end > true_start:
+            text_style_ranges[str(turn)].append({
+                'type':  'underline',
+                'start': true_start,
+                'end':   true_end
+            })
         text = text.replace('__', '', 2)
         dash_start = text.find('__')
     tilde_start = text.find('~~')
@@ -43,11 +46,12 @@ async def process_styles(text, text_style_ranges, turn):
         tilde_end = text.find('~~', tilde_start + 3)
         true_start = len(text[:tilde_start].replace('*','').replace('~~','').replace('__',''))
         true_end = true_start + len(text[tilde_start:tilde_end].replace('*','').replace('~~','').replace('__',''))
-        text_style_ranges[str(turn)].append({
-            'type':  'strikethrough',
-            'start': true_start,
-            'end':   true_end
-        })
+        if true_end > true_start:
+            text_style_ranges[str(turn)].append({
+                'type':  'strikethrough',
+                'start': true_start,
+                'end':   true_end
+            })
         text = text.replace('~~', '', 2)
         tilde_start = text.find('~~')
     text.replace('<ASTERISK>','*')
@@ -66,7 +70,7 @@ async def process_new_log(ctx, start_hours_ago, end_hours_ago):
         async for message in ctx.history(limit=10000,oldest_first=True,after=start,before=end):
             if (message.author != last_author or message.clean_content[:5] == '<NEW>') and message.author != ctx.me and last_author is not None:
                 text_so_far, text_style_ranges = await process_styles(text_so_far, text_style_ranges, len(turns))
-                if len(text_so_far) != 0:
+                if len(text_so_far.strip()) != 0:
                     turns.append({
                         'author': last_author.display_name,
                         'text':   text_so_far.strip()
