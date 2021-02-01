@@ -107,6 +107,8 @@ async def nick_log(turns, text_style_ranges, name):
                     'fields': style['type']
                 }
             })
+    print(requests)
+
     service.documents().batchUpdate(documentId=id, body={'requests': requests}).execute()
 
     return f'https://docs.google.com/document/d/{id}'
