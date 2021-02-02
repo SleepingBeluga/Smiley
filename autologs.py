@@ -90,7 +90,7 @@ async def process_new_log(ctx, start_hours_ago, end_hours_ago):
             else:
                 last_author = message.author
             text_so_far += text + '\n'
-        if last_author is not None:
+        if last_author is not None and len(text_so_far.strip()) != 0:
             text_so_far, text_style_ranges = await process_styles(text_so_far, text_style_ranges, len(turns))
             turns.append({
                 'author': last_author.display_name,
