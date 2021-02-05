@@ -18,7 +18,6 @@ async def nick_log(turns, text_style_ranges, name):
     requests = []
     for i, turn in enumerate(turns[::-1]):
         if i and i % 50 == 0:
-            print(i, requests)
             service.documents().batchUpdate(documentId=id, body={'requests': requests}).execute()
             requests = []
         offset = len(turn['author']) + 2
@@ -111,7 +110,6 @@ async def nick_log(turns, text_style_ranges, name):
                     'fields': style['type']
                 }
             })
-    print(requests)
     if len(requests):
         service.documents().batchUpdate(documentId=id, body={'requests': requests}).execute()
 

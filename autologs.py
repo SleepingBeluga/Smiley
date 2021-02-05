@@ -68,7 +68,7 @@ async def process_new_log(ctx, start_hours_ago, end_hours_ago):
     first = True
     async with ctx.typing():
         async for message in ctx.history(limit=10000,oldest_first=True,after=start,before=end):
-            if (message.author != last_author or message.clean_content[:5] == '<NEW>') and message.author != ctx.me and last_author is not None:
+            if message.author != last_author and message.author != ctx.me and last_author is not None:
                 text_so_far, text_style_ranges = await process_styles(text_so_far, text_style_ranges, len(turns))
                 if len(text_so_far.strip()) != 0:
                     turns.append({
