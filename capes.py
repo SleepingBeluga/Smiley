@@ -6,20 +6,23 @@ from battle import Battle
 
 async def longpm(ctx, content):
     if len(content) > 1990:
-        msgs = content.split('\n')
+        found_too_long = True
+        i = content.find('```')
+        if i >= 0:
+            msgs = content[:i].split('\n') + [content[i:]]
+        else:
+            msgs = content.split()
+        while found_too_long:
+            found_too_long = False
+            for i, msg in enumerate(msgs):
+                if len(msg) > 1990:
+                    found_too_long = True
+                    msgs[i] = msg[:1990]
+                    msgs.insert(i+1,msg[1990:])
     else:
         msgs = [content]
-    found_too_long = True
-    while found_too_long:
-        found_too_long = False
-        for i, msg in enumerate(msgs):
-            if len(msg) > 1990:
-                found_too_long = True
-                msgs[i] = msg[:1990]
-                msgs.insert(i+1,msg[1990:])
     for msg in msgs:
         await ctx.author.send(msg)
-
 
 class Capes(commands.Cog):
 
@@ -525,7 +528,7 @@ class Capes(commands.Cog):
             if i not in owned[i.tier]:
                 owned[i.tier][i] = 0
             owned[i.tier][i] += 1
-        
+
         crafted = False
 
         upgrade = {"C": "B", "B": "A", "A": "S"}
@@ -555,7 +558,7 @@ class Capes(commands.Cog):
                             self.trading[who].remove(i)
                         crafted = True
                         group = []
-        
+
         if not crafted:
             await ctx.send("Couldn't find enough duplicate cards to craft together")
         else:
@@ -866,6 +869,9 @@ class Capes(commands.Cog):
         s = args.strip()
         if len(s) == 0:
             await ctx.send("Can't submit an empty trigger")
+            return
+        elif len(s) > 1850:
+            await ctx.send(f"Your trigger is {1850 - len(s)} characters too long!")
             return
         if s in self.triggers:
             await ctx.send("This trigger already exists!")
