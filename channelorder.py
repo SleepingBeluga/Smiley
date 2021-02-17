@@ -1,4 +1,5 @@
 from discord.ext import commands
+import constants
 import datetime, asyncio
 
 class ChanOrder(commands.Cog):
@@ -31,7 +32,7 @@ class ChanOrder(commands.Cog):
             pdGames = []
             archives = []
 
-            for category in 'WeaverDice Games', 'WeaverDice Games 2', 'PactDice Games', 'PactDice Games 2', 'Archives', 'Archives 2':
+            for category in constants.wd_categories | constants.pd_categories | constants.archive_categories:
                 await sortCategory(self.b.guilds[0], category, ctx)
 
         await ctx.send("Finished sorting channels!")
