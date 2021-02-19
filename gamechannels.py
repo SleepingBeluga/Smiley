@@ -22,27 +22,27 @@ class Game_Channels(commands.Cog):
         if (gameType != 'wd' and gameType != 'pd'):
             await ctx.send("Please write out your game's name after the command (i.e. %addgame pd New York)")
             return
-        gameName = ''
+        game_name = ''
         gameMaster = None
         #gameRole = None
         gamecat = None
         altcat = None
 
         for arg in args[1:]:
-            gameName = gameName + str(arg).lower()
+            game_name = game_name + str(arg).lower()
 
         # List of restricted titles
         restricted_names = ['all', 'allactive', 'inactive', 'active', 'wdall', 'allwd', 'allpd', 'pdall', 'allarchive', 'archived', 'archives']
-        if gameName in restricted_names:
-            await ctx.send(gameName + " is a restricted term and you can't name your game that. Sorry!")
+        if game_name in restricted_names:
+            await ctx.send(game_name + " is a restricted term and you can't name your game that. Sorry!")
             return
 
         for channel in ctx.guild.channels:
-            if channel.name == gameName:
-                await ctx.send('There\'s already a channel called ' + gameName +', use another name to avoid confusion.')
+            if channel.name == game_name:
+                await ctx.send('There\'s already a channel called ' + game_name +', use another name to avoid confusion.')
                 return
 
-        if gameName == '':
+        if game_name == '':
             await ctx.send("Please write out your game's name after the command (i.e. %addgame pd New York)")
         else:
 
@@ -72,7 +72,7 @@ class Game_Channels(commands.Cog):
             newChannel = None
             for cat in cats:
                 try:
-                    newChannel = await ctx.message.guild.create_text_channel(gameName, category=cat, overwrites=overwrites)
+                    newChannel = await ctx.message.guild.create_text_channel(game_name, category=cat, overwrites=overwrites)
                     break
                 except:
                     continue
@@ -83,7 +83,7 @@ class Game_Channels(commands.Cog):
                     if newChannel.name < chan.name:
                         await newChannel.edit(position=chan.position)
                         break
-                await sheets.newgame(str('#' + gameName),str(ctx.author.id), str(gameType).upper())
+                await sheets.newgame(str('#' + game_name),str(ctx.author.id), str(gameType).upper())
                 await ctx.send(f"{newChannel.mention} has been created in category {newChannel.category.name}")
             else:
                 await ctx.send("Looks like there was a problem creating the channel. If the problem persists, please ping the bot team role")
@@ -95,7 +95,7 @@ class Game_Channels(commands.Cog):
                %enter <group>
         Group arguments include wdall, pdall, allactive, allarchive, all
         '''
-        gameName = ''
+        game_name = ''
         game = None
         check = False
         debugging = False
@@ -104,15 +104,15 @@ class Game_Channels(commands.Cog):
             if arg.lower() == "-d":
                 debugging = True
                 continue
-            gameName = gameName + str(arg).lower()
+            game_name = game_name + str(arg).lower()
 
-        if gameName == '':
+        if game_name == '':
             await ctx.send("Please write out the game you wish to access after the command (i.e. %enter New York)")
             return
 
-        joinAllWD = gameName in ['wdall', 'allwd', 'all', 'allactive']
-        joinAllPD = gameName in ['pdall', 'allpd', 'all', 'allactive']
-        joinAllArchive = gameName in ['all', 'allarchive', 'inactive', 'archived', 'archives']
+        joinAllWD = game_name in ['wdall', 'allwd', 'all', 'allactive']
+        joinAllPD = game_name in ['pdall', 'allpd', 'all', 'allactive']
+        joinAllArchive = game_name in ['all', 'allarchive', 'inactive', 'archived', 'archives']
 
         applicableChannels = set()
 
@@ -135,14 +135,14 @@ class Game_Channels(commands.Cog):
                 if debugging:
                     await ctx.send("Trying to join " + channel.name)
                 await channel.set_permissions(ctx.author, read_messages=True)
-            elif channel.name == gameName or 'wd' + channel.name == gameName or 'pd' + channel.name == gameName or '#' + channel.name == gameName:
+            elif channel.name == game_name or 'wd' + channel.name == game_name or 'pd' + channel.name == game_name or '#' + channel.name == game_name:
                 check = (catName in constants.wd_categories | constants.pd_categories | constants.archive_categories)
                 if check:
                     await channel.set_permissions(ctx.author, read_messages=True)
                     return
 
         if check == False and not (joinAllWD or joinAllPD or joinAllArchive):
-            closestChannels = difflib.get_close_matches(gameName, applicableChannels)
+            closestChannels = difflib.get_close_matches(game_name, applicableChannels)
             if len(closestChannels) > 1:
                 await ctx.send("That game could not be found, did you mean one of: " + ', '.join(closestChannels))
             elif len(closestChannels) == 1:
@@ -208,7 +208,7 @@ class Game_Channels(commands.Cog):
         for arg in args:
             game_name = game_name + str(arg).lower()
 
-        namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
+        namecheck = (await sheets.gamecheck(ctx.author.id,game_name))
         moderator = False
         for role in ctx.author.roles:
             if str(role) == 'Mod Team':
@@ -264,7 +264,7 @@ class Game_Channels(commands.Cog):
             argStart = 0
             #await ctx.send("Please write out your game's name after the command (i.e. %unarchive pd New York)")
             #return
-        gameName = ''
+        game_name = ''
         gameRole = None
         gameChan = None
         game_cat = None
@@ -281,10 +281,10 @@ class Game_Channels(commands.Cog):
                 archive_cats.append(category)
 
         for arg in args[argStart:]:
-            gameName = gameName + str(arg).lower()
+            game_name = game_name + str(arg).lower()
 
-        namecheck = (await sheets.gamecheck(ctx.author.id,gameName))
-        category = (await sheets.category(gameName))
+        namecheck = (await sheets.gamecheck(ctx.author.id,game_name))
+        category = (await sheets.category(game_name))
         moderator = False
         for role in ctx.author.roles:
             if str(role) == 'Mod Team':
@@ -292,10 +292,10 @@ class Game_Channels(commands.Cog):
                 break
 
         for channel in ctx.message.guild.channels:
-            if channel.name == gameName:
+            if channel.name == game_name:
                 game_cat = channel.category
 
-        if gameName == '':
+        if game_name == '':
             await ctx.send("Please write out the game you wish to unarchive after the command (i.e. %unarchive New York)")
         elif game_cat in wd_cats or game_cat in pd_cats:
             await ctx.send("That game is already active.")
@@ -306,7 +306,7 @@ class Game_Channels(commands.Cog):
                 await ctx.send("That game could not be found.")
             else:
                 for ctx.TextChannel in ctx.message.guild.text_channels:
-                    if ctx.TextChannel.name == gameName:
+                    if ctx.TextChannel.name == game_name:
                         # Prioritise on pd/wd override, then default to sheet data
                         if gameType is None:
                             gameType = category.lower()
@@ -327,7 +327,7 @@ class Game_Channels(commands.Cog):
                                 except:
                                     continue
                         if success:
-                            await sheets.changeState(gameName,'Y')
+                            await sheets.changeState(game_name,'Y')
                         else:
                             await ctx.send("Error, could not unarchive that game.")
 
@@ -380,19 +380,19 @@ class Game_Channels(commands.Cog):
         '''Checks the owner of a given campaign
         Usage: %owner <game name>
         '''
-        gameName = ''
+        game_name = ''
         game = None
         check = False
 
         for arg in args:
-            gameName = gameName + str(arg).lower()
+            game_name = game_name + str(arg).lower()
 
-        ownercheck = (await sheets.ownercheck(gameName))
+        ownercheck = (await sheets.ownercheck(game_name))
 
         if ownercheck != '':
-            await ctx.send('<@' + ownercheck + '> owns ' + gameName)
+            await ctx.send('<@' + ownercheck + '> owns ' + game_name)
         else:
-            await ctx.send('Could not find game ' + gameName)
+            await ctx.send('Could not find game ' + game_name)
 
     @commands.command()
     async def document(self, ctx, *, arguments):
