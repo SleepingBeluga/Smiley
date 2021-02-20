@@ -187,7 +187,7 @@ class Game_Channels(commands.Cog):
                 await channel.set_permissions(ctx.author, read_messages=False)
             if channel.name == to_leave:
                 game = channel
-                check = (catName in constants.archive_categories)
+                check = (catName in constants.wd_categories | constants.pd_categories | constants.archive_categories)
                 if check:
                     await channel.set_permissions(ctx.author, read_messages=False)
                     return
