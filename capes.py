@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord, sheets
-import random, datetime, difflib
+import random, datetime, difflib, asyncio
 from card import Card
 from battle import Battle
 
@@ -38,6 +38,7 @@ class Capes(commands.Cog):
         self.battles = {}
         self.cached = False
         self.pause = False
+        self.lock = asyncio.Lock()
 
     async def set_local_cache(self):
         await self.load_capes()
@@ -675,51 +676,52 @@ class Capes(commands.Cog):
             %tc craft [Card 1, Card 2, Card 3] - Craft three cards together into a new one
             %tc autocraft - Automatically craft away duplicates (as long as you have 3 or more in a specific rarity)
         '''
-        if action == "unpause" and str(ctx.author.id) == "227834498019098624":
-            self.pause = False
-            return
-        if self.pause:
-            # For when developing on a secondary bot
-            return
-        if not self.cached:
-            await ctx.send("Caching things on first run")
-            await self.set_local_cache()
-        if action == "claim":
-            #await ctx.send("Claiming paused while Wellwick experiments with things")
-            await self.random_claim(ctx, str(ctx.author.id))
-        elif action == "recache" and str(ctx.author.id) == "227834498019098624":
-            self.capelist = []
-            self.trading = {}
-            self.triggers = {}
-            self.reviewing = {}
-            await self.set_local_cache()
-        elif action == "view" or action == "list" or action == "check":
-            await self.view(ctx, str(ctx.author.id), *args)
-        elif action == "submit":
-            await ctx.send("<https://docs.google.com/forms/d/e/1FAIpQLSdntX_uPBSttXxuYlHh_lLszN1YYk248xSBLbuFXiGAQ3PdIA/viewform>")
-        elif action == "masterlist":
-            await ctx.send("<https://docs.google.com/spreadsheets/d/1PcMDs_zm8xg22IdXl8hoHS8IPF5skX-_GK3djUZSlBw/edit#gid=0>")
-        elif action == "trade":
-            if len(args) == 0:
-                await ctx.send("Missing trade subcommand (ie offer, accept, reject, view, cancel)")
-            else:
-                await self.trade(ctx, str(ctx.author.id), args[0], *args[1:])
-        elif action == "offer" and len(args) > 0 and args[1] == "trade":
-            await self.trade(ctx, str(ctx.author.id), "offer", *args[1:])
-        elif action == "filter":
-            await self.filter(ctx, str(ctx.author.id), *args)
-        elif action == "pause" and str(ctx.author.id) == "227834498019098624":
-            self.pause = True
-        elif action == "grant" and str(ctx.author.id) == "227834498019098624":
-            who = await self.at_to_id(args[0])
-            amount = int(args[1])
-            await self.grant(who, amount)
-        elif action == "craft":
-            await self.craft(ctx, str(ctx.author.id), *args)
-        elif action == "autocraft":
-            await self.autocraft(ctx, str(ctx.author.id))
-        elif action == "collection":
-            await self.collection(ctx, str(ctx.author.id), *args)
+        async with self.lock:
+            if action == "unpause" and str(ctx.author.id) == "227834498019098624":
+                self.pause = False
+                return
+            if self.pause:
+                # For when developing on a secondary bot
+                return
+            if not self.cached:
+                await ctx.send("Caching things on first run")
+                await self.set_local_cache()
+            if action == "claim":
+                #await ctx.send("Claiming paused while Wellwick experiments with things")
+                await self.random_claim(ctx, str(ctx.author.id))
+            elif action == "recache" and str(ctx.author.id) == "227834498019098624":
+                self.capelist = []
+                self.trading = {}
+                self.triggers = {}
+                self.reviewing = {}
+                await self.set_local_cache()
+            elif action == "view" or action == "list" or action == "check":
+                await self.view(ctx, str(ctx.author.id), *args)
+            elif action == "submit":
+                await ctx.send("<https://docs.google.com/forms/d/e/1FAIpQLSdntX_uPBSttXxuYlHh_lLszN1YYk248xSBLbuFXiGAQ3PdIA/viewform>")
+            elif action == "masterlist":
+                await ctx.send("<https://docs.google.com/spreadsheets/d/1PcMDs_zm8xg22IdXl8hoHS8IPF5skX-_GK3djUZSlBw/edit#gid=0>")
+            elif action == "trade":
+                if len(args) == 0:
+                    await ctx.send("Missing trade subcommand (ie offer, accept, reject, view, cancel)")
+                else:
+                    await self.trade(ctx, str(ctx.author.id), args[0], *args[1:])
+            elif action == "offer" and len(args) > 0 and args[1] == "trade":
+                await self.trade(ctx, str(ctx.author.id), "offer", *args[1:])
+            elif action == "filter":
+                await self.filter(ctx, str(ctx.author.id), *args)
+            elif action == "pause" and str(ctx.author.id) == "227834498019098624":
+                self.pause = True
+            elif action == "grant" and str(ctx.author.id) == "227834498019098624":
+                who = await self.at_to_id(args[0])
+                amount = int(args[1])
+                await self.grant(who, amount)
+            elif action == "craft":
+                await self.craft(ctx, str(ctx.author.id), *args)
+            elif action == "autocraft":
+                await self.autocraft(ctx, str(ctx.author.id))
+            elif action == "collection":
+                await self.collection(ctx, str(ctx.author.id), *args)
 
     async def start_battle(self, battle: Battle):
         for i in battle.teams:
