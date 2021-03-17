@@ -13,7 +13,7 @@ from wounds import WoundOption, Wound
 
 class myHelp(commands.DefaultHelpCommand):
     def get_ending_note(self):
-        return '```Type `%help <command>` for more info on a command.\nYou can also type `%help <category>` for more info on a category.\nFor more thorough documentation, go to https://smileybot.gitlab.io (WIP)```'
+        return '```Type `%help <command>` for more info on a command.\nYou can also type `%help <category>` for more info on a category.\nFor more thorough documentation, go to https://smileybot.gitlab.io (heavily WIP)```'
 
 b = commands.Bot(command_prefix=('%'), case_insensitive=True, help_command=myHelp(dm_help=None))
 
