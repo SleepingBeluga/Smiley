@@ -4,7 +4,7 @@ import sheets, draftai
 
 memory = {}
 
-async def clear_memory():
+def clear_memory():
     memory['channel'] = None
     memory['phase'] = 'none'
     memory['round'] = None
@@ -117,7 +117,7 @@ async def subround(clash):
         await autofill()
         await update_sheet()
         await memory['channel'].send('That\'s the end of the draft! Thanks for playing!')
-        await clear_memory()
+        clear_memory()
     # If it's the last round, end the draft
 
     else:
@@ -553,7 +553,7 @@ class Draft(commands.Cog):
     '''
 
     def __init__(self):
-        asyncio.run(clear_memory())
+        clear_memory()
 
     @commands.command()
     async def reset(self, ctx, *args):
@@ -565,7 +565,7 @@ class Draft(commands.Cog):
             await asyncio.sleep(60)
             memory['quitconfirm'] = False
         else:
-            self.__init__()
+            clear_memory()
             await ctx.send('OK, I\'ve reset.')
 
     @commands.command()
